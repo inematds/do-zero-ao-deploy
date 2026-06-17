@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="inema-course" content="dzd">
+  <title>O Terminal: Seu Primeiro Comando | Do Zero ao Deploy</title>
+
+  <!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+  <script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'emerald');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/learn.css">
+
+  <!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+  <script type="application/json" data-inema-manifest>
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha emerald) */
+    html:not(.dark) .text-emerald-400 { color: #059669; }
+    html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(5, 150, 105, 0.12); }
+    html:not(.dark) .bg-emerald-500\/10 { background-color: rgba(5, 150, 105, 0.08); }
+    html:not(.dark) .border-emerald-500\/30 { border-color: rgba(5, 150, 105, 0.25); }
+    html:not(.dark) .hover\:bg-emerald-500\/30:hover { background-color: rgba(5, 150, 105, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+
+  <!-- NAVIGATION -->
+  <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-14">
+        <div class="flex items-center space-x-4">
+          <a href="../../index.html" class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300">
+            <span class="text-2xl">&#128640;</span>
+            <span class="font-bold text-lg hidden sm:inline">Do Zero ao Deploy</span>
+          </a>
+          <span class="text-neutral-600">|</span>
+          <a href="https://inema.club" target="_blank" class="text-sky-400 hover:text-sky-300 text-sm font-medium">INEMA.CLUB</a>
+        </div>
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <a href="index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-emerald-400 bg-emerald-500/10">
+            <span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal & Git</span>
+          </a>
+          <a href="../trilha2/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors">
+            <span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy Moderno</span>
+          </a>
+          <a href="../trilha3/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors">
+            <span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor Proprio</span>
+          </a>
+          <a href="../trilha4/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
+            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+          </a>
+          <a href="../trilha5/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors">
+            <span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+          </a>
+          <button id="theme-toggle" class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2">
+            <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMB -->
+  <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex items-center space-x-2 text-sm text-neutral-400">
+      <a href="../../index.html" class="hover:text-emerald-400">Inicio</a>
+      <span>/</span>
+      <a href="index.html" class="hover:text-emerald-400">Trilha 1</a>
+      <span>/</span>
+      <span class="text-emerald-400">Modulo 1.1</span>
+    </div>
+  </nav>
+
+  <!-- HEADER -->
+  <header class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full mb-4">MODULO 1.1</span>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">&#128187; O Terminal: Seu Primeiro Comando</h1>
+      <p class="text-lg text-neutral-400 max-w-3xl">O terminal e a janela de texto onde voce conversa diretamente com o computador. Sem menus, sem cliques. So voce e a maquina. Aqui voce vai aprender a usar esse superpoder.</p>
+      <div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-emerald-400">6</div>
+          <div class="text-xs text-neutral-400">Topicos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-emerald-400">45</div>
+          <div class="text-xs text-neutral-400">Minutos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-emerald-400">Zero</div>
+          <div class="text-xs text-neutral-400">Nivel</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-emerald-400">Pratico</div>
+          <div class="text-xs text-neutral-400">Tipo</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEUDO -->
+  <main id="conteudo" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="1-1" data-inema-track="1">
+
+    <!-- ============================================ -->
+    <!-- TOPICO 1: O que e o Terminal                 -->
+    <!-- ============================================ -->
+    <section id="topico-1" data-inema-topic="modulo-1-1#topico-1" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">1</span>
+        <h2 class="text-2xl font-bold">O Que e o Terminal</h2>
+      </div>
+
+      <p data-inema-block="m1-1-t1-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Pense no terminal como um <strong class="text-emerald-400">chat com o computador</strong>. Em vez de clicar em icones e menus, voce digita comandos em texto e o computador responde. E como mandar uma mensagem no WhatsApp, so que para a sua maquina. Voce escreve "lista os arquivos", e ele lista. Voce escreve "cria uma pasta", e ele cria.
+      </p>
+
+      <!-- SVG: Terminal vs Interface Grafica -->
+      <div class="rounded-2xl border border-emerald-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+        <svg viewBox="0 0 800 200" class="w-full h-auto" role="img" aria-label="Diagrama comparando interface grafica (clique em icones) com terminal (digitar comandos em texto)">
+          <defs>
+            <linearGradient id="m11-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/>
+            </linearGradient>
+            <filter id="m11-glow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <pattern id="m11-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="1.3" cy="1.3" r="1.3" fill="#34d399" opacity="0.12"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="800" height="200" fill="url(#m11-grid)"/>
+          <!-- Interface Grafica -->
+          <rect x="30" y="30" width="320" height="140" rx="14" fill="#1a1a2e" stroke="#9ca3af" stroke-width="2"/>
+          <text x="190" y="26" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-weight="600" font-size="13">INTERFACE GRAFICA</text>
+          <rect x="55" y="60" width="50" height="50" rx="8" fill="#374151" stroke="#9ca3af" stroke-width="1.5"/>
+          <text x="80" y="90" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="22">&#128193;</text>
+          <rect x="125" y="60" width="50" height="50" rx="8" fill="#374151" stroke="#9ca3af" stroke-width="1.5"/>
+          <text x="150" y="90" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="22">&#128196;</text>
+          <rect x="195" y="60" width="50" height="50" rx="8" fill="#374151" stroke="#9ca3af" stroke-width="1.5"/>
+          <text x="220" y="90" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="22">&#128247;</text>
+          <rect x="265" y="60" width="50" height="50" rx="8" fill="#374151" stroke="#9ca3af" stroke-width="1.5"/>
+          <text x="290" y="90" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="22">&#9881;</text>
+          <text x="190" y="145" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="12">clique... clique... clique...</text>
+          <!-- Seta -->
+          <text x="400" y="108" text-anchor="middle" fill="#34d399" font-family="Inter,sans-serif" font-size="24" font-weight="600">vs</text>
+          <!-- Terminal -->
+          <g filter="url(#m11-glow)">
+            <rect x="450" y="30" width="320" height="140" rx="14" fill="#0e2018" stroke="url(#m11-grad)" stroke-width="2"/>
+          </g>
+          <text x="610" y="26" text-anchor="middle" fill="#34d399" font-family="Inter,sans-serif" font-weight="600" font-size="13">TERMINAL</text>
+          <circle cx="470" cy="48" r="5" fill="#f87171"/><circle cx="486" cy="48" r="5" fill="#fbbf24"/><circle cx="502" cy="48" r="5" fill="#34d399"/>
+          <text x="470" y="80" fill="#34d399" font-family="monospace" font-size="13">$ ls</text>
+          <text x="470" y="98" fill="#9ca3af" font-family="monospace" font-size="12">index.html  style.css</text>
+          <text x="470" y="118" fill="#34d399" font-family="monospace" font-size="13">$ mkdir projeto</text>
+          <text x="470" y="136" fill="#34d399" font-family="monospace" font-size="13">$ cd projeto</text>
+          <text x="470" y="156" fill="#38bdf8" font-family="monospace" font-size="11">~/projeto $</text>
+        </svg>
+      </div>
+
+      <div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: O Terminal e um Chat
+        </h3>
+        <p data-inema-block="m1-1-t1-p2" class="text-neutral-300 mb-4">Imagine que voce tem um assistente super obediente. Ele nao entende gestos nem cliques. Mas se voce escrever exatamente o que quer, ele faz na hora. Esse assistente e o terminal.</p>
+        <ul class="space-y-2 text-neutral-300">
+          <li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">&#8226;</span><span><strong>Voce digita:</strong> um comando (ex: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">ls</code>)</span></li>
+          <li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">&#8226;</span><span><strong>Ele responde:</strong> o resultado (a lista de arquivos)</span></li>
+          <li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">&#8226;</span><span><strong>Voce digita de novo:</strong> outro comando</span></li>
+          <li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">&#8226;</span><span>E assim por diante. Cada linha e uma "mensagem".</span></li>
+        </ul>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Nomes diferentes, mesma coisa
+        </h3>
+        <p data-inema-block="m1-1-t1-p3" class="text-neutral-300">Voce vai ouvir varios nomes: <strong>Terminal</strong>, <strong>Prompt de Comando</strong>, <strong>CMD</strong>, <strong>PowerShell</strong>, <strong>Shell</strong>, <strong>Console</strong>. Todos sao variantes da mesma ideia: uma janela de texto para conversar com o computador. No Mac e Linux, o mais comum e o Terminal (com Bash ou Zsh). No Windows, e o Prompt de Comando (CMD) ou PowerShell.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 2: Abrindo o Terminal                 -->
+    <!-- ============================================ -->
+    <section id="topico-2" data-inema-topic="modulo-1-1#topico-2" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">2</span>
+        <h2 class="text-2xl font-bold">Abrindo o Terminal no Seu Computador</h2>
+      </div>
+
+      <p data-inema-block="m1-1-t2-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        O primeiro passo e <strong class="text-emerald-400">encontrar e abrir o terminal</strong>. Cada sistema operacional tem o seu, mas todos funcionam da mesma forma: voce digita, o computador responde.
+      </p>
+
+      <!-- Timeline: Passo a passo por OS -->
+      <div class="space-y-6 mb-6">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <span class="text-emerald-400 font-bold text-lg">W</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Windows</h4>
+            <p class="text-sm text-neutral-400 mb-3">Dois terminais disponiveis: CMD (antigo) e PowerShell (moderno)</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm mb-3">
+              <p class="text-neutral-400 mb-1"># Opcao 1: Pressione as teclas juntas</p>
+              <p class="text-emerald-400">Windows + R, digite "cmd", Enter</p>
+              <p class="text-neutral-400 mt-3 mb-1"># Opcao 2: Menu Iniciar</p>
+              <p class="text-emerald-400">Menu Iniciar > digite "PowerShell" > clique</p>
+              <p class="text-neutral-400 mt-3 mb-1"># Opcao 3: Botao direito na pasta</p>
+              <p class="text-emerald-400">Shift + clique direito > "Abrir janela de comando aqui"</p>
+            </div>
+            <p class="text-neutral-300 text-sm"><strong class="text-emerald-400">Recomendacao:</strong> Use o PowerShell. Ele aceita os mesmos comandos do CMD e mais.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <span class="text-emerald-400 font-bold text-lg">&#127822;</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">macOS</h4>
+            <p class="text-sm text-neutral-400 mb-3">O Terminal ja vem instalado</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm mb-3">
+              <p class="text-neutral-400 mb-1"># Opcao 1: Spotlight</p>
+              <p class="text-emerald-400">Cmd + Space, digite "Terminal", Enter</p>
+              <p class="text-neutral-400 mt-3 mb-1"># Opcao 2: Finder</p>
+              <p class="text-emerald-400">Aplicativos > Utilitarios > Terminal</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <span class="text-emerald-400 font-bold text-lg">&#128039;</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Linux</h4>
+            <p class="text-sm text-neutral-400 mb-3">Terminal e nativo, normalmente acessivel por atalho</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-neutral-400 mb-1"># Atalho universal</p>
+              <p class="text-emerald-400">Ctrl + Alt + T</p>
+              <p class="text-neutral-400 mt-3 mb-1"># Ou procure nos aplicativos</p>
+              <p class="text-emerald-400">Menu > Terminal (ou Konsole, GNOME Terminal)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- O que voce vai ver -->
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#128065;</span> O que voce vai ver ao abrir
+        </h3>
+        <div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># No Mac/Linux, algo assim:</p>
+          <p class="text-emerald-400">usuario@meu-computador ~ $</p>
+          <p class="text-neutral-400 mt-3"># No Windows CMD:</p>
+          <p class="text-emerald-400">C:\Users\SeuNome></p>
+          <p class="text-neutral-400 mt-3"># No Windows PowerShell:</p>
+          <p class="text-emerald-400">PS C:\Users\SeuNome></p>
+        </div>
+        <p data-inema-block="m1-1-t2-p2" class="text-neutral-300 text-sm mt-4">O <strong class="text-blue-400">$</strong> (ou <strong class="text-blue-400">></strong> no Windows) e o sinal de que o terminal esta esperando voce digitar. E como o cursor piscando numa caixa de texto.</p>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m1-1-t2-p3" class="text-neutral-300"><strong>Problema:</strong> "Abri o terminal e fechou sozinho." <br><strong>Solucao:</strong> Isso acontece quando voce clica duas vezes num arquivo .bat ou .sh sem querer. O terminal aberto pelos metodos acima fica esperando seus comandos. Se fechou, abra de novo pelo metodo do seu sistema operacional.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 3: Navegacao                          -->
+    <!-- ============================================ -->
+    <section id="topico-3" data-inema-topic="modulo-1-1#topico-3" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">3</span>
+        <h2 class="text-2xl font-bold">Navegando Pelas Pastas: cd, ls, pwd</h2>
+      </div>
+
+      <p data-inema-block="m1-1-t3-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        No explorador de arquivos, voce clica nas pastas para entrar nelas. No terminal, voce faz a mesma coisa com comandos. Pense no terminal como um <strong class="text-emerald-400">explorador de arquivos cego</strong>: ele so sabe onde esta se voce perguntar, e so vai para onde voce mandar.
+      </p>
+
+      <!-- Comando pwd -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">pwd</code> - Onde estou?</h3>
+        <p data-inema-block="m1-1-t3-p2" class="text-neutral-300 text-sm mb-4">"Print Working Directory". Mostra o caminho completo de onde voce esta agora.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-emerald-400">$ pwd</p>
+          <p class="text-neutral-300">/home/usuario</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">No Windows, o equivalente e <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">cd</code> (sem argumentos).</p>
+      </div>
+
+      <!-- Comando ls -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">ls</code> - O que tem aqui?</h3>
+        <p data-inema-block="m1-1-t3-p3" class="text-neutral-300 text-sm mb-4">"List". Lista todos os arquivos e pastas do diretorio atual.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-emerald-400">$ ls</p>
+          <p class="text-neutral-300">Desktop    Documents    Downloads    Music    Pictures</p>
+          <p class="text-neutral-400 mt-3"># Com mais detalhes:</p>
+          <p class="text-emerald-400">$ ls -la</p>
+          <p class="text-neutral-300">total 20</p>
+          <p class="text-neutral-300">drwxr-xr-x  5 usuario usuario 4096 jun 16 10:00 .</p>
+          <p class="text-neutral-300">drwxr-xr-x  3 root    root    4096 jun 15 09:00 ..</p>
+          <p class="text-neutral-300">drwxr-xr-x  2 usuario usuario 4096 jun 16 10:00 Desktop</p>
+          <p class="text-neutral-300">-rw-r--r--  1 usuario usuario  220 jun 15 09:00 .bashrc</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">No Windows CMD, o equivalente e <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">dir</code>. No PowerShell, <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">ls</code> funciona.</p>
+      </div>
+
+      <!-- Comando cd -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">cd</code> - Ir para outra pasta</h3>
+        <p data-inema-block="m1-1-t3-p4" class="text-neutral-300 text-sm mb-4">"Change Directory". Muda para uma pasta diferente.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Entrar na pasta Documents</p>
+          <p class="text-emerald-400">$ cd Documents</p>
+          <p class="text-emerald-400">$ pwd</p>
+          <p class="text-neutral-300">/home/usuario/Documents</p>
+          <p class="text-neutral-400 mt-3"># Voltar uma pasta</p>
+          <p class="text-emerald-400">$ cd ..</p>
+          <p class="text-emerald-400">$ pwd</p>
+          <p class="text-neutral-300">/home/usuario</p>
+          <p class="text-neutral-400 mt-3"># Ir direto para a pasta home</p>
+          <p class="text-emerald-400">$ cd ~</p>
+          <p class="text-neutral-400 mt-3"># Ir para um caminho especifico</p>
+          <p class="text-emerald-400">$ cd /home/usuario/Documents/projetos</p>
+        </div>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Dica: Tab Autocomplete
+        </h3>
+        <p data-inema-block="m1-1-t3-p5" class="text-neutral-300">Ao digitar nomes de pastas ou arquivos, pressione a tecla <strong class="text-primary">Tab</strong> para autocompletar. Por exemplo, digite <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">cd Doc</code> e pressione Tab. O terminal completa para <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">cd Documents/</code>. Isso evita erros de digitacao e economiza tempo.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+          <h4 class="font-bold text-emerald-400 mb-4">&#10003; O que FAZER</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Usar <code class="font-mono text-sm">pwd</code> sempre que se perder</span></li>
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Usar Tab para autocompletar nomes</span></li>
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Usar <code class="font-mono text-sm">cd ..</code> para voltar</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; O que NAO fazer</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Digitar caminhos enormes sem Tab</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Ignorar mensagens de erro ("No such file")</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Usar espacos em nomes de pasta (complica tudo)</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 4: Operacoes com Arquivos             -->
+    <!-- ============================================ -->
+    <section id="topico-4" data-inema-topic="modulo-1-1#topico-4" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">4</span>
+        <h2 class="text-2xl font-bold">Criando e Manipulando Arquivos</h2>
+      </div>
+
+      <p data-inema-block="m1-1-t4-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Agora que voce sabe andar pelas pastas, e hora de <strong class="text-emerald-400">criar, copiar, mover e apagar</strong> coisas. No explorador de arquivos, voce usa clique direito > "Nova Pasta". No terminal, voce digita um comando e pronto.
+      </p>
+
+      <!-- mkdir -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">mkdir</code> - Criar pasta</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Criar uma pasta chamada "meu-projeto"</p>
+          <p class="text-emerald-400">$ mkdir meu-projeto</p>
+          <p class="text-emerald-400">$ ls</p>
+          <p class="text-neutral-300">meu-projeto</p>
+          <p class="text-neutral-400 mt-3"># Criar pastas dentro de pastas de uma vez</p>
+          <p class="text-emerald-400">$ mkdir -p meu-projeto/src/componentes</p>
+        </div>
+      </div>
+
+      <!-- touch -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">touch</code> - Criar arquivo vazio</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Criar um arquivo chamado "index.html"</p>
+          <p class="text-emerald-400">$ touch index.html</p>
+          <p class="text-emerald-400">$ ls</p>
+          <p class="text-neutral-300">index.html</p>
+          <p class="text-neutral-400 mt-3"># Criar varios arquivos de uma vez</p>
+          <p class="text-emerald-400">$ touch index.html style.css script.js</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">No Windows, use <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">echo. > index.html</code> ou <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">New-Item index.html</code> no PowerShell.</p>
+      </div>
+
+      <!-- cp, mv, rm -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Copiar, Mover e Apagar</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># cp = copiar (origem, destino)</p>
+          <p class="text-emerald-400">$ cp index.html backup.html</p>
+          <p class="text-neutral-400 mt-3"># mv = mover (tambem serve para renomear)</p>
+          <p class="text-emerald-400">$ mv backup.html pasta-backup/</p>
+          <p class="text-emerald-400">$ mv arquivo-velho.txt arquivo-novo.txt</p>
+          <p class="text-neutral-400 mt-3"># rm = remover (CUIDADO: nao vai pra lixeira!)</p>
+          <p class="text-red-400">$ rm arquivo-inutil.txt</p>
+          <p class="text-neutral-400 mt-3"># rm -r = remover pasta e tudo dentro</p>
+          <p class="text-red-400">$ rm -r pasta-antiga</p>
+        </div>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> CUIDADO com rm
+        </h3>
+        <p data-inema-block="m1-1-t4-p2" class="text-neutral-300">O comando <code class="font-mono text-sm text-red-400">rm</code> <strong>apaga definitivamente</strong>. Nao tem lixeira, nao tem Ctrl+Z. Antes de rodar <code class="font-mono text-sm text-red-400">rm -r</code>, confira tres vezes se o caminho esta certo. <strong>Nunca</strong> rode <code class="font-mono text-sm text-red-400">rm -rf /</code> (isso apaga TUDO no computador).</p>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+          <div class="text-2xl mb-2">&#128193;</div>
+          <code class="text-emerald-400 font-mono text-sm font-bold">mkdir</code>
+          <p class="text-xs text-neutral-400 mt-1">Criar pasta</p>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+          <div class="text-2xl mb-2">&#128196;</div>
+          <code class="text-emerald-400 font-mono text-sm font-bold">touch</code>
+          <p class="text-xs text-neutral-400 mt-1">Criar arquivo</p>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+          <div class="text-2xl mb-2">&#128203;</div>
+          <code class="text-emerald-400 font-mono text-sm font-bold">cp / mv</code>
+          <p class="text-xs text-neutral-400 mt-1">Copiar / Mover</p>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+          <div class="text-2xl mb-2">&#128465;</div>
+          <code class="text-red-400 font-mono text-sm font-bold">rm</code>
+          <p class="text-xs text-neutral-400 mt-1">Apagar (cuidado!)</p>
+        </div>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 5: Editores no Terminal               -->
+    <!-- ============================================ -->
+    <section id="topico-5" data-inema-topic="modulo-1-1#topico-5" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">5</span>
+        <h2 class="text-2xl font-bold">Editores: nano e VS Code</h2>
+      </div>
+
+      <p data-inema-block="m1-1-t5-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Criar um arquivo vazio e facil. Mas como colocar conteudo nele? Voce tem duas opcoes: editar <strong class="text-emerald-400">direto no terminal</strong> (com o nano) ou abrir num <strong class="text-emerald-400">editor visual</strong> (como o VS Code). As duas formas funcionam. A escolha depende da situacao.
+      </p>
+
+      <!-- nano -->
+      <div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
+          <span class="mr-2">&#128221;</span> nano: Editor dentro do terminal
+        </h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm mb-4">
+          <p class="text-neutral-400"># Abrir ou criar um arquivo com nano</p>
+          <p class="text-emerald-400">$ nano index.html</p>
+        </div>
+        <p data-inema-block="m1-1-t5-p2" class="text-neutral-300 mb-4">O nano abre dentro do proprio terminal. Voce digita normalmente. Na parte de baixo, aparecem os atalhos:</p>
+        <div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-300">  GNU nano 7.2      index.html</p>
+          <p class="text-emerald-400">&lt;html&gt;</p>
+          <p class="text-emerald-400">  &lt;body&gt;Ola mundo&lt;/body&gt;</p>
+          <p class="text-emerald-400">&lt;/html&gt;</p>
+          <p class="text-neutral-500 mt-2">^O Salvar    ^X Sair    ^K Recortar    ^U Colar</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3"><strong>^O</strong> = Ctrl+O (salvar) | <strong>^X</strong> = Ctrl+X (sair) | O <strong>^</strong> significa a tecla Ctrl.</p>
+      </div>
+
+      <!-- VS Code -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">VS Code: Editor visual acessado pelo terminal</h3>
+        <p data-inema-block="m1-1-t5-p3" class="text-neutral-300 text-sm mb-4">Se voce tem o VS Code instalado, pode abrir qualquer arquivo ou pasta direto do terminal:</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Abrir um arquivo especifico no VS Code</p>
+          <p class="text-emerald-400">$ code index.html</p>
+          <p class="text-neutral-400 mt-3"># Abrir a pasta inteira como projeto</p>
+          <p class="text-emerald-400">$ code .</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">O ponto <code class="font-mono">.</code> significa "pasta atual". Esse e o jeito mais comum de abrir projetos no VS Code.</p>
+      </div>
+
+      <!-- Quando usar cada um -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+          <h4 class="font-bold text-emerald-400 mb-4">&#10003; Use nano quando</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Precisa editar algo rapido (1-2 linhas)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Esta num servidor remoto (SSH)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Precisa editar arquivos de configuracao</span></li>
+          </ul>
+        </div>
+        <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6">
+          <h4 class="font-bold text-blue-400 mb-4">&#128187; Use VS Code quando</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-blue-400">&#10003;</span><span>Vai trabalhar num projeto inteiro</span></li>
+            <li class="flex items-start space-x-2"><span class="text-blue-400">&#10003;</span><span>Quer syntax highlighting (cores no codigo)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-blue-400">&#10003;</span><span>Quer autocompletar e extensoes</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 6: Exercicio Pratico                  -->
+    <!-- ============================================ -->
+    <section id="topico-6" data-inema-topic="modulo-1-1#topico-6" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">6</span>
+        <h2 class="text-2xl font-bold">Exercicio: Monte Seu Primeiro Projeto</h2>
+      </div>
+
+      <p data-inema-block="m1-1-t6-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Hora de praticar tudo junto. Voce vai criar a <strong class="text-emerald-400">estrutura de pastas de um projeto web</strong> usando so o terminal. No final, vai ter uma arvore de pastas e arquivos pronta para comecar a codar.
+      </p>
+
+      <div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-emerald-400 mb-4">&#127919; O que voce vai construir</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-300">meu-site/</p>
+          <p class="text-neutral-300">  ├── index.html</p>
+          <p class="text-neutral-300">  ├── style.css</p>
+          <p class="text-neutral-300">  ├── script.js</p>
+          <p class="text-neutral-300">  ├── img/</p>
+          <p class="text-neutral-300">  │   └── logo.png</p>
+          <p class="text-neutral-300">  └── pages/</p>
+          <p class="text-neutral-300">      ├── sobre.html</p>
+          <p class="text-neutral-300">      └── contato.html</p>
+        </div>
+      </div>
+
+      <!-- Passo a passo -->
+      <div class="space-y-4 mb-6">
+        <div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+          <h4 class="font-semibold text-white mb-3">Passo 1: Crie a pasta do projeto</h4>
+          <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+            <p class="text-emerald-400">$ mkdir meu-site</p>
+            <p class="text-emerald-400">$ cd meu-site</p>
+            <p class="text-emerald-400">$ pwd</p>
+            <p class="text-neutral-300">/home/usuario/meu-site</p>
+          </div>
+        </div>
+
+        <div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+          <h4 class="font-semibold text-white mb-3">Passo 2: Crie os arquivos da raiz</h4>
+          <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+            <p class="text-emerald-400">$ touch index.html style.css script.js</p>
+            <p class="text-emerald-400">$ ls</p>
+            <p class="text-neutral-300">index.html  script.js  style.css</p>
+          </div>
+        </div>
+
+        <div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+          <h4 class="font-semibold text-white mb-3">Passo 3: Crie as subpastas e seus arquivos</h4>
+          <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+            <p class="text-emerald-400">$ mkdir img pages</p>
+            <p class="text-emerald-400">$ touch img/logo.png</p>
+            <p class="text-emerald-400">$ touch pages/sobre.html pages/contato.html</p>
+          </div>
+        </div>
+
+        <div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+          <h4 class="font-semibold text-white mb-3">Passo 4: Confira a estrutura</h4>
+          <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+            <p class="text-emerald-400">$ ls -R</p>
+            <p class="text-neutral-300">.:</p>
+            <p class="text-neutral-300">img  index.html  pages  script.js  style.css</p>
+            <p class="text-neutral-300 mt-1">./img:</p>
+            <p class="text-neutral-300">logo.png</p>
+            <p class="text-neutral-300 mt-1">./pages:</p>
+            <p class="text-neutral-300">contato.html  sobre.html</p>
+          </div>
+        </div>
+
+        <div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+          <h4 class="font-semibold text-white mb-3">Passo 5: Adicione conteudo ao index.html</h4>
+          <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+            <p class="text-emerald-400">$ nano index.html</p>
+            <p class="text-neutral-400 mt-2"># Digite isto dentro do nano:</p>
+            <p class="text-neutral-300">&lt;!DOCTYPE html&gt;</p>
+            <p class="text-neutral-300">&lt;html&gt;</p>
+            <p class="text-neutral-300">  &lt;head&gt;&lt;title&gt;Meu Site&lt;/title&gt;&lt;/head&gt;</p>
+            <p class="text-neutral-300">  &lt;body&gt;</p>
+            <p class="text-neutral-300">    &lt;h1&gt;Ola, mundo!&lt;/h1&gt;</p>
+            <p class="text-neutral-300">  &lt;/body&gt;</p>
+            <p class="text-neutral-300">&lt;/html&gt;</p>
+            <p class="text-neutral-400 mt-2"># Ctrl+O para salvar, Enter, Ctrl+X para sair</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#127942;</span> Parabens!
+        </h3>
+        <p data-inema-block="m1-1-t6-p2" class="text-neutral-300">Se voce conseguiu criar essa estrutura inteira sem sair do terminal, ja dominou os comandos fundamentais. A partir de agora, voce vai usar esses mesmos comandos em todos os proximos modulos. No proximo, voce vai aprender a <strong class="text-emerald-400">salvar versoes do seu trabalho</strong> com Git.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- RESUMO -->
+    <section class="mb-12">
+      <div class="bg-gradient-to-br from-emerald-900/40 via-dark-800 to-dark-800 rounded-xl border border-emerald-500/30 p-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+          <span class="mr-3">&#128218;</span> Resumo do Modulo
+        </h2>
+        <div class="space-y-4 mb-8">
+          <div class="flex items-start space-x-3">
+            <span class="text-emerald-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Terminal e um chat com o computador</strong><span class="text-neutral-400"> - voce digita, ele responde</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-emerald-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">pwd, ls, cd</strong><span class="text-neutral-400"> - onde estou, o que tem aqui, ir para outra pasta</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-emerald-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">mkdir, touch, cp, mv, rm</strong><span class="text-neutral-400"> - criar, copiar, mover, apagar</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-emerald-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">nano e code .</strong><span class="text-neutral-400"> - editar no terminal ou abrir no VS Code</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-emerald-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Tab para autocompletar</strong><span class="text-neutral-400"> - economiza tempo e evita erros</span></div>
+          </div>
+        </div>
+
+        <div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+          <h3 class="font-semibold text-emerald-400 mb-2">Proximo Modulo:</h3>
+          <p class="text-neutral-300">1.2 - Git: Salvando Seu Trabalho (controle de versao, nunca mais perder codigo)</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">
+            &#8592; Voltar para Trilha
+          </a>
+          <a href="modulo-1-2.html" class="flex-1 text-center px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-500 transition-colors">
+            Proximo Modulo &#8594;
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-dark-600 py-8 mt-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+      <p>Do Zero ao Deploy - 2026</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+
+  <script src="../../assets/learn.js"></script>
+  <script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>
