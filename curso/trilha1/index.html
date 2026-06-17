@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="inema-course" content="dzd">
+  <title>Trilha 1: Terminal & Git | Do Zero ao Deploy</title>
+
+  <!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+  <script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'emerald');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/learn.css">
+
+  <!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+  <script type="application/json" data-inema-manifest>
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha emerald) */
+    html:not(.dark) .text-emerald-400 { color: #059669; }
+    html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(5, 150, 105, 0.12); }
+    html:not(.dark) .bg-emerald-500\/10 { background-color: rgba(5, 150, 105, 0.08); }
+    html:not(.dark) .border-emerald-500\/30 { border-color: rgba(5, 150, 105, 0.25); }
+    html:not(.dark) .hover\:bg-emerald-500\/30:hover { background-color: rgba(5, 150, 105, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+
+    /* Topicos expansiveis */
+    .topic-explanation { display: none; }
+    .topic-explanation.active { display: block; }
+  </style>
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+
+  <!-- NAVIGATION -->
+  <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-14">
+        <div class="flex items-center space-x-4">
+          <a href="../../index.html" class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300">
+            <span class="text-2xl">&#128640;</span>
+            <span class="font-bold text-lg hidden sm:inline">Do Zero ao Deploy</span>
+          </a>
+          <span class="text-neutral-600">|</span>
+          <a href="https://inema.club" target="_blank" class="text-sky-400 hover:text-sky-300 text-sm font-medium">INEMA.CLUB</a>
+        </div>
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <a href="index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-emerald-400 bg-emerald-500/10">
+            <span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal & Git</span>
+          </a>
+          <a href="../trilha2/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors">
+            <span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy Moderno</span>
+          </a>
+          <a href="../trilha3/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors">
+            <span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor Proprio</span>
+          </a>
+          <a href="../trilha4/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
+            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+          </a>
+          <a href="../trilha5/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors">
+            <span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+          </a>
+          <button id="theme-toggle" class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2">
+            <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HEADER DE TRILHA -->
+  <header class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full mb-4">TRILHA 1</span>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">&#128187; Terminal &amp; Git</h1>
+      <p class="text-lg text-neutral-400 max-w-3xl">Dominar o terminal, o Git e o GitHub partindo do zero absoluto. Voce vai sair daqui conversando com a maquina por texto, salvando cada versao do seu trabalho e publicando seu primeiro site na internet.</p>
+      <div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-emerald-400">4</div>
+          <div class="text-xs text-neutral-400">Modulos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-emerald-400">24</div>
+          <div class="text-xs text-neutral-400">Topicos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-emerald-400">~3h</div>
+          <div class="text-xs text-neutral-400">Duracao</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-emerald-400">Basico</div>
+          <div class="text-xs text-neutral-400">Nivel</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEUDO -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <!-- HERO SVG: fan-out (voce -> terminal/git/github -> deploy) -->
+    <div class="rounded-2xl border border-emerald-500/30 bg-dark-900/40 p-3 sm:p-4 mb-10 overflow-hidden">
+      <svg viewBox="0 0 800 280" class="w-full h-auto" role="img" aria-label="Diagrama de fluxo: voce parte do zero, ramifica em terminal, Git e GitHub, e os tres convergem em um deploy no ar">
+        <defs>
+          <linearGradient id="t1hero-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/>
+          </linearGradient>
+          <filter id="t1hero-glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <pattern id="t1hero-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <circle cx="1.3" cy="1.3" r="1.3" fill="#34d399" opacity="0.10"/>
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="800" height="280" fill="url(#t1hero-grid)"/>
+
+        <!-- Origem: VOCE -->
+        <g filter="url(#t1hero-glow)">
+          <rect x="30" y="110" width="120" height="60" rx="14" fill="#0e2018" stroke="url(#t1hero-grad)" stroke-width="2"/>
+        </g>
+        <text x="90" y="138" text-anchor="middle" fill="#34d399" font-family="Inter,sans-serif" font-weight="600" font-size="15">VOCE</text>
+        <text x="90" y="158" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">do zero absoluto</text>
+
+        <!-- Ramos (linhas) -->
+        <path class="wf-a" d="M150 140 C 250 140, 250 60, 350 60" fill="none" stroke="#34d399" stroke-width="2.5"/>
+        <path class="wf-a" d="M150 140 C 250 140, 250 140, 350 140" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+        <path class="wf-a" d="M150 140 C 250 140, 250 220, 350 220" fill="none" stroke="#34d399" stroke-width="2.5"/>
+
+        <!-- Ramo 1: TERMINAL -->
+        <rect x="350" y="32" width="160" height="56" rx="12" fill="#1a1a2e" stroke="#34d399" stroke-width="1.8"/>
+        <text x="430" y="56" text-anchor="middle" fill="#34d399" font-family="Inter,sans-serif" font-weight="600" font-size="13">TERMINAL</text>
+        <text x="430" y="74" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="11">$ ls  cd  mkdir</text>
+
+        <!-- Ramo 2: GIT -->
+        <rect x="350" y="112" width="160" height="56" rx="12" fill="#1a1a2e" stroke="#38bdf8" stroke-width="1.8"/>
+        <text x="430" y="136" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="13">GIT</text>
+        <text x="430" y="154" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="11">add  commit  push</text>
+
+        <!-- Ramo 3: GITHUB -->
+        <rect x="350" y="192" width="160" height="56" rx="12" fill="#1a1a2e" stroke="#34d399" stroke-width="1.8"/>
+        <text x="430" y="216" text-anchor="middle" fill="#34d399" font-family="Inter,sans-serif" font-weight="600" font-size="13">GITHUB</text>
+        <text x="430" y="234" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="11">repo + Pages</text>
+
+        <!-- Convergencia -->
+        <path d="M510 60 C 600 60, 600 140, 650 140" fill="none" stroke="#34d399" stroke-width="2.5" opacity="0.8"/>
+        <path d="M510 140 C 600 140, 600 140, 650 140" fill="none" stroke="#38bdf8" stroke-width="2.5" opacity="0.8"/>
+        <path d="M510 220 C 600 220, 600 140, 650 140" fill="none" stroke="#34d399" stroke-width="2.5" opacity="0.8"/>
+
+        <!-- Resultado: DEPLOY -->
+        <g filter="url(#t1hero-glow)">
+          <rect x="650" y="108" width="120" height="64" rx="14" fill="#0e2018" stroke="url(#t1hero-grad)" stroke-width="2.4"/>
+        </g>
+        <text x="710" y="136" text-anchor="middle" fill="#34d399" font-family="Inter,sans-serif" font-weight="600" font-size="15">&#128640; DEPLOY</text>
+        <text x="710" y="156" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">site no ar</text>
+      </svg>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MAPA DA TRILHA                               -->
+    <!-- ============================================ -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-6">Mapa da trilha</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <a href="#modulo-1-1" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-emerald-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-emerald-400 font-bold text-sm">1.1</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-emerald-400 transition-colors">&#128187; O Terminal</h3>
+          <p class="text-xs text-neutral-400">Converse com a maquina</p>
+        </a>
+        <a href="#modulo-1-2" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-emerald-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-emerald-400 font-bold text-sm">1.2</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-emerald-400 transition-colors">&#127807; Git Essencial</h3>
+          <p class="text-xs text-neutral-400">Ctrl+Z infinito</p>
+        </a>
+        <a href="#modulo-1-3" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-emerald-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-emerald-400 font-bold text-sm">1.3</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-emerald-400 transition-colors">&#9729;&#65039; GitHub e Pages</h3>
+          <p class="text-xs text-neutral-400">Seu codigo na nuvem</p>
+        </a>
+        <a href="#modulo-1-4" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-emerald-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-emerald-400 font-bold text-sm">1.4</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-emerald-400 transition-colors">&#128640; Projeto: Landing Page</h3>
+          <p class="text-xs text-neutral-400">No ar em minutos</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- CONTEUDO DETALHADO                           -->
+    <!-- ============================================ -->
+    <h2 class="text-2xl font-bold mb-6">Conteudo detalhado</h2>
+
+    <!-- ===== MODULO 1.1 ===== -->
+    <div id="modulo-1-1" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-emerald-400 font-bold">1.1</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#128187; O Terminal</h3>
+        <p class="text-neutral-400 text-sm">A janela de texto onde voce conversa diretamente com o computador. Sem menus, sem cliques: so voce e a maquina.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#128172;</span>
+            <div>
+              <span class="font-medium">O que e o terminal</span>
+              <span class="text-neutral-500 text-sm ml-2">- CMD, PowerShell, shell, console</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Uma janela de texto onde voce digita comandos e o computador responde. CMD e PowerShell sao os do Windows; shell (Bash/Zsh) e o do Mac e Linux; "console" e so outro nome para a mesma coisa.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Quase toda ferramenta de programador (Git, deploy, servidores) e operada por texto. Aprender o terminal e como aprender a falar a lingua nativa do computador.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Voce digita um comando, ele responde. O sinal <code class="font-mono">$</code> (ou <code class="font-mono">&gt;</code> no Windows) significa "estou esperando voce digitar". Todos os nomes apontam para a mesma ideia.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#128241;</span>
+            <div>
+              <span class="font-medium">Abrir o terminal</span>
+              <span class="text-neutral-500 text-sm ml-2">- Windows, Mac e Linux</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O passo de encontrar e abrir o terminal no seu sistema: Windows + R e "cmd" no Windows, Cmd + Espaco e "Terminal" no Mac, Ctrl + Alt + T no Linux.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Sem saber abrir, nada acontece. Cada sistema tem o seu jeito, mas o resultado e o mesmo: uma janela esperando seus comandos.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">No Windows, prefira o PowerShell (moderno). No Mac e Linux, o Terminal ja vem instalado. Ao abrir, voce ve o prompt com seu nome de usuario.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#129517;</span>
+            <div>
+              <span class="font-medium">Navegar: cd, ls, pwd</span>
+              <span class="text-neutral-500 text-sm ml-2">- andar pelas pastas</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Os tres comandos de navegacao: <code class="font-mono">pwd</code> (onde estou), <code class="font-mono">ls</code> (o que tem aqui) e <code class="font-mono">cd</code> (ir para outra pasta).</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">No terminal voce nao ve as pastas, voce pergunta por elas. Esses comandos sao o seu mapa: sem eles voce fica perdido em qualquer projeto.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">cd ..</code> volta uma pasta, <code class="font-mono">cd ~</code> vai para a home. Pressione Tab para autocompletar nomes e evitar erros de digitacao.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#128193;</span>
+            <div>
+              <span class="font-medium">Criar, mover, copiar, apagar</span>
+              <span class="text-neutral-500 text-sm ml-2">- mkdir, touch, cp, mv, rm</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Os comandos para mexer em arquivos: <code class="font-mono">mkdir</code> cria pasta, <code class="font-mono">touch</code> cria arquivo, <code class="font-mono">cp</code> copia, <code class="font-mono">mv</code> move/renomeia, <code class="font-mono">rm</code> apaga.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o "clique direito > Nova Pasta" do terminal, so que mais rapido. Voce monta a estrutura de um projeto inteiro em segundos.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><strong class="text-red-400">CUIDADO com rm:</strong> apaga de vez, sem lixeira e sem Ctrl+Z. Confira o caminho antes. <code class="font-mono">mkdir -p</code> cria pastas aninhadas de uma vez.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#128221;</span>
+            <div>
+              <span class="font-medium">Editores: nano e code</span>
+              <span class="text-neutral-500 text-sm ml-2">- escrever dentro dos arquivos</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Duas formas de colocar conteudo num arquivo: o <code class="font-mono">nano</code> edita dentro do proprio terminal; o <code class="font-mono">code</code> abre o arquivo ou a pasta no VS Code.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Criar um arquivo vazio e so o comeco; voce precisa escrever nele. Saber as duas formas cobre desde edicoes rapidas ate projetos inteiros.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">No nano, <strong class="text-emerald-400">^O</strong> salva e <strong class="text-emerald-400">^X</strong> sai (o ^ e a tecla Ctrl). <code class="font-mono">code .</code> abre a pasta atual inteira no VS Code.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#127919;</span>
+            <div>
+              <span class="font-medium">Exercicio: estrutura de um projeto</span>
+              <span class="text-neutral-500 text-sm ml-2">- praticar tudo junto</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Um exercicio pratico: montar a arvore de pastas e arquivos de um site (index.html, style.css, pasta img, pasta pages) usando so o terminal.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Praticar amarra tudo. Quando voce monta um projeto sem sair do terminal, os comandos viram automaticos e voce ganha confianca.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Combine <code class="font-mono">mkdir</code> + <code class="font-mono">touch</code> + <code class="font-mono">cd</code>. Confira o resultado com <code class="font-mono">ls -R</code>. Essa estrutura e a base do projeto da Trilha 1.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-1-1')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-1-1.html" class="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ===== MODULO 1.2 ===== -->
+    <div id="modulo-1-2" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-emerald-400 font-bold">1.2</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#127807; Git Essencial</h3>
+        <p class="text-neutral-400 text-sm">O Git e um Ctrl+Z infinito para o seu codigo. Cada versao salva fica guardada para sempre, e voce nunca mais perde trabalho.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#9203;</span>
+            <div>
+              <span class="font-medium">O que e controle de versao</span>
+              <span class="text-neutral-500 text-sm ml-2">- historico do seu codigo</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Um sistema que guarda fotos (versoes) do seu projeto ao longo do tempo. A qualquer momento voce pode olhar uma versao antiga ou voltar para ela.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Acaba com o caos de "projeto-final-2-AGORA-VAI.zip". Voce experimenta sem medo, porque toda versao boa fica salva e nada se perde.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Cada versao salva e um "commit" com uma mensagem. O historico e uma linha do tempo. Git e a ferramenta mais usada para isso no mundo.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#128229;</span>
+            <div>
+              <span class="font-medium">Instalar o Git</span>
+              <span class="text-neutral-500 text-sm ml-2">- por sistema operacional</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O passo de baixar e instalar o Git no seu computador: instalador oficial no Windows, <code class="font-mono">brew</code> no Mac, gerenciador de pacotes no Linux.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">O Git nao vem pronto em todo sistema. Instalar uma vez (e configurar nome e email) deixa tudo pronto para o resto do curso.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Confira com <code class="font-mono">git --version</code>. Configure <code class="font-mono">git config --global user.name</code> e <code class="font-mono">user.email</code> uma unica vez.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#128260;</span>
+            <div>
+              <span class="font-medium">Ciclo basico: init, add, commit</span>
+              <span class="text-neutral-500 text-sm ml-2">- salvar uma versao</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O fluxo de salvar trabalho: <code class="font-mono">git init</code> liga o Git na pasta, <code class="font-mono">git add</code> seleciona o que salvar e <code class="font-mono">git commit</code> grava a versao com uma mensagem.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o coracao do Git. Voce vai repetir <code class="font-mono">add</code> e <code class="font-mono">commit</code> dezenas de vezes por dia para guardar seu progresso.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">add</code> = "prepara"; <code class="font-mono">commit</code> = "salva de vez". A mensagem do commit (<code class="font-mono">-m</code>) explica o que mudou. Faca commits pequenos e frequentes.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#128269;</span>
+            <div>
+              <span class="font-medium">Ver o que mudou: status, log, diff</span>
+              <span class="text-neutral-500 text-sm ml-2">- inspecionar o projeto</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Os comandos de inspecao: <code class="font-mono">status</code> mostra o que mudou agora, <code class="font-mono">log</code> mostra o historico de commits e <code class="font-mono">diff</code> mostra linha a linha o que foi alterado.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Antes de salvar, voce precisa enxergar o que mudou. Esses comandos sao seus olhos: evitam commitar coisa errada por acidente.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Use <code class="font-mono">git status</code> o tempo todo. <code class="font-mono">git log --oneline</code> da um resumo limpo. <code class="font-mono">git diff</code> mostra o "antes e depois".</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#127795;</span>
+            <div>
+              <span class="font-medium">Branches: criar, trocar, mergear</span>
+              <span class="text-neutral-500 text-sm ml-2">- linhas paralelas de trabalho</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Branches sao copias paralelas do projeto. Voce cria uma branch para testar algo novo sem mexer na versao principal, e depois junta (merge) se der certo.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Permite experimentar sem medo: se a ideia nao funcionar, voce descarta a branch e a versao principal continua intacta.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">git branch nome</code> cria, <code class="font-mono">git checkout</code> (ou <code class="font-mono">switch</code>) troca, <code class="font-mono">git merge</code> junta. <code class="font-mono">main</code> e a branch principal.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#128683;</span>
+            <div>
+              <span class="font-medium">.gitignore</span>
+              <span class="text-neutral-500 text-sm ml-2">- o que nao versionar</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Um arquivo de texto chamado <code class="font-mono">.gitignore</code> que lista o que o Git deve ignorar: senhas, arquivos temporarios, pastas pesadas como <code class="font-mono">node_modules</code>.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Sem ele, voce pode subir senhas para a internet ou poluir o historico com lixo. E a primeira protecao de seguranca de todo projeto.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Uma linha por padrao a ignorar. <code class="font-mono">*.log</code> ignora todos os logs; <code class="font-mono">.env</code> protege segredos. Crie o <code class="font-mono">.gitignore</code> antes do primeiro commit.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-1-2')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-1-2.html" class="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ===== MODULO 1.3 ===== -->
+    <div id="modulo-1-3" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-emerald-400 font-bold">1.3</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#9729;&#65039; GitHub e Pages</h3>
+        <p class="text-neutral-400 text-sm">O GitHub e onde seu codigo vive na nuvem: backup, colaboracao e, com o GitHub Pages, seu site publicado de graca.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#128100;</span>
+            <div>
+              <span class="font-medium">Criar conta no GitHub</span>
+              <span class="text-neutral-500 text-sm ml-2">- seu perfil de dev</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O cadastro no GitHub, o maior site do mundo para guardar codigo. A conta gratuita ja cobre tudo que voce precisa neste curso.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">O GitHub e o "portfolio" de quem programa. Recrutadores olham seu perfil, e e de la que o seu site vai ao ar pelo Pages.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Escolha um nome de usuario profissional (ele vira parte do endereco do seu site). Confirme o email para liberar todos os recursos.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#128273;</span>
+            <div>
+              <span class="font-medium">Tokens de acesso (PAT)</span>
+              <span class="text-neutral-500 text-sm ml-2">- senha para o terminal</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Um Personal Access Token (PAT) e uma senha especial que o GitHub gera para o terminal usar no lugar da sua senha normal.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">O GitHub nao aceita mais a senha comum no terminal. Sem o token, voce nao consegue enviar (push) seu codigo para a nuvem.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Gere o token nas configuracoes do GitHub e copie na hora (ele so aparece uma vez). Trate o token como uma senha: nunca compartilhe.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#128279;</span>
+            <div>
+              <span class="font-medium">Conectar: remote, push, pull</span>
+              <span class="text-neutral-500 text-sm ml-2">- local e nuvem juntos</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">A ponte entre seu computador e o GitHub: <code class="font-mono">remote</code> aponta para o repositorio na nuvem, <code class="font-mono">push</code> envia e <code class="font-mono">pull</code> baixa as mudancas.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o que transforma o Git local num backup online e colaborativo. Sem o push, seu codigo nunca sai da sua maquina.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">git remote add origin</code> conecta uma vez. <code class="font-mono">git push</code> sobe, <code class="font-mono">git pull</code> desce. <code class="font-mono">origin</code> e o apelido do repositorio remoto.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#127760;</span>
+            <div>
+              <span class="font-medium">GitHub Pages: ativar e publicar</span>
+              <span class="text-neutral-500 text-sm ml-2">- site no ar de graca</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O GitHub Pages e um servico gratuito que transforma um repositorio com HTML em um site publico, com endereco proprio na internet.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o jeito mais simples e gratuito de colocar um site no ar. Em poucos cliques, qualquer pessoa no mundo acessa seu projeto.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Ative nas configuracoes do repositorio (aba Pages). O endereco fica <code class="font-mono">usuario.github.io/repo</code>. Cada push atualiza o site automaticamente.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#129302;</span>
+            <div>
+              <span class="font-medium">IA no codigo: Codex e Copilot</span>
+              <span class="text-neutral-500 text-sm ml-2">- programar com ajuda</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Assistentes de IA que escrevem e completam codigo para voce dentro do editor: o GitHub Copilot e ferramentas como o Codex.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">A IA acelera muito o trabalho: sugere comandos, explica erros e escreve trechos inteiros. Quem sabe usar bem produz mais rapido.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">A IA sugere; voce decide e confere. Descreva bem o que quer (prompt claro). Use como apoio, sem deixar de entender o que o codigo faz.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#127919;</span>
+            <div>
+              <span class="font-medium">Exercicio: subir um repositorio</span>
+              <span class="text-neutral-500 text-sm ml-2">- do zero ao push</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Um exercicio que junta tudo: criar um repositorio no GitHub, conectar com o projeto local e enviar (push) o codigo pela primeira vez.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Fazer o ciclo completo uma vez tira o medo. Depois disso, subir qualquer projeto vira rotina de poucos comandos.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Sequencia: <code class="font-mono">init</code> &#8594; <code class="font-mono">add</code> &#8594; <code class="font-mono">commit</code> &#8594; <code class="font-mono">remote add</code> &#8594; <code class="font-mono">push</code>. Use o token (PAT) ao autenticar.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-1-3')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-1-3.html" class="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ===== MODULO 1.4 ===== -->
+    <div id="modulo-1-4" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-emerald-400 font-bold">1.4</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#128640; Projeto: Landing Page</h3>
+        <p class="text-neutral-400 text-sm">A hora de juntar tudo: voce constroi uma landing page do zero e a coloca no ar em minutos, com endereco proprio.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#128194;</span>
+            <div>
+              <span class="font-medium">Criar o repositorio</span>
+              <span class="text-neutral-500 text-sm ml-2">- a base do projeto</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O primeiro passo do projeto: criar a pasta local, ligar o Git e criar o repositorio correspondente no GitHub.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Todo projeto profissional comeca por um repositorio bem montado. Comecar certo evita retrabalho la na frente.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Combine o que voce viu: <code class="font-mono">mkdir</code> + <code class="font-mono">git init</code> + repositorio no GitHub + <code class="font-mono">remote add</code>. Tenha um <code class="font-mono">.gitignore</code> desde o inicio.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#128196;</span>
+            <div>
+              <span class="font-medium">HTML basico</span>
+              <span class="text-neutral-500 text-sm ml-2">- a estrutura da pagina</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">HTML e a linguagem que define a estrutura de uma pagina: titulos, paragrafos, imagens e links, organizados em "tags".</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o esqueleto de todo site da internet. Sem HTML, nao ha pagina. Saber o basico ja permite criar uma landing de verdade.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Tags vem em pares: <code class="font-mono">&lt;h1&gt;...&lt;/h1&gt;</code>. O conteudo visivel fica dentro do <code class="font-mono">&lt;body&gt;</code>. Comece pelo <code class="font-mono">index.html</code>.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#127912;</span>
+            <div>
+              <span class="font-medium">CSS basico</span>
+              <span class="text-neutral-500 text-sm ml-2">- deixar bonito</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">CSS e a linguagem do estilo: cores, fontes, tamanhos, espacamentos e posicionamento. E o que transforma um HTML cru em uma pagina bonita.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Uma landing precisa atrair. O CSS e o que separa uma pagina sem graca de uma pagina profissional e agradavel de ver.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">O CSS escolhe um elemento (seletor) e aplica regras. Coloque os estilos em <code class="font-mono">style.css</code> e ligue ao HTML com a tag <code class="font-mono">&lt;link&gt;</code>.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#128640;</span>
+            <div>
+              <span class="font-medium">Publicar no GitHub Pages</span>
+              <span class="text-neutral-500 text-sm ml-2">- colocar no ar</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O passo de enviar (push) sua landing para o GitHub e ativar o Pages, deixando o site acessivel por um endereco publico.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o momento "no ar": seu trabalho deixa de ser um arquivo no computador e vira um site real que qualquer pessoa pode visitar.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Faca <code class="font-mono">push</code> com o <code class="font-mono">index.html</code> na raiz, ative o Pages e aguarde alguns minutos. Cada novo push atualiza o site sozinho.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#127991;&#65039;</span>
+            <div>
+              <span class="font-medium">Dominio personalizado</span>
+              <span class="text-neutral-500 text-sm ml-2">- opcional</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Trocar o endereco padrao <code class="font-mono">usuario.github.io</code> por um dominio proprio que voce compra, como <code class="font-mono">seunome.com</code>.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Um dominio proprio passa profissionalismo e e mais facil de divulgar. E um extra opcional, mas que valoriza muito o projeto.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Compre o dominio num registrador, aponte o DNS para o GitHub e configure o campo "Custom domain" no Pages. O HTTPS vem de graca.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#127881;</span>
+            <div>
+              <span class="font-medium">Exercicio final: sua landing no ar</span>
+              <span class="text-neutral-500 text-sm ml-2">- o projeto completo</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-emerald-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O exercicio que fecha a trilha: criar, estilizar, versionar e publicar sua propria landing page, do primeiro comando ate o site no ar.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Entregar um projeto completo prova que voce dominou tudo: terminal, Git, GitHub e Pages, trabalhando em conjunto.</p></div>
+              <div><span class="text-emerald-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Junte os 4 modulos num fluxo so. No final voce tem um link publico para compartilhar, e a base pronta para a Trilha 2.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-1-4')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-1-4.html" class="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- NAVEGACAO FINAL                              -->
+    <!-- ============================================ -->
+    <div class="flex flex-col sm:flex-row gap-4 mt-12">
+      <a href="../../index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">
+        &#8592; Voltar para o inicio
+      </a>
+      <a href="../trilha2/index.html" class="flex-1 text-center px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-500 transition-colors">
+        Proxima Trilha &#8594;
+      </a>
+    </div>
+
+  </main>
+
+  <!-- ============================================ -->
+  <!-- MODAIS                                        -->
+  <!-- ============================================ -->
+  <div id="modal-1-1" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-emerald-400 font-bold">1.1</span>
+          <span class="font-semibold">O Terminal</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-1-1.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <div id="modal-1-2" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-emerald-400 font-bold">1.2</span>
+          <span class="font-semibold">Git Essencial</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-1-2.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <div id="modal-1-3" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-emerald-400 font-bold">1.3</span>
+          <span class="font-semibold">GitHub e Pages</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-1-3.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <div id="modal-1-4" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-emerald-400 font-bold">1.4</span>
+          <span class="font-semibold">Projeto: Landing Page</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-1-4.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-dark-600 py-8 mt-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+      <p>Do Zero ao Deploy - 2026</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Toggle de Topicos
+    function toggleTopic(button) {
+      const topicItem = button.closest('.topic-item');
+      const explanation = topicItem.querySelector('.topic-explanation');
+      const moduleCard = button.closest('.bg-dark-800');
+
+      // Fecha outros topicos do mesmo modulo
+      moduleCard.querySelectorAll('.topic-explanation.active').forEach(exp => {
+        if (exp !== explanation) {
+          exp.classList.remove('active');
+        }
+      });
+
+      // Toggle do topico atual
+      explanation.classList.toggle('active');
+    }
+
+    // Modal com iframe
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeModal() {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.add('hidden');
+      });
+      document.body.style.overflow = 'auto';
+    }
+
+    // Fechar com ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+
+  <script src="../../assets/learn.js"></script>
+  <script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

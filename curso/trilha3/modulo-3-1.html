@@ -6,9 +6,59 @@
   <meta name="inema-course" content="dzd">
   <title>VPS: Seu Computador na Nuvem | Do Zero ao Deploy</title>
 
-  <!-- ANTI-FOUC: bloqueante, antes de tudo -->
+  <!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
   <script>
-  (function(){try{var h=document.documentElement,D={theme:'inema-dark',font:'inter',fontScale:100,lineWidth:68,leading:1.7,accent:'purple'};function c(o){var r={};for(var x in o)r[x]=o[x];return r}var p=c(D);try{var raw=localStorage.getItem('inema.prefs');if(raw){var j=JSON.parse(raw);if(j&&typeof j==='object')for(var k in D)if(j[k]!=null)p[k]=j[k]}else{var l=localStorage.getItem('theme');if(l==='light')p.theme='claro';else if(l==='dark')p.theme='inema-dark'}}catch(e){p=c(D)}var T={'inema-dark':{dark:true,attr:null,cs:'dark'},'claro':{dark:false,attr:null,cs:'light'},'sepia':{dark:false,attr:'sepia',cs:'light'},'foco':{dark:null,attr:'foco',cs:null},'contraste':{dark:true,attr:'contraste',cs:'dark'}};var t=T[p.theme]||T['inema-dark'];if(t.dark===true)h.classList.add('dark');else if(t.dark===false)h.classList.remove('dark');if(t.attr)h.setAttribute('data-theme',t.attr);else h.removeAttribute('data-theme');h.style.colorScheme=t.cs?t.cs:(h.classList.contains('dark')?'dark':'light');h.setAttribute('data-font',p.font||'inter');h.setAttribute('data-accent',p.accent||'purple');var s=h.style,sc=+p.fontScale||100;s.setProperty('--inema-font-scale',(sc/100).toString());s.setProperty('font-size',sc+'%');s.setProperty('--measure',(+p.lineWidth||68)+'ch');s.setProperty('--lh-body',(+p.leading||1.7).toString());var fam=p.font==='system'?'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif':p.font==='leitura'?'"Atkinson Hyperlegible","Inter",system-ui,sans-serif':'"Inter",system-ui,sans-serif';s.setProperty('--font-body',fam);var A={emerald:[152,76,45],blue:[217,91,60],purple:[258,90,66],amber:[38,92,50],teal:[174,72,41],rose:[350,89,60]};var a=A[p.accent]||A.purple;s.setProperty('--accent-h',a[0]+'');s.setProperty('--accent-s',a[1]+'%');s.setProperty('--accent-l',a[2]+'%');s.setProperty('--accent','hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)')}catch(err){try{document.documentElement.classList.add('dark');document.documentElement.style.colorScheme='dark'}catch(e){}}})();
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'purple' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'purple');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
   </script>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -28,7 +78,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/learn.css">
 
-  <!-- Manifesto do curso -->
+  <!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
   <script type="application/json" data-inema-manifest>
   {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
   </script>
@@ -36,10 +86,8 @@
   <style>
     body { font-family: 'Inter', sans-serif; }
     .dark body { background-color: #111827; }
-    .topic-explanation { display: none; }
-    .topic-explanation.active { display: block; }
 
-    /* Light mode - Base */
+    /* Light mode overrides - OBRIGATORIO */
     html:not(.dark) body { background-color: #f8fafc; }
     html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
     html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
@@ -53,11 +101,11 @@
     html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
 
     /* Light mode - cores de acento (trilha purple) */
-    html:not(.dark) .text-purple-400 { color: #7c3aed; }
-    html:not(.dark) .bg-purple-500\/20 { background-color: rgba(124, 58, 237, 0.12); }
-    html:not(.dark) .bg-purple-500\/10 { background-color: rgba(124, 58, 237, 0.08); }
-    html:not(.dark) .border-purple-500\/30 { border-color: rgba(124, 58, 237, 0.25); }
-    html:not(.dark) .hover\:bg-purple-500\/30:hover { background-color: rgba(124, 58, 237, 0.18); }
+    html:not(.dark) .text-purple-400 { color: #9333ea; }
+    html:not(.dark) .bg-purple-500\/20 { background-color: rgba(147, 51, 234, 0.12); }
+    html:not(.dark) .bg-purple-500\/10 { background-color: rgba(147, 51, 234, 0.08); }
+    html:not(.dark) .border-purple-500\/30 { border-color: rgba(147, 51, 234, 0.25); }
+    html:not(.dark) .hover\:bg-purple-500\/30:hover { background-color: rgba(147, 51, 234, 0.18); }
 
     /* Light mode - remove gradientes */
     html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
@@ -81,24 +129,23 @@
     /* SVG light mode */
     html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
 
-    /* SVG pulse */
+    /* SVG pulse animation */
     @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
     @media (prefers-reduced-motion: no-preference) {
       .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
-      .wf-a:nth-child(2){animation-delay:.25s}
-      .wf-a:nth-child(3){animation-delay:.5s}
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
     }
   </style>
 </head>
 <body class="bg-dark-900 text-neutral-100 min-h-screen">
 
-  <!-- NAV GLOBAL -->
+  <!-- NAVIGATION -->
   <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-14">
         <div class="flex items-center space-x-4">
           <a href="../../index.html" class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300">
-            <span class="text-2xl">🚀</span>
+            <span class="text-2xl">&#128640;</span>
             <span class="font-bold text-lg hidden sm:inline">Do Zero ao Deploy</span>
           </a>
           <span class="text-neutral-600">|</span>
@@ -115,10 +162,10 @@
             <span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor Proprio</span>
           </a>
           <a href="../trilha4/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
-            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker & Automacao</span>
+            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
           </a>
           <a href="../trilha5/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors">
-            <span class="sm:hidden">T5</span><span class="hidden sm:inline">Assistentes IA</span>
+            <span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
           </a>
           <button id="theme-toggle" class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2">
             <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
@@ -148,8 +195,8 @@
   <header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MODULO 3.1</span>
-      <h1 class="text-3xl sm:text-4xl font-bold mb-4">🖥️ VPS: Seu Computador na Nuvem</h1>
-      <p class="text-lg text-neutral-400 max-w-3xl">Imagine alugar um computador que fica ligado 24 horas, 7 dias por semana, em algum lugar do mundo. Isso e um VPS. Aqui voce vai contratar o seu e dar os primeiros passos.</p>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">&#128421;&#65039; VPS: Seu Computador na Nuvem</h1>
+      <p class="text-lg text-neutral-400 max-w-3xl">Um VPS e um computador que voce aluga e que fica ligado 24 horas por dia, 7 dias por semana, em um data center. E nele que voce vai hospedar seus projetos, rodar seus programas e ter um servidor de verdade. Aqui voce vai aprender o que e, como escolher e como contratar o seu primeiro.</p>
       <div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
         <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
           <div class="text-xl font-bold text-purple-400">6</div>
@@ -171,35 +218,25 @@
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="3-1" data-inema-track="3">
+  <!-- CONTEUDO -->
+  <main id="conteudo" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="3-1" data-inema-track="3">
 
-    <!-- TOPICO 1 -->
-    <section id="topico-1" data-inema-topic="modulo-3-1#topico-1" class="mb-16">
+    <!-- ============================================ -->
+    <!-- TOPICO 1: O que e um VPS                      -->
+    <!-- ============================================ -->
+    <section id="topico-1" data-inema-topic="modulo-3-1#topico-1" class="mb-16 scroll-mt-20">
       <div class="flex items-center space-x-4 mb-6">
         <span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
-        <h2 class="text-2xl font-bold">🏠 O Que e um VPS?</h2>
+        <h2 class="text-2xl font-bold">O Que e um VPS</h2>
       </div>
 
-      <p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m31-t1-p1">
-        <strong class="text-purple-400">VPS</strong> significa Virtual Private Server (Servidor Virtual Privado). Pense assim: voce aluga um computador que fica em um datacenter, funcionando 24 horas por dia. E como ter um PC remoto, so seu, que nunca desliga. Enquanto o Vercel e o GitHub Pages rodam seu site "pra voce" (voce nao ve o servidor), com um VPS voce tem controle total: instala o que quiser, configura como quiser, roda o que quiser.
+      <p data-inema-block="m3-1-t1-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        VPS significa <strong class="text-purple-400">Virtual Private Server</strong> (Servidor Virtual Privado). Em portugues simples: e um <strong class="text-purple-400">computador na nuvem que voce aluga</strong>. Ele nao fica na sua mesa, fica em um data center (um galpao gigante cheio de servidores), ligado o tempo todo, com internet rapida e um endereco fixo. Voce controla esse computador pela internet, como se estivesse sentado na frente dele.
       </p>
 
-      <div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
-        <h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
-          <span class="mr-2">🔑</span> Analogia: Aluguel de Apartamento
-        </h3>
-        <p class="text-neutral-300 mb-4">Hospedar um site na Vercel e como morar em hotel: tudo incluso, mas voce nao muda nada. Um VPS e como alugar um apartamento:</p>
-        <ul class="space-y-2 text-neutral-300">
-          <li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>Voce escolhe o tamanho</strong> (RAM, CPU, disco) como escolhe quantos quartos</span></li>
-          <li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>Voce decora como quiser</strong> (instala programas, configura o sistema)</span></li>
-          <li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>Voce paga aluguel mensal</strong> (geralmente $3 a $20/mes)</span></li>
-          <li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>Voce tem a chave</strong> (acesso root, controle total)</span></li>
-        </ul>
-      </div>
-
-      <!-- SVG: VPS vs Hosting Compartilhado -->
+      <!-- SVG: Seu PC -> Internet -> VPS sempre ligado na nuvem -->
       <div class="rounded-2xl border border-purple-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
-        <svg viewBox="0 0 900 260" class="w-full h-auto" role="img" aria-label="Comparacao entre hosting compartilhado (varios usuarios no mesmo servidor) e VPS (cada usuario tem seu espaco isolado)">
+        <svg viewBox="0 0 800 240" class="w-full h-auto" role="img" aria-label="Diagrama mostrando seu computador conectando pela internet a um VPS sempre ligado em um data center na nuvem">
           <defs>
             <linearGradient id="m31-grad" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0" stop-color="#c084fc"/><stop offset="1" stop-color="#a855f7"/>
@@ -208,547 +245,530 @@
               <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
             <pattern id="m31-grid" width="32" height="32" patternUnits="userSpaceOnUse">
-              <circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.12"/>
+              <circle cx="1.3" cy="1.3" r="1.3" fill="#c084fc" opacity="0.12"/>
             </pattern>
           </defs>
-          <rect x="0" y="0" width="900" height="260" fill="url(#m31-grid)"/>
-          <!-- Lado esquerdo: Hosting compartilhado -->
-          <rect x="30" y="30" width="380" height="200" rx="14" fill="#1a1230" stroke="#c084fc" stroke-width="2" opacity="0.5"/>
-          <text x="220" y="55" text-anchor="middle" fill="#c084fc" font-family="Inter,sans-serif" font-weight="600" font-size="14">HOSTING COMPARTILHADO</text>
-          <rect x="55" y="70" width="80" height="50" rx="8" fill="#0e1b26" stroke="#9ca3af" stroke-width="1.8"/><text x="95" y="100" text-anchor="middle" fill="#e5e7eb" font-family="Inter,sans-serif" font-size="11">Site A</text>
-          <rect x="155" y="70" width="80" height="50" rx="8" fill="#0e1b26" stroke="#9ca3af" stroke-width="1.8"/><text x="195" y="100" text-anchor="middle" fill="#e5e7eb" font-family="Inter,sans-serif" font-size="11">Site B</text>
-          <rect x="255" y="70" width="80" height="50" rx="8" fill="#0e1b26" stroke="#9ca3af" stroke-width="1.8"/><text x="295" y="100" text-anchor="middle" fill="#e5e7eb" font-family="Inter,sans-serif" font-size="11">Site C</text>
-          <rect x="55" y="140" width="280" height="40" rx="8" fill="#1a1230" stroke="#9ca3af" stroke-width="1.8" stroke-dasharray="6 4"/>
-          <text x="195" y="165" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="12">1 Servidor (recursos divididos)</text>
-          <text x="220" y="215" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">Se o Site B travar, todos sofrem</text>
-          <!-- Lado direito: VPS -->
+          <rect x="0" y="0" width="800" height="240" fill="url(#m31-grid)"/>
+          <!-- Seu PC -->
+          <rect x="40" y="80" width="150" height="100" rx="12" fill="#1a1a2e" stroke="#9ca3af" stroke-width="2"/>
+          <rect x="58" y="98" width="114" height="56" rx="4" fill="#1a1230" stroke="#9ca3af" stroke-width="1"/>
+          <text x="115" y="170" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">o teclado e voce</text>
+          <text x="115" y="70" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-weight="600" font-size="13">SEU PC</text>
+          <!-- Internet -->
+          <line x1="195" y1="130" x2="305" y2="130" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="6 5" class="wf-a"/>
+          <text x="250" y="118" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-size="12">internet</text>
+          <text x="250" y="150" text-anchor="middle" fill="#38bdf8" font-family="monospace" font-size="11">SSH</text>
+          <!-- Nuvem -->
           <g filter="url(#m31-glow)">
-            <rect x="490" y="30" width="380" height="200" rx="14" fill="#1a1230" stroke="url(#m31-grad)" stroke-width="2.5"/>
+            <ellipse cx="500" cy="70" rx="120" ry="38" fill="none" stroke="url(#m31-grad)" stroke-width="2"/>
           </g>
-          <text x="680" y="55" text-anchor="middle" fill="#c084fc" font-family="Inter,sans-serif" font-weight="600" font-size="14">VPS (ISOLADO)</text>
-          <rect x="515" y="70" width="100" height="100" rx="10" fill="#1a1230" stroke="#c084fc" stroke-width="2"/><text x="565" y="110" text-anchor="middle" fill="#c084fc" font-family="Inter,sans-serif" font-weight="600" font-size="12">SEU VPS</text><text x="565" y="128" text-anchor="middle" fill="#e5e7eb" font-family="Inter,sans-serif" font-size="10">2GB RAM</text><text x="565" y="143" text-anchor="middle" fill="#e5e7eb" font-family="Inter,sans-serif" font-size="10">1 vCPU</text><text x="565" y="158" text-anchor="middle" fill="#e5e7eb" font-family="Inter,sans-serif" font-size="10">20GB SSD</text>
-          <rect x="640" y="70" width="100" height="100" rx="10" fill="#0e1b26" stroke="#38bdf8" stroke-width="1.8" opacity="0.5"/><text x="690" y="115" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">VPS de</text><text x="690" y="130" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">outro user</text>
-          <rect x="765" y="70" width="80" height="100" rx="10" fill="#0e1b26" stroke="#38bdf8" stroke-width="1.8" opacity="0.5"/><text x="805" y="125" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">...</text>
-          <text x="680" y="210" text-anchor="middle" fill="#c084fc" font-family="Inter,sans-serif" font-size="11">Cada VPS e isolado: seu espaco, suas regras</text>
+          <text x="500" y="40" text-anchor="middle" fill="#c084fc" font-family="Inter,sans-serif" font-weight="600" font-size="13">NUVEM (DATA CENTER)</text>
+          <!-- VPS -->
+          <line x1="315" y1="130" x2="395" y2="130" stroke="#c084fc" stroke-width="2.5"/>
+          <g filter="url(#m31-glow)">
+            <rect x="400" y="95" width="200" height="110" rx="12" fill="#1a1230" stroke="url(#m31-grad)" stroke-width="2"/>
+          </g>
+          <text x="500" y="120" text-anchor="middle" fill="#c084fc" font-family="Inter,sans-serif" font-weight="600" font-size="14">VPS</text>
+          <!-- racks/leds -->
+          <rect x="420" y="135" width="160" height="14" rx="3" fill="#1a1230" stroke="#a855f7" stroke-width="1"/>
+          <circle cx="430" cy="142" r="3" fill="#34d399"/><circle cx="442" cy="142" r="3" fill="#34d399"/>
+          <rect x="420" y="155" width="160" height="14" rx="3" fill="#1a1230" stroke="#a855f7" stroke-width="1"/>
+          <circle cx="430" cy="162" r="3" fill="#34d399"/><circle cx="442" cy="162" r="3" fill="#fbbf24"/>
+          <text x="500" y="194" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="11">sempre ligado</text>
+          <!-- IP fixo -->
+          <rect x="640" y="110" width="130" height="80" rx="10" fill="#1a1230" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="705" y="135" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="11">IP FIXO</text>
+          <text x="705" y="158" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="12">203.0.113.7</text>
+          <text x="705" y="178" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="10">o endereco do servidor</text>
+          <line x1="600" y1="150" x2="640" y2="150" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4 4"/>
         </svg>
+      </div>
+
+      <div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: Alugar um Computador na Nuvem
+        </h3>
+        <p data-inema-block="m3-1-t1-p2" class="text-neutral-300 mb-4">Imagine que voce precisa de um computador ligado para sempre, mas nao quer deixar o seu proprio PC ligado dia e noite (gastando luz, fazendo barulho, podendo cair quando falta energia). Entao voce <strong>aluga um</strong>: outra empresa cuida da maquina fisica, da energia, da internet e da refrigeracao. Voce so usa, paga por mes e acessa de qualquer lugar.</p>
+        <ul class="space-y-2 text-neutral-300">
+          <li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">&#8226;</span><span><strong>Seu PC:</strong> desliga quando voce dorme, fica preso na sua casa</span></li>
+          <li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">&#8226;</span><span><strong>O VPS:</strong> nunca desliga, tem IP fixo, acessivel do mundo todo</span></li>
+          <li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">&#8226;</span><span><strong>Voce paga:</strong> uma mensalidade (em geral de 4 a 12 dolares/mes)</span></li>
+          <li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">&#8226;</span><span><strong>"Virtual":</strong> uma maquina fisica e dividida em varios VPS isolados</span></li>
+        </ul>
       </div>
 
       <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
         <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
-          <span class="mr-2">💡</span> Quando usar um VPS?
+          <span class="mr-2">&#128161;</span> Por que nao usar so a Vercel?
         </h3>
-        <p class="text-neutral-300">Use VPS quando precisar rodar bots (Telegram, Discord), bancos de dados proprios, APIs customizadas, ou qualquer coisa que precisa ficar online 24h. Se voce so quer um site estatico, Vercel/Pages resolvem. Se precisa de controle total, VPS e o caminho.</p>
+        <p data-inema-block="m3-1-t1-p3" class="text-neutral-300">Na trilha 2 voce usou a Vercel, que e otima para sites e front-ends. Mas ela e <strong>limitada</strong>: voce nao controla a maquina, nao roda processos longos, nao instala o que quer. O VPS te da <strong>controle total</strong>: e um Linux de verdade onde voce instala bancos de dados, bots, APIs pesadas, jogos, automacoes que rodam o dia inteiro. Mais poder, mais responsabilidade.</p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="bg-dark-800 rounded-xl border border-dark-600 p-4">
-          <h4 class="font-semibold text-purple-400 mb-2">Conceitos-chave</h4>
-          <ul class="text-sm text-neutral-300 space-y-1">
-            <li>• VPS = computador virtual alugado</li>
-            <li>• Roda 24/7 em um datacenter</li>
-            <li>• Voce tem acesso root (admin total)</li>
-            <li>• Isolado de outros usuarios</li>
-          </ul>
-        </div>
-        <div class="bg-dark-800 rounded-xl border border-dark-600 p-4">
-          <h4 class="font-semibold text-purple-400 mb-2">Vocabulario</h4>
-          <ul class="text-sm text-neutral-300 space-y-1">
-            <li>• <strong>Root</strong> = usuario administrador</li>
-            <li>• <strong>Datacenter</strong> = predio com servidores</li>
-            <li>• <strong>vCPU</strong> = processador virtual</li>
-            <li>• <strong>SSD</strong> = disco rapido</li>
-          </ul>
-        </div>
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
       </div>
-
-      <button type="button" data-inema-read-toggle aria-pressed="false" class="mt-6 px-4 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-sm text-neutral-300 transition-colors flex items-center justify-start space-x-2">
-        <span class="inema-ico-todo" aria-hidden="true">☐</span>
-        <span class="inema-ico-done" aria-hidden="true">☑</span>
-        <span class="inema-label-todo">Marcar como lido</span>
-        <span class="inema-label-done">Lido</span>
-      </button>
     </section>
 
-    <!-- TOPICO 2 -->
-    <section id="topico-2" data-inema-topic="modulo-3-1#topico-2" class="mb-16">
+    <!-- ============================================ -->
+    <!-- TOPICO 2: Provedores e como escolher         -->
+    <!-- ============================================ -->
+    <section id="topico-2" data-inema-topic="modulo-3-1#topico-2" class="mb-16 scroll-mt-20">
       <div class="flex items-center space-x-4 mb-6">
         <span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
-        <h2 class="text-2xl font-bold">🏪 Provedores: Onde Alugar</h2>
+        <h2 class="text-2xl font-bold">Provedores: DigitalOcean, Hetzner, Contabo</h2>
       </div>
 
-      <p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m31-t2-p1">
-        Existem dezenas de empresas que alugam VPS. As tres mais populares para iniciantes sao <strong class="text-purple-400">DigitalOcean</strong>, <strong class="text-purple-400">Hetzner</strong> e <strong class="text-purple-400">Contabo</strong>. Cada uma tem seus pontos fortes. Vamos comparar para voce escolher.
+      <p data-inema-block="m3-1-t2-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Existem dezenas de empresas que alugam VPS. Para iniciantes, tres se destacam: <strong class="text-purple-400">DigitalOcean</strong> (a mais facil), <strong class="text-purple-400">Hetzner</strong> (melhor preco por desempenho) e <strong class="text-purple-400">Contabo</strong> (mais memoria pelo mesmo dinheiro). Todas funcionam igual: voce cria uma conta, escolhe um plano, e em 60 segundos tem um servidor pronto.
       </p>
 
-      <!-- Timeline: provedores -->
-      <div class="space-y-6 mb-6">
-        <div class="flex items-start space-x-4">
-          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-            <span class="text-purple-400 font-bold">🌊</span>
-          </div>
-          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
-            <h4 class="font-semibold text-white mb-2">DigitalOcean</h4>
-            <p class="text-sm text-neutral-400 mb-3">A mais famosa. Interface bonita, docs excelentes.</p>
-            <div class="text-neutral-300 text-sm space-y-1">
-              <p><strong>Preco:</strong> a partir de $4/mes (1GB RAM, 1 vCPU, 25GB SSD)</p>
-              <p><strong>Datacenters:</strong> EUA, Europa, Asia, Australia</p>
-              <p><strong>Ponto forte:</strong> documentacao incrivel, comunidade grande</p>
-              <p><strong>Pra quem:</strong> iniciantes que querem docs bons</p>
-            </div>
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+          <div class="text-2xl mb-2">&#127754;</div>
+          <h3 class="text-lg font-semibold text-purple-400 mb-2">DigitalOcean</h3>
+          <p class="text-sm text-neutral-400 mb-3">A mais amigavel para quem esta comecando. Painel simples, muita documentacao, tutoriais excelentes.</p>
+          <ul class="space-y-1 text-sm text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#8226;</span><span>A partir de ~6 dolares/mes</span></li>
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#8226;</span><span>Chama o VPS de "Droplet"</span></li>
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#8226;</span><span>Creditos gratis para testar</span></li>
+          </ul>
         </div>
-        <div class="flex items-start space-x-4">
-          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-            <span class="text-purple-400 font-bold">🇩🇪</span>
-          </div>
-          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
-            <h4 class="font-semibold text-white mb-2">Hetzner</h4>
-            <p class="text-sm text-neutral-400 mb-3">Alema, preco imbativel na Europa.</p>
-            <div class="text-neutral-300 text-sm space-y-1">
-              <p><strong>Preco:</strong> a partir de EUR 3.29/mes (2GB RAM, 1 vCPU, 20GB SSD)</p>
-              <p><strong>Datacenters:</strong> Alemanha, Finlandia, EUA</p>
-              <p><strong>Ponto forte:</strong> melhor custo-beneficio, hardware potente</p>
-              <p><strong>Pra quem:</strong> quem quer mais por menos</p>
-            </div>
-          </div>
+        <div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+          <div class="text-2xl mb-2">&#128184;</div>
+          <h3 class="text-lg font-semibold text-purple-400 mb-2">Hetzner</h3>
+          <p class="text-sm text-neutral-400 mb-3">Melhor custo-beneficio do mercado. Empresa alema, servidores na Europa e nos EUA.</p>
+          <ul class="space-y-1 text-sm text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#8226;</span><span>A partir de ~4 dolares/mes</span></li>
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#8226;</span><span>Chama o VPS de "Cloud Server"</span></li>
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#8226;</span><span>Otimo para projetos serios</span></li>
+          </ul>
         </div>
-        <div class="flex items-start space-x-4">
-          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-            <span class="text-purple-400 font-bold">💪</span>
-          </div>
-          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
-            <h4 class="font-semibold text-white mb-2">Contabo</h4>
-            <p class="text-sm text-neutral-400 mb-3">Muito barato, mas interface mais antiga.</p>
-            <div class="text-neutral-300 text-sm space-y-1">
-              <p><strong>Preco:</strong> a partir de EUR 4.50/mes (4GB RAM, 2 vCPU, 50GB SSD)</p>
-              <p><strong>Datacenters:</strong> Alemanha, EUA, Asia, Australia</p>
-              <p><strong>Ponto forte:</strong> MUITO recurso por pouco dinheiro</p>
-              <p><strong>Pra quem:</strong> quem precisa de mais RAM/disco barato</p>
-            </div>
-          </div>
+        <div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+          <div class="text-2xl mb-2">&#128190;</div>
+          <h3 class="text-lg font-semibold text-purple-400 mb-2">Contabo</h3>
+          <p class="text-sm text-neutral-400 mb-3">Muita memoria RAM e disco pelo menor preco. Bom para quem precisa de espaco.</p>
+          <ul class="space-y-1 text-sm text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#8226;</span><span>A partir de ~5 dolares/mes</span></li>
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#8226;</span><span>RAM generosa nos planos baratos</span></li>
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#8226;</span><span>Suporte um pouco mais lento</span></li>
+          </ul>
         </div>
       </div>
 
       <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
         <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
-          <span class="mr-2">📊</span> Comparacao Rapida
+          <span class="mr-2">&#128065;</span> O que voce vai ver no site do provedor
         </h3>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm text-neutral-300">
-            <thead><tr class="border-b border-dark-600">
-              <th class="text-left py-2">Provedor</th><th class="text-left py-2">RAM Minima</th><th class="text-left py-2">Preco</th><th class="text-left py-2">Nota</th>
-            </tr></thead>
-            <tbody>
-              <tr class="border-b border-dark-700"><td class="py-2">DigitalOcean</td><td>1GB</td><td>$4/mes</td><td>Melhor UX</td></tr>
-              <tr class="border-b border-dark-700"><td class="py-2">Hetzner</td><td>2GB</td><td>EUR 3.29/mes</td><td>Melhor custo</td></tr>
-              <tr><td class="py-2">Contabo</td><td>4GB</td><td>EUR 4.50/mes</td><td>Mais recurso</td></tr>
-            </tbody>
-          </table>
+        <p data-inema-block="m3-1-t2-p2" class="text-neutral-300 text-sm mb-4">Ao abrir qualquer um desses sites, voce encontra uma tabela de planos parecida com esta:</p>
+        <div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Tabela de planos (exemplo)</p>
+          <p class="text-blue-400">Plano       vCPU   RAM     Disco    Preco</p>
+          <p class="text-neutral-300">Basico       1      1 GB    25 GB    ~5/mes</p>
+          <p class="text-neutral-300">Standard     2      4 GB    80 GB    ~12/mes</p>
+          <p class="text-neutral-300">Pro          4      8 GB    160 GB   ~24/mes</p>
+        </div>
+        <p data-inema-block="m3-1-t2-p3" class="text-neutral-300 text-sm mt-4"><strong class="text-blue-400">vCPU</strong> = poder de processamento. <strong class="text-blue-400">RAM</strong> = memoria para rodar programas. <strong class="text-blue-400">Disco</strong> = espaco para guardar arquivos. Para comecar, o plano mais barato ja resolve.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-6">
+          <h4 class="font-bold text-purple-400 mb-4">&#10003; O que FAZER ao escolher</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#10003;</span><span>Comecar pelo plano mais barato (da pra aumentar depois)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#10003;</span><span>Escolher uma regiao perto dos seus usuarios</span></li>
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#10003;</span><span>Conferir se cobra por hora (pode apagar e parar de pagar)</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; O que NAO fazer</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Contratar o plano mais caro "por garantia"</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Esquecer um VPS ligado e gerando cobranca</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Ignorar a regiao e colocar o servidor do outro lado do mundo</span></li>
+          </ul>
         </div>
       </div>
 
-      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
-        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
-          <span class="mr-2">💡</span> Recomendacao para Iniciantes
-        </h3>
-        <p class="text-neutral-300">Comece com <strong>Hetzner</strong> se quiser economizar, ou <strong>DigitalOcean</strong> se quiser a melhor experiencia de usuario. Ambos aceitam cartao de credito internacional. Para este curso, qualquer VPS com 1GB+ de RAM serve.</p>
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
       </div>
-
-      <button type="button" data-inema-read-toggle aria-pressed="false" class="mt-6 px-4 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-sm text-neutral-300 transition-colors flex items-center justify-start space-x-2">
-        <span class="inema-ico-todo" aria-hidden="true">☐</span>
-        <span class="inema-ico-done" aria-hidden="true">☑</span>
-        <span class="inema-label-todo">Marcar como lido</span>
-        <span class="inema-label-done">Lido</span>
-      </button>
     </section>
 
-    <!-- TOPICO 3 -->
-    <section id="topico-3" data-inema-topic="modulo-3-1#topico-3" class="mb-16">
+    <!-- ============================================ -->
+    <!-- TOPICO 3: Contratar o primeiro VPS           -->
+    <!-- ============================================ -->
+    <section id="topico-3" data-inema-topic="modulo-3-1#topico-3" class="mb-16 scroll-mt-20">
       <div class="flex items-center space-x-4 mb-6">
         <span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
-        <h2 class="text-2xl font-bold">🛒 Contratando Seu Primeiro VPS</h2>
+        <h2 class="text-2xl font-bold">Contratando o Seu Primeiro VPS</h2>
       </div>
 
-      <p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m31-t3-p1">
-        Vamos contratar um VPS na <strong class="text-purple-400">Hetzner</strong> passo a passo (o processo e similar nos outros provedores). Em 5 minutos voce tera seu servidor rodando.
+      <p data-inema-block="m3-1-t3-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Criar um VPS leva menos de dois minutos. O processo e parecido em qualquer provedor: voce responde quatro perguntas (<strong class="text-purple-400">regiao</strong>, <strong class="text-purple-400">tamanho</strong>, <strong class="text-purple-400">sistema</strong> e <strong class="text-purple-400">como vai entrar</strong>), clica em "Criar" e pronto. Vamos passo a passo.
       </p>
 
-      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
-        <h3 class="text-lg font-semibold text-white mb-4">Passo a Passo: Hetzner Cloud</h3>
-        <ol class="space-y-4 text-neutral-300">
-          <li class="flex items-start space-x-3">
-            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center">1</span>
-            <div><strong>Criar conta:</strong> acesse <code class="bg-dark-700 px-2 py-0.5 rounded text-sm">hetzner.com/cloud</code> e clique em "Register". Use email real (precisam verificar).</div>
-          </li>
-          <li class="flex items-start space-x-3">
-            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center">2</span>
-            <div><strong>Criar projeto:</strong> no dashboard, clique em "+ New Project". Nomeie "meu-servidor" ou algo parecido.</div>
-          </li>
-          <li class="flex items-start space-x-3">
-            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center">3</span>
-            <div><strong>Add Server:</strong> dentro do projeto, clique "Add Server". Escolha:
-              <ul class="mt-2 ml-4 space-y-1 text-sm">
-                <li>• <strong>Location:</strong> Nuremberg ou Helsinki (Europa) ou Ashburn (EUA)</li>
-                <li>• <strong>Image:</strong> Ubuntu 24.04 (a mais usada)</li>
-                <li>• <strong>Type:</strong> CX22 (2 vCPU, 4GB RAM) por EUR 3.29/mes</li>
-              </ul>
+      <!-- Timeline: passos da contratacao -->
+      <div class="space-y-6 mb-6">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+            <span class="text-purple-400 font-bold text-lg">1</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Escolha a Regiao (Region)</h4>
+            <p class="text-sm text-neutral-400 mb-3">Onde fisicamente o servidor vai ficar. Quanto mais perto de voce e dos seus usuarios, mais rapido.</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-neutral-400"># Opcoes comuns</p>
+              <p class="text-purple-400">New York / NYC   -&gt; EUA leste</p>
+              <p class="text-purple-400">Frankfurt / FRA  -&gt; Europa</p>
+              <p class="text-purple-400">Sao Paulo / GRU  -&gt; Brasil (quando disponivel)</p>
             </div>
-          </li>
-          <li class="flex items-start space-x-3">
-            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center">4</span>
-            <div><strong>SSH Key (opcional agora):</strong> pule por enquanto. No proximo modulo vamos configurar SSH direito.</div>
-          </li>
-          <li class="flex items-start space-x-3">
-            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center">5</span>
-            <div><strong>Create & Buy:</strong> clique no botao. Em ~30 segundos seu servidor estara rodando. Voce recebera a senha root por email.</div>
-          </li>
-        </ol>
+            <p class="text-neutral-300 text-sm mt-3"><strong class="text-purple-400">Para o Brasil:</strong> se nao houver regiao no Brasil, escolha "New York" ou "Miami". A diferenca de velocidade e pequena.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+            <span class="text-purple-400 font-bold text-lg">2</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Escolha o Tamanho (Size)</h4>
+            <p class="text-sm text-neutral-400 mb-3">Quanto de CPU, RAM e disco. Comece pequeno: da pra aumentar depois sem perder os dados.</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-neutral-400"># Recomendado para o primeiro projeto</p>
+              <p class="text-purple-400">1 vCPU, 1 GB RAM, 25 GB de disco</p>
+              <p class="text-neutral-400 mt-2"># Custa em torno de</p>
+              <p class="text-purple-400">5 a 6 dolares por mes</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+            <span class="text-purple-400 font-bold text-lg">3</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Escolha o Sistema (Image)</h4>
+            <p class="text-sm text-neutral-400 mb-3">Qual sistema operacional o servidor vai usar. Escolha sempre Linux Ubuntu, o mais comum e com mais tutoriais.</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-neutral-400"># Selecione a versao LTS mais recente</p>
+              <p class="text-purple-400">Ubuntu 24.04 (LTS)</p>
+              <p class="text-neutral-400 mt-2"># LTS = Long Term Support (suporte longo)</p>
+              <p class="text-neutral-400"># = mais estavel, ideal para servidores</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+            <span class="text-purple-400 font-bold text-lg">4</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Defina o Acesso (Senha ou Chave SSH)</h4>
+            <p class="text-sm text-neutral-400 mb-3">Como voce vai entrar no servidor. Duas opcoes: senha (mais simples) ou chave SSH (mais segura).</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-neutral-400"># Opcao A: Senha</p>
+              <p class="text-purple-400">Crie uma senha forte e ANOTE em lugar seguro</p>
+              <p class="text-neutral-400 mt-2"># Opcao B: Chave SSH (recomendada)</p>
+              <p class="text-purple-400">Cole sua chave publica (veremos no modulo 3.2)</p>
+            </div>
+            <p class="text-neutral-300 text-sm mt-3">Por enquanto, a <strong class="text-purple-400">senha</strong> esta de bom tamanho. No proximo modulo voce aprende SSH.</p>
+          </div>
+        </div>
       </div>
 
       <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
         <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
-          <span class="mr-2">⚠️</span> Erro Comum
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
         </h3>
-        <p class="text-neutral-300 mb-2"><strong>Problema:</strong> "Nao recebi o email com a senha root"</p>
-        <p class="text-neutral-300"><strong>Solucao:</strong> Verifique a pasta de spam. Se nao chegar em 5 minutos, use o console web do provedor (tem um botao "Console" no dashboard) para resetar a senha.</p>
+        <p data-inema-block="m3-1-t3-p2" class="text-neutral-300"><strong>Problema:</strong> "Criei o VPS, anotei a senha errada e agora nao consigo entrar." <br><strong>Solucao:</strong> No painel do provedor existe a opcao de <strong>redefinir a senha do root</strong> (Reset Root Password). Ela gera uma nova senha temporaria e manda por e-mail. Use-a para entrar e troque na hora. Por isso: sempre anote a senha antes de fechar a tela.</p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="bg-dark-800 rounded-xl border border-dark-600 p-4">
-          <h4 class="font-semibold text-purple-400 mb-2">O que voce vai ter</h4>
-          <ul class="text-sm text-neutral-300 space-y-1">
-            <li>• Um IP publico (ex: 168.119.xxx.xxx)</li>
-            <li>• Acesso root (admin total)</li>
-            <li>• Ubuntu 24.04 instalado</li>
-            <li>• Servidor rodando 24/7</li>
-          </ul>
-        </div>
-        <div class="bg-dark-800 rounded-xl border border-dark-600 p-4">
-          <h4 class="font-semibold text-purple-400 mb-2">Informacoes importantes</h4>
-          <ul class="text-sm text-neutral-300 space-y-1">
-            <li>• Anote o IP do servidor</li>
-            <li>• Guarde a senha root em local seguro</li>
-            <li>• Lembre do datacenter escolhido</li>
-            <li>• Saiba o nome do projeto</li>
-          </ul>
-        </div>
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
       </div>
-
-      <button type="button" data-inema-read-toggle aria-pressed="false" class="mt-6 px-4 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-sm text-neutral-300 transition-colors flex items-center justify-start space-x-2">
-        <span class="inema-ico-todo" aria-hidden="true">☐</span>
-        <span class="inema-ico-done" aria-hidden="true">☑</span>
-        <span class="inema-label-todo">Marcar como lido</span>
-        <span class="inema-label-done">Lido</span>
-      </button>
     </section>
 
-    <!-- TOPICO 4 -->
-    <section id="topico-4" data-inema-topic="modulo-3-1#topico-4" class="mb-16">
+    <!-- ============================================ -->
+    <!-- TOPICO 4: Primeiro acesso via console web    -->
+    <!-- ============================================ -->
+    <section id="topico-4" data-inema-topic="modulo-3-1#topico-4" class="mb-16 scroll-mt-20">
       <div class="flex items-center space-x-4 mb-6">
         <span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
-        <h2 class="text-2xl font-bold">🖥️ Primeiro Acesso: Console Web</h2>
+        <h2 class="text-2xl font-bold">Primeiro Acesso pelo Console Web</h2>
       </div>
 
-      <p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m31-t4-p1">
-        Antes de configurar SSH (proximo modulo), voce pode acessar seu servidor pelo <strong class="text-purple-400">console web</strong> do provedor. E como ter um monitor e teclado plugados no servidor, so que no navegador.
+      <p data-inema-block="m3-1-t4-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Com o VPS criado, voce precisa <strong class="text-purple-400">entrar nele</strong>. O jeito mais rapido (e que nao depende de configurar nada) e o <strong class="text-purple-400">console web</strong>: um terminal que abre dentro do navegador, direto no painel do provedor. E como sentar na frente do servidor de verdade.
       </p>
 
-      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
-        <h3 class="text-lg font-semibold text-white mb-4">Como acessar o Console Web (Hetzner)</h3>
-        <ol class="space-y-3 text-neutral-300 text-sm">
-          <li>1. Va ao dashboard Hetzner Cloud</li>
-          <li>2. Clique no nome do seu servidor</li>
-          <li>3. No menu lateral, clique em "Console"</li>
-          <li>4. Uma tela preta vai aparecer no navegador</li>
-          <li>5. Digite o login e senha:</li>
-        </ol>
-        <div class="mt-4 bg-dark-900 rounded-lg p-4 font-mono text-sm">
-          <p class="text-neutral-500">login: </p>
-          <p class="text-green-400">root</p>
-          <p class="text-neutral-500">Password: </p>
-          <p class="text-neutral-500">(digite a senha que recebeu por email - nao aparece na tela)</p>
-          <p class="text-green-400 mt-2">root@meu-servidor:~#</p>
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#128065;</span> O que voce vai ver na tela
+        </h3>
+        <p data-inema-block="m3-1-t4-p2" class="text-neutral-300 text-sm mb-4">Ao clicar no botao "Console" (ou "Launch Console") no painel, abre uma janela preta pedindo login. Digite <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">root</code> e a senha que voce definiu:</p>
+        <div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-300">Ubuntu 24.04 LTS  meu-vps  tty1</p>
+          <p class="text-neutral-300 mt-2">meu-vps login: <span class="text-blue-400">root</span></p>
+          <p class="text-neutral-300">Password: <span class="text-neutral-500">(digite a senha - nao aparece nada)</span></p>
+          <p class="text-neutral-400 mt-3"># Se a senha estiver certa, aparece:</p>
+          <p class="text-purple-400">Welcome to Ubuntu 24.04 LTS</p>
+          <p class="text-purple-400">root@meu-vps:~#</p>
         </div>
-        <p class="text-neutral-400 text-sm mt-3">Quando voce ve o <code class="bg-dark-700 px-1 rounded">root@meu-servidor:~#</code>, esta dentro! O <code class="bg-dark-700 px-1 rounded">#</code> no final indica que voce e root (administrador).</p>
+        <p data-inema-block="m3-1-t4-p3" class="text-neutral-300 text-sm mt-4">O <strong class="text-blue-400">#</strong> no final indica que voce esta logado como root (o chefe do servidor). Agora qualquer comando que digitar roda dentro do VPS, nao no seu PC.</p>
+      </div>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Primeiros comandos para "tocar" o servidor</h3>
+        <p data-inema-block="m3-1-t4-p4" class="text-neutral-300 text-sm mb-4">Os mesmos comandos da trilha 1 funcionam aqui. Teste para confirmar que esta tudo certo:</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Quem sou eu neste servidor?</p>
+          <p class="text-purple-400">root@meu-vps:~# whoami</p>
+          <p class="text-neutral-300">root</p>
+          <p class="text-neutral-400 mt-3"># Onde estou?</p>
+          <p class="text-purple-400">root@meu-vps:~# pwd</p>
+          <p class="text-neutral-300">/root</p>
+          <p class="text-neutral-400 mt-3"># Qual sistema esta rodando?</p>
+          <p class="text-purple-400">root@meu-vps:~# uname -a</p>
+          <p class="text-neutral-300">Linux meu-vps 6.8.0 x86_64 GNU/Linux</p>
+        </div>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m3-1-t4-p5" class="text-neutral-300"><strong>Problema:</strong> "Digito a senha mas ela nao aparece na tela, parece que nao funciona." <br><strong>Solucao:</strong> Isso e normal e proposital. No Linux, a senha <strong>nunca</strong> aparece enquanto voce digita (nem asteriscos). E uma protecao para ninguem ver por cima do ombro. Digite com calma e pressione Enter. Se errar, ele pede de novo.</p>
       </div>
 
       <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
         <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
-          <span class="mr-2">💡</span> Dica: Primeira coisa a fazer
+          <span class="mr-2">&#128161;</span> Dica: Console web e so o comeco
         </h3>
-        <p class="text-neutral-300 mb-3">Assim que entrar, rode este comando para ver informacoes do sistema:</p>
-        <div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
-          <p><span class="text-green-400">$</span> <span class="text-white">hostnamectl</span></p>
-          <p class="text-neutral-400 mt-1">   Static hostname: meu-servidor</p>
-          <p class="text-neutral-400">         Icon name: computer-vm</p>
-          <p class="text-neutral-400">   Operating System: Ubuntu 24.04 LTS</p>
-          <p class="text-neutral-400">            Kernel: Linux 6.8.0-xx-generic</p>
-          <p class="text-neutral-400">      Architecture: x86-64</p>
+        <p data-inema-block="m3-1-t4-p6" class="text-neutral-300">O console web e otimo para o primeiro acesso e para emergencias (quando voce se tranca para fora). Mas para o dia a dia, ele e desconfortavel: nao da pra colar texto facil, e mais lento. No proximo modulo voce vai aprender <strong>SSH</strong>, que conecta o seu terminal direto ao servidor, com copiar e colar funcionando normalmente.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 5: Entendendo Linux no servidor       -->
+    <!-- ============================================ -->
+    <section id="topico-5" data-inema-topic="modulo-3-1#topico-5" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+        <h2 class="text-2xl font-bold">Entendendo o Linux no Servidor</h2>
+      </div>
+
+      <p data-inema-block="m3-1-t5-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Seu VPS roda <strong class="text-purple-400">Linux</strong>, um sistema operacional diferente do Windows e do Mac, mas que segue a mesma logica de pastas e comandos que voce ja viu. Tres conceitos sao essenciais: quem e o <strong class="text-purple-400">root</strong>, como sao as <strong class="text-purple-400">pastas</strong> e como instalar programas com o <strong class="text-purple-400">apt</strong>.
+      </p>
+
+      <div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: root e o dono do predio
+        </h3>
+        <p data-inema-block="m3-1-t5-p2" class="text-neutral-300 mb-4">O usuario <strong>root</strong> e o administrador absoluto do servidor: ele pode fazer tudo, abrir qualquer porta, mexer em qualquer arquivo, instalar e apagar o que quiser. E o "dono do predio" com a chave-mestra. Por isso tambem e perigoso: um comando errado como root pode quebrar o sistema inteiro.</p>
+        <ul class="space-y-2 text-neutral-300">
+          <li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">&#8226;</span><span><strong>root:</strong> poder total, prompt termina em <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-purple-400">#</code></span></li>
+          <li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">&#8226;</span><span><strong>usuario comum:</strong> poderes limitados, prompt termina em <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-purple-400">$</code></span></li>
+          <li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">&#8226;</span><span><strong>sudo:</strong> pede "permissao de root" para um comando especifico</span></li>
+        </ul>
+      </div>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">As pastas principais do Linux</h3>
+        <p data-inema-block="m3-1-t5-p3" class="text-neutral-300 text-sm mb-4">No Linux tudo comeca na barra <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">/</code> (a raiz). As pastas mais importantes para voce:</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-purple-400">/          <span class="text-neutral-400"># a raiz de tudo</span></p>
+          <p class="text-purple-400">/root      <span class="text-neutral-400"># a casa do usuario root</span></p>
+          <p class="text-purple-400">/home      <span class="text-neutral-400"># casa dos usuarios comuns</span></p>
+          <p class="text-purple-400">/etc       <span class="text-neutral-400"># arquivos de configuracao</span></p>
+          <p class="text-purple-400">/var       <span class="text-neutral-400"># logs e dados de programas</span></p>
+          <p class="text-purple-400">/usr       <span class="text-neutral-400"># programas instalados</span></p>
+          <p class="text-purple-400">/tmp       <span class="text-neutral-400"># arquivos temporarios</span></p>
+        </div>
+      </div>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-purple-400 font-mono">apt</code> - Instalar programas no servidor</h3>
+        <p data-inema-block="m3-1-t5-p4" class="text-neutral-300 text-sm mb-4">No Ubuntu, voce instala programas com o <strong>apt</strong>, uma especie de "loja de aplicativos" pela linha de comando. Nao precisa baixar nada de site nenhum.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Instalar um programa (ex: o editor nano)</p>
+          <p class="text-purple-400">root@meu-vps:~# apt install nano</p>
+          <p class="text-neutral-300">Reading package lists... Done</p>
+          <p class="text-neutral-300">nano is already the newest version.</p>
+          <p class="text-neutral-400 mt-3"># Instalar o git e o curl de uma vez</p>
+          <p class="text-purple-400">root@meu-vps:~# apt install git curl</p>
+          <p class="text-neutral-400 mt-3"># Remover um programa</p>
+          <p class="text-purple-400">root@meu-vps:~# apt remove nome-do-programa</p>
         </div>
       </div>
 
       <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
         <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
-          <span class="mr-2">⚠️</span> Erro Comum
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
         </h3>
-        <p class="text-neutral-300 mb-2"><strong>Problema:</strong> "Digitei a senha e nada acontece"</p>
-        <p class="text-neutral-300"><strong>Solucao:</strong> No Linux, quando voce digita uma senha, NADA aparece na tela (nem asteriscos). Isso e normal e e por seguranca. Continue digitando e aperte Enter.</p>
+        <p data-inema-block="m3-1-t5-p5" class="text-neutral-300"><strong>Problema:</strong> "Rodei <code class="font-mono text-sm text-red-400">apt install</code> e deu erro 'Unable to locate package' ou 'Could not get lock'." <br><strong>Solucao:</strong> Rode <code class="font-mono text-sm text-purple-400">apt update</code> primeiro: ele atualiza a lista de programas disponiveis. Sem isso, o apt nao sabe onde achar o que voce pediu. Se aparecer "lock", espere alguns segundos (outra atualizacao esta rodando) e tente de novo.</p>
       </div>
 
-      <button type="button" data-inema-read-toggle aria-pressed="false" class="mt-6 px-4 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-sm text-neutral-300 transition-colors flex items-center justify-start space-x-2">
-        <span class="inema-ico-todo" aria-hidden="true">☐</span>
-        <span class="inema-ico-done" aria-hidden="true">☑</span>
-        <span class="inema-label-todo">Marcar como lido</span>
-        <span class="inema-label-done">Lido</span>
-      </button>
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
     </section>
 
-    <!-- TOPICO 5 -->
-    <section id="topico-5" data-inema-topic="modulo-3-1#topico-5" class="mb-16">
+    <!-- ============================================ -->
+    <!-- TOPICO 6: Atualizacao e manutencao basica    -->
+    <!-- ============================================ -->
+    <section id="topico-6" data-inema-topic="modulo-3-1#topico-6" class="mb-16 scroll-mt-20">
       <div class="flex items-center space-x-4 mb-6">
-        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
-        <h2 class="text-2xl font-bold">🐧 Linux no Servidor: O Basico</h2>
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+        <h2 class="text-2xl font-bold">Atualizacao e Manutencao Basica</h2>
       </div>
 
-      <p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m31-t5-p1">
-        Seu VPS roda <strong class="text-purple-400">Ubuntu</strong>, uma versao do Linux. Nao se assuste: voce nao precisa ser expert. Vamos aprender os comandos essenciais para sobreviver no servidor. E como aprender as 20 palavras mais usadas de uma lingua nova.
+      <p data-inema-block="m3-1-t6-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Um servidor precisa de cuidados, como um carro. Tres tarefas simples mantem o seu VPS saudavel: <strong class="text-purple-400">atualizar</strong> os programas, <strong class="text-purple-400">reiniciar</strong> quando preciso e ficar de olho no <strong class="text-purple-400">espaco em disco</strong>. Faca isso de tempos em tempos e seu servidor vai rodar liso por anos.
       </p>
 
+      <div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-purple-400 mb-4">&#128260; Atualizar tudo (a rotina mais importante)</h3>
+        <p data-inema-block="m3-1-t6-p2" class="text-neutral-300 text-sm mb-4">Sao dois comandos em sequencia: <strong>update</strong> busca as novidades e <strong>upgrade</strong> instala. Faca isso quando ligar um VPS novo e a cada poucas semanas.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># 1) Atualizar a lista de pacotes</p>
+          <p class="text-purple-400">root@meu-vps:~# apt update</p>
+          <p class="text-neutral-300">Hit:1 http://archive.ubuntu.com noble InRelease</p>
+          <p class="text-neutral-300">12 packages can be upgraded.</p>
+          <p class="text-neutral-400 mt-3"># 2) Instalar as atualizacoes (-y responde "sim" sozinho)</p>
+          <p class="text-purple-400">root@meu-vps:~# apt upgrade -y</p>
+          <p class="text-neutral-300">Setting up packages...</p>
+          <p class="text-neutral-300">Done.</p>
+        </div>
+      </div>
+
       <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
-        <h3 class="text-lg font-semibold text-white mb-4">Comandos Essenciais</h3>
-        <div class="space-y-4 font-mono text-sm">
-          <div>
-            <p class="text-neutral-400 mb-1"># Onde estou?</p>
-            <p><span class="text-green-400">$</span> <span class="text-white">pwd</span></p>
-            <p class="text-neutral-500">/root</p>
-          </div>
-          <div>
-            <p class="text-neutral-400 mb-1"># Listar arquivos</p>
-            <p><span class="text-green-400">$</span> <span class="text-white">ls -la</span></p>
-            <p class="text-neutral-500">total 28</p>
-            <p class="text-neutral-500">drwx------  4 root root 4096 Jun 16 10:00 .</p>
-            <p class="text-neutral-500">-rw-r--r--  1 root root 3106 Jun 16 10:00 .bashrc</p>
-          </div>
-          <div>
-            <p class="text-neutral-400 mb-1"># Ver uso de disco</p>
-            <p><span class="text-green-400">$</span> <span class="text-white">df -h</span></p>
-            <p class="text-neutral-500">Filesystem      Size  Used Avail Use% Mounted on</p>
-            <p class="text-neutral-500">/dev/sda1        20G  2.1G   17G  11% /</p>
-          </div>
-          <div>
-            <p class="text-neutral-400 mb-1"># Ver uso de memoria</p>
-            <p><span class="text-green-400">$</span> <span class="text-white">free -h</span></p>
-            <p class="text-neutral-500">              total        used        free</p>
-            <p class="text-neutral-500">Mem:          1.9Gi       180Mi       1.5Gi</p>
-          </div>
-          <div>
-            <p class="text-neutral-400 mb-1"># Ver processos rodando</p>
-            <p><span class="text-green-400">$</span> <span class="text-white">htop</span></p>
-            <p class="text-neutral-500">(abre um monitor interativo - aperte q para sair)</p>
-          </div>
+        <h3 class="text-lg font-semibold text-white mb-4">Reiniciar e checar o espaco</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Reiniciar o servidor (depois de atualizacoes grandes)</p>
+          <p class="text-purple-400">root@meu-vps:~# reboot</p>
+          <p class="text-neutral-400 mt-1"># A conexao cai por ~30 segundos. Reconecte depois.</p>
+          <p class="text-neutral-400 mt-3"># Ver quanto espaco de disco resta (-h = legivel)</p>
+          <p class="text-purple-400">root@meu-vps:~# df -h</p>
+          <p class="text-neutral-300">Filesystem  Size  Used  Avail  Use%  Mounted</p>
+          <p class="text-neutral-300">/dev/vda1    25G   6.2G   18G    27%  /</p>
+          <p class="text-neutral-400 mt-3"># Ver o uso de memoria RAM</p>
+          <p class="text-purple-400">root@meu-vps:~# free -h</p>
+          <p class="text-neutral-300">              total   used   free</p>
+          <p class="text-neutral-300">Mem:          958Mi  210Mi  748Mi</p>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
-          <h4 class="font-bold text-emerald-400 mb-4">✓ O que FAZER</h4>
+        <div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-6">
+          <h4 class="font-bold text-purple-400 mb-4">&#10003; Boas praticas de manutencao</h4>
           <ul class="space-y-3 text-neutral-300">
-            <li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Criar um usuario pessoal (nao usar root pra tudo)</span></li>
-            <li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Anotar os comandos que usa com frequencia</span></li>
-            <li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Usar <code class="bg-dark-700 px-1 rounded text-sm">Tab</code> para auto-completar</span></li>
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#10003;</span><span>Rodar <code class="font-mono text-sm">apt update &amp;&amp; apt upgrade</code> a cada poucas semanas</span></li>
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#10003;</span><span>Checar o disco com <code class="font-mono text-sm">df -h</code> antes de instalar coisas grandes</span></li>
+            <li class="flex items-start space-x-2"><span class="text-purple-400">&#10003;</span><span>Reiniciar apos atualizacoes de kernel</span></li>
           </ul>
         </div>
         <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
-          <h4 class="font-bold text-red-400 mb-4">✗ O que NAO fazer</h4>
+          <h4 class="font-bold text-red-400 mb-4">&#10007; O que NAO fazer</h4>
           <ul class="space-y-3 text-neutral-300">
-            <li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Rodar <code class="bg-dark-700 px-1 rounded text-sm">rm -rf /</code> (apaga TUDO)</span></li>
-            <li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Usar root como usuario do dia-a-dia</span></li>
-            <li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Ignorar mensagens de erro (leia sempre!)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Deixar o disco encher ate 100% (o servidor trava)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Ignorar atualizacoes de seguranca por meses</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Reiniciar no meio de uma atualizacao em andamento</span></li>
           </ul>
-        </div>
-      </div>
-
-      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
-        <h3 class="text-lg font-semibold text-white mb-4">Criando um Usuario Pessoal</h3>
-        <div class="font-mono text-sm space-y-2">
-          <p class="text-neutral-400"># Criar usuario (substitua "nick" pelo seu nome)</p>
-          <p><span class="text-green-400">$</span> <span class="text-white">adduser nick</span></p>
-          <p class="text-neutral-500">Adding user 'nick' ...</p>
-          <p class="text-neutral-500">New password: (digite uma senha forte)</p>
-          <p class="mt-2 text-neutral-400"># Dar poderes de admin (sudo)</p>
-          <p><span class="text-green-400">$</span> <span class="text-white">usermod -aG sudo nick</span></p>
-          <p class="mt-2 text-neutral-400"># Testar: trocar para o novo usuario</p>
-          <p><span class="text-green-400">$</span> <span class="text-white">su - nick</span></p>
-          <p class="text-green-400">nick@meu-servidor:~$</p>
-          <p class="text-neutral-400 mt-1"># Agora voce e "nick" (note: $ no final, nao #)</p>
-        </div>
-      </div>
-
-      <button type="button" data-inema-read-toggle aria-pressed="false" class="mt-6 px-4 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-sm text-neutral-300 transition-colors flex items-center justify-start space-x-2">
-        <span class="inema-ico-todo" aria-hidden="true">☐</span>
-        <span class="inema-ico-done" aria-hidden="true">☑</span>
-        <span class="inema-label-todo">Marcar como lido</span>
-        <span class="inema-label-done">Lido</span>
-      </button>
-    </section>
-
-    <!-- TOPICO 6 -->
-    <section id="topico-6" data-inema-topic="modulo-3-1#topico-6" class="mb-16">
-      <div class="flex items-center space-x-4 mb-6">
-        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
-        <h2 class="text-2xl font-bold">🔄 Atualizacao e Manutencao</h2>
-      </div>
-
-      <p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m31-t6-p1">
-        Assim como seu celular recebe atualizacoes, seu servidor tambem precisa. Manter o sistema atualizado e a coisa <strong class="text-purple-400">mais importante</strong> que voce pode fazer pela seguranca do servidor. E como trancar a porta de casa antes de dormir.
-      </p>
-
-      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
-        <h3 class="text-lg font-semibold text-white mb-4">Atualizando o Sistema</h3>
-        <div class="font-mono text-sm space-y-3">
-          <div>
-            <p class="text-neutral-400"># 1. Atualizar lista de pacotes disponiveis</p>
-            <p><span class="text-green-400">$</span> <span class="text-white">sudo apt update</span></p>
-            <p class="text-neutral-500">Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease</p>
-            <p class="text-neutral-500">Get:2 http://archive.ubuntu.com/ubuntu noble-updates InRelease</p>
-            <p class="text-neutral-500">Reading package lists... Done</p>
-            <p class="text-neutral-500">15 packages can be upgraded.</p>
-          </div>
-          <div>
-            <p class="text-neutral-400"># 2. Instalar as atualizacoes</p>
-            <p><span class="text-green-400">$</span> <span class="text-white">sudo apt upgrade -y</span></p>
-            <p class="text-neutral-500">Reading package lists... Done</p>
-            <p class="text-neutral-500">Upgrading... Done.</p>
-          </div>
-          <div>
-            <p class="text-neutral-400"># 3. (Opcional) Reiniciar se o kernel foi atualizado</p>
-            <p><span class="text-green-400">$</span> <span class="text-white">sudo reboot</span></p>
-          </div>
         </div>
       </div>
 
       <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
         <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
-          <span class="mr-2">💡</span> Rotina de Manutencao
+          <span class="mr-2">&#127942;</span> Parabens!
         </h3>
-        <p class="text-neutral-300 mb-3">Faca isso pelo menos 1x por semana:</p>
-        <ol class="text-neutral-300 space-y-1 text-sm">
-          <li>1. <code class="bg-dark-700 px-1 rounded">sudo apt update && sudo apt upgrade -y</code></li>
-          <li>2. <code class="bg-dark-700 px-1 rounded">sudo apt autoremove -y</code> (remove pacotes orfaos)</li>
-          <li>3. <code class="bg-dark-700 px-1 rounded">df -h</code> (verificar espaco em disco)</li>
-          <li>4. <code class="bg-dark-700 px-1 rounded">free -h</code> (verificar memoria)</li>
-        </ol>
-        <p class="text-neutral-400 text-sm mt-3">No Modulo 4.4 (Cron) voce vai aprender a automatizar isso.</p>
+        <p data-inema-block="m3-1-t6-p2b" class="text-neutral-300">Voce ja tem um computador na nuvem ligado 24/7, sabe entrar nele e mante-lo atualizado. Esse e o alicerce de tudo que vem na trilha 3. No proximo modulo voce vai aprender <strong class="text-purple-400">SSH</strong>, para acessar o servidor direto do seu terminal, com seguranca e conforto, sem depender do console web.</p>
       </div>
 
-      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
-        <h3 class="text-lg font-semibold text-white mb-4">Instalar Ferramentas Uteis</h3>
-        <div class="font-mono text-sm">
-          <p class="text-neutral-400"># Instalar tudo de uma vez:</p>
-          <p><span class="text-green-400">$</span> <span class="text-white">sudo apt install -y htop curl wget git nano ufw</span></p>
-          <p class="mt-3 text-neutral-400"># O que cada um faz:</p>
-          <p class="text-neutral-300">htop   - monitor de processos (visual)</p>
-          <p class="text-neutral-300">curl   - fazer requisicoes HTTP</p>
-          <p class="text-neutral-300">wget   - baixar arquivos</p>
-          <p class="text-neutral-300">git    - controle de versao</p>
-          <p class="text-neutral-300">nano   - editor de texto simples</p>
-          <p class="text-neutral-300">ufw    - firewall (vamos usar no modulo 3.3)</p>
-        </div>
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
       </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="bg-dark-800 rounded-xl border border-dark-600 p-4">
-          <h4 class="font-semibold text-purple-400 mb-2">Conceitos-chave</h4>
-          <ul class="text-sm text-neutral-300 space-y-1">
-            <li>• <code class="bg-dark-700 px-1 rounded">apt</code> = gerenciador de pacotes</li>
-            <li>• <code class="bg-dark-700 px-1 rounded">sudo</code> = rodar como admin</li>
-            <li>• <code class="bg-dark-700 px-1 rounded">update</code> = atualizar lista</li>
-            <li>• <code class="bg-dark-700 px-1 rounded">upgrade</code> = instalar atualizacoes</li>
-          </ul>
-        </div>
-        <div class="bg-dark-800 rounded-xl border border-dark-600 p-4">
-          <h4 class="font-semibold text-purple-400 mb-2">Frequencia</h4>
-          <ul class="text-sm text-neutral-300 space-y-1">
-            <li>• Atualizacoes: 1x por semana</li>
-            <li>• Check disco: 1x por semana</li>
-            <li>• Reboot: so quando necessario</li>
-            <li>• Backups: diarios (veremos em Cron)</li>
-          </ul>
-        </div>
-      </div>
-
-      <button type="button" data-inema-read-toggle aria-pressed="false" class="mt-6 px-4 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-sm text-neutral-300 transition-colors flex items-center justify-start space-x-2">
-        <span class="inema-ico-todo" aria-hidden="true">☐</span>
-        <span class="inema-ico-done" aria-hidden="true">☑</span>
-        <span class="inema-label-todo">Marcar como lido</span>
-        <span class="inema-label-done">Lido</span>
-      </button>
     </section>
 
     <!-- RESUMO -->
     <section class="mb-12">
       <div class="bg-gradient-to-br from-purple-900/40 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-8">
         <h2 class="text-2xl font-bold mb-6 flex items-center">
-          <span class="mr-3">🎯</span> Resumo do Modulo
+          <span class="mr-3">&#128218;</span> Resumo do Modulo
         </h2>
         <div class="space-y-4 mb-8">
           <div class="flex items-start space-x-3">
-            <span class="text-purple-400 mt-1">✓</span>
-            <div><strong class="text-white">VPS e seu computador na nuvem</strong><span class="text-neutral-400"> - alugado, isolado, 24/7</span></div>
+            <span class="text-purple-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">VPS e um computador alugado na nuvem</strong><span class="text-neutral-400"> - sempre ligado, com IP fixo, acessivel de qualquer lugar</span></div>
           </div>
           <div class="flex items-start space-x-3">
-            <span class="text-purple-400 mt-1">✓</span>
-            <div><strong class="text-white">Hetzner, DigitalOcean, Contabo</strong><span class="text-neutral-400"> - os tres melhores para iniciantes</span></div>
+            <span class="text-purple-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">DigitalOcean, Hetzner, Contabo</strong><span class="text-neutral-400"> - bons provedores; comece pelo plano mais barato</span></div>
           </div>
           <div class="flex items-start space-x-3">
-            <span class="text-purple-400 mt-1">✓</span>
-            <div><strong class="text-white">Console web</strong><span class="text-neutral-400"> - sua primeira forma de acessar o servidor</span></div>
+            <span class="text-purple-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Contratar = regiao, tamanho, sistema, acesso</strong><span class="text-neutral-400"> - Ubuntu LTS e a melhor escolha de sistema</span></div>
           </div>
           <div class="flex items-start space-x-3">
-            <span class="text-purple-400 mt-1">✓</span>
-            <div><strong class="text-white">Comandos basicos</strong><span class="text-neutral-400"> - pwd, ls, df, free, apt update/upgrade</span></div>
+            <span class="text-purple-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">root, pastas e apt</strong><span class="text-neutral-400"> - o root manda em tudo; apt instala programas</span></div>
           </div>
           <div class="flex items-start space-x-3">
-            <span class="text-purple-400 mt-1">✓</span>
-            <div><strong class="text-white">Usuario pessoal</strong><span class="text-neutral-400"> - nunca usar root para tarefas do dia-a-dia</span></div>
-          </div>
-          <div class="flex items-start space-x-3">
-            <span class="text-purple-400 mt-1">✓</span>
-            <div><strong class="text-white">Manutencao semanal</strong><span class="text-neutral-400"> - atualizar pacotes e monitorar recursos</span></div>
+            <span class="text-purple-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">apt update/upgrade, reboot, df -h</strong><span class="text-neutral-400"> - manutencao basica que mantem o servidor saudavel</span></div>
           </div>
         </div>
+
         <div class="bg-dark-800/50 rounded-lg p-4 mb-8">
           <h3 class="font-semibold text-purple-400 mb-2">Proximo Modulo:</h3>
-          <p class="text-neutral-300">3.2 - SSH: Acesso Seguro (conectar do seu computador sem precisar do console web)</p>
+          <p class="text-neutral-300">3.2 - SSH: Acesso Seguro ao Servidor (conectar do seu terminal, com chaves em vez de senha)</p>
         </div>
+
         <div class="flex flex-col sm:flex-row gap-4">
-          <a href="index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">← Voltar para Trilha</a>
-          <a href="modulo-3-2.html" class="flex-1 text-center px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-500 transition-colors">Proximo Modulo →</a>
+          <a href="index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">
+            &#8592; Voltar para Trilha
+          </a>
+          <a href="modulo-3-2.html" class="flex-1 text-center px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-500 transition-colors">
+            Proximo Modulo &#8594;
+          </a>
         </div>
       </div>
     </section>
 
   </main>
 
+  <!-- FOOTER -->
   <footer class="border-t border-dark-600 py-8 mt-16">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
-      <p>Do Zero ao Deploy - 2025</p>
+      <p>Do Zero ao Deploy - 2026</p>
     </div>
   </footer>
 
+  <!-- SCRIPTS -->
   <script>
-    function toggleTopic(button) {
-      const topicItem = button.closest('.topic-item');
-      const explanation = topicItem.querySelector('.topic-explanation');
-      const moduleCard = button.closest('.bg-dark-800');
-      if (moduleCard) {
-        moduleCard.querySelectorAll('.topic-explanation.active').forEach(exp => {
-          if (exp !== explanation) exp.classList.remove('active');
-        });
-      }
-      explanation.classList.toggle('active');
-    }
-
+    // Theme Toggle (v1)
     const themeToggle = document.getElementById('theme-toggle');
     const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
     const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
@@ -769,7 +789,7 @@
 
   <script src="../../assets/learn.js"></script>
   <script>
-    if (window.INEMA && typeof window.INEMA.init === "function") {
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
       window.INEMA.init();
     }
   </script>

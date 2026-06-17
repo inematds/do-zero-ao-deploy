@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="inema-course" content="dzd">
+  <title>Trilha 4: Docker & Automacao | Do Zero ao Deploy</title>
+
+  <!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+  <script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'amber' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'amber');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/learn.css">
+
+  <!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+  <script type="application/json" data-inema-manifest>
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha amber) */
+    html:not(.dark) .text-amber-400 { color: #b45309; }
+    html:not(.dark) .bg-amber-500\/20 { background-color: rgba(180, 83, 9, 0.12); }
+    html:not(.dark) .bg-amber-500\/10 { background-color: rgba(180, 83, 9, 0.08); }
+    html:not(.dark) .border-amber-500\/30 { border-color: rgba(180, 83, 9, 0.25); }
+    html:not(.dark) .hover\:bg-amber-500\/30:hover { background-color: rgba(180, 83, 9, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+
+    /* Topicos expansiveis */
+    .topic-explanation { display: none; }
+    .topic-explanation.active { display: block; }
+  </style>
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+
+  <!-- NAVIGATION -->
+  <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-14">
+        <div class="flex items-center space-x-4">
+          <a href="../../index.html" class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300">
+            <span class="text-2xl">&#128640;</span>
+            <span class="font-bold text-lg hidden sm:inline">Do Zero ao Deploy</span>
+          </a>
+          <span class="text-neutral-600">|</span>
+          <a href="https://inema.club" target="_blank" class="text-sky-400 hover:text-sky-300 text-sm font-medium">INEMA.CLUB</a>
+        </div>
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <a href="../trilha1/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+            <span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal & Git</span>
+          </a>
+          <a href="../trilha2/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors">
+            <span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy Moderno</span>
+          </a>
+          <a href="../trilha3/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors">
+            <span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor Proprio</span>
+          </a>
+          <a href="index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-amber-400 bg-amber-500/10">
+            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+          </a>
+          <a href="../trilha5/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors">
+            <span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+          </a>
+          <button id="theme-toggle" class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2">
+            <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HEADER DE TRILHA -->
+  <header class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full mb-4">TRILHA 4</span>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">&#128051; Docker &amp; Automacao</h1>
+      <p class="text-lg text-neutral-400 max-w-3xl">Empacotar suas aplicacoes em containers e automatizar o servidor: Docker, Compose, systemd e cron. Voce vai sair daqui colocando qualquer app numa "mala" que roda igual em qualquer lugar e deixando a maquina trabalhar sozinha.</p>
+      <div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-amber-400">4</div>
+          <div class="text-xs text-neutral-400">Modulos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-amber-400">24</div>
+          <div class="text-xs text-neutral-400">Topicos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-amber-400">~3h</div>
+          <div class="text-xs text-neutral-400">Duracao</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-amber-400">Intermediario</div>
+          <div class="text-xs text-neutral-400">Nivel</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEUDO -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <!-- HERO SVG: fan-out (seu app -> docker/compose/systemd/cron -> servidor automatizado) -->
+    <div class="rounded-2xl border border-amber-500/30 bg-dark-900/40 p-3 sm:p-4 mb-10 overflow-hidden">
+      <svg viewBox="0 0 800 280" class="w-full h-auto" role="img" aria-label="Diagrama de fluxo: seu app parte em uma mala, ramifica em Docker, Compose, systemd e cron, e os quatro convergem em um servidor que roda sozinho">
+        <defs>
+          <linearGradient id="t4hero-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+          <filter id="t4hero-glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <pattern id="t4hero-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <circle cx="1.3" cy="1.3" r="1.3" fill="#fbbf24" opacity="0.10"/>
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="800" height="280" fill="url(#t4hero-grid)"/>
+
+        <!-- Origem: SEU APP -->
+        <g filter="url(#t4hero-glow)">
+          <rect x="30" y="106" width="120" height="68" rx="14" fill="#1f1604" stroke="url(#t4hero-grad)" stroke-width="2"/>
+        </g>
+        <text x="90" y="136" text-anchor="middle" fill="#fbbf24" font-family="Inter,sans-serif" font-weight="600" font-size="15">SEU APP</text>
+        <text x="90" y="156" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">codigo + deps</text>
+
+        <!-- Ramos (linhas) -->
+        <path class="wf-a" d="M150 140 C 250 140, 250 44, 350 44" fill="none" stroke="#fbbf24" stroke-width="2.5"/>
+        <path class="wf-a" d="M150 140 C 250 140, 250 108, 350 108" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+        <path class="wf-a" d="M150 140 C 250 140, 250 172, 350 172" fill="none" stroke="#fbbf24" stroke-width="2.5"/>
+        <path class="wf-a" d="M150 140 C 250 140, 250 236, 350 236" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+
+        <!-- Ramo 1: DOCKER -->
+        <rect x="350" y="20" width="160" height="48" rx="12" fill="#1a1a2e" stroke="#fbbf24" stroke-width="1.8"/>
+        <text x="430" y="40" text-anchor="middle" fill="#fbbf24" font-family="Inter,sans-serif" font-weight="600" font-size="13">&#128051; DOCKER</text>
+        <text x="430" y="58" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="11">build  run</text>
+
+        <!-- Ramo 2: COMPOSE -->
+        <rect x="350" y="84" width="160" height="48" rx="12" fill="#1a1a2e" stroke="#38bdf8" stroke-width="1.8"/>
+        <text x="430" y="104" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="13">COMPOSE</text>
+        <text x="430" y="122" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="11">up  -d</text>
+
+        <!-- Ramo 3: SYSTEMD -->
+        <rect x="350" y="148" width="160" height="48" rx="12" fill="#1a1a2e" stroke="#fbbf24" stroke-width="1.8"/>
+        <text x="430" y="168" text-anchor="middle" fill="#fbbf24" font-family="Inter,sans-serif" font-weight="600" font-size="13">SYSTEMD</text>
+        <text x="430" y="186" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="11">enable  start</text>
+
+        <!-- Ramo 4: CRON -->
+        <rect x="350" y="212" width="160" height="48" rx="12" fill="#1a1a2e" stroke="#38bdf8" stroke-width="1.8"/>
+        <text x="430" y="232" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="13">CRON</text>
+        <text x="430" y="250" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="11">* * * * *</text>
+
+        <!-- Convergencia -->
+        <path d="M510 44 C 600 44, 600 140, 650 140" fill="none" stroke="#fbbf24" stroke-width="2.5" opacity="0.8"/>
+        <path d="M510 108 C 600 108, 600 140, 650 140" fill="none" stroke="#38bdf8" stroke-width="2.5" opacity="0.8"/>
+        <path d="M510 172 C 600 172, 600 140, 650 140" fill="none" stroke="#fbbf24" stroke-width="2.5" opacity="0.8"/>
+        <path d="M510 236 C 600 236, 600 140, 650 140" fill="none" stroke="#38bdf8" stroke-width="2.5" opacity="0.8"/>
+
+        <!-- Resultado: SERVIDOR -->
+        <g filter="url(#t4hero-glow)">
+          <rect x="650" y="106" width="120" height="68" rx="14" fill="#1f1604" stroke="url(#t4hero-grad)" stroke-width="2.4"/>
+        </g>
+        <text x="710" y="136" text-anchor="middle" fill="#fbbf24" font-family="Inter,sans-serif" font-weight="600" font-size="14">SERVIDOR</text>
+        <text x="710" y="156" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">roda sozinho</text>
+      </svg>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MAPA DA TRILHA                               -->
+    <!-- ============================================ -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-6">Mapa da trilha</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <a href="#modulo-4-1" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-amber-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-amber-400 font-bold text-sm">4.1</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-amber-400 transition-colors">&#128051; Docker Basico</h3>
+          <p class="text-xs text-neutral-400">App numa mala</p>
+        </a>
+        <a href="#modulo-4-2" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-amber-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-amber-400 font-bold text-sm">4.2</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-amber-400 transition-colors">&#127932; Docker Compose</h3>
+          <p class="text-xs text-neutral-400">Orquestra de servicos</p>
+        </a>
+        <a href="#modulo-4-3" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-amber-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-amber-400 font-bold text-sm">4.3</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-amber-400 transition-colors">&#9881;&#65039; Systemd</h3>
+          <p class="text-xs text-neutral-400">Servicos que nao param</p>
+        </a>
+        <a href="#modulo-4-4" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-amber-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-amber-400 font-bold text-sm">4.4</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-amber-400 transition-colors">&#9200; Cron Jobs</h3>
+          <p class="text-xs text-neutral-400">Despertador do servidor</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- CONTEUDO DETALHADO                           -->
+    <!-- ============================================ -->
+    <h2 class="text-2xl font-bold mb-6">Conteudo detalhado</h2>
+
+    <!-- ===== MODULO 4.1 ===== -->
+    <div id="modulo-4-1" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-amber-400 font-bold">4.1</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#128051; Docker Basico</h3>
+        <p class="text-neutral-400 text-sm">O Docker e uma mala: voce coloca o app e tudo que ele precisa dentro de um container, e ele roda igual em qualquer maquina, sem o "na minha funciona".</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#128230;</span>
+            <div>
+              <span class="font-medium">O que e container</span>
+              <span class="text-neutral-500 text-sm ml-2">- a mala do seu app</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Um container e uma caixa fechada que carrega o app e tudo que ele precisa para rodar: codigo, bibliotecas e configuracoes. E como uma mala pronta que abre igual em qualquer lugar.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Acaba com o "na minha maquina funciona". Se roda no container, roda no servidor, no laptop do colega e na nuvem, exatamente igual.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Container nao e maquina virtual: e mais leve e sobe em segundos. Cada container e isolado dos outros, mas compartilha o sistema do servidor.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#128229;</span>
+            <div>
+              <span class="font-medium">Instalar Docker</span>
+              <span class="text-neutral-500 text-sm ml-2">- por sistema operacional</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O passo de baixar e instalar o Docker: Docker Desktop no Windows e Mac, ou o script oficial / gerenciador de pacotes no Linux do seu servidor.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Sem o Docker instalado, nenhum container roda. Instalar uma vez deixa o motor pronto para o resto da trilha.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Confira com <code class="font-mono">docker --version</code> e <code class="font-mono">docker run hello-world</code>. No Linux, adicione seu usuario ao grupo <code class="font-mono">docker</code> para nao precisar de <code class="font-mono">sudo</code> sempre.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#9654;&#65039;</span>
+            <div>
+              <span class="font-medium">docker run: primeiro container</span>
+              <span class="text-neutral-500 text-sm ml-2">- subir algo de verdade</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O comando <code class="font-mono">docker run</code> baixa uma imagem (se preciso) e sobe um container a partir dela. Com ele voce coloca um servidor web no ar em um comando.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o comando que voce mais vai usar. Em segundos voce tem um banco, um site ou uma ferramenta rodando, sem instalar nada na sua maquina.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">-d</code> roda em segundo plano, <code class="font-mono">-p 8080:80</code> liga uma porta sua a porta do container, <code class="font-mono">--name</code> da um apelido. <code class="font-mono">docker ps</code> lista o que esta rodando.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#128247;</span>
+            <div>
+              <span class="font-medium">Imagens vs containers</span>
+              <span class="text-neutral-500 text-sm ml-2">- molde e copia</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">A imagem e o molde congelado (a receita pronta); o container e uma copia viva rodando daquele molde. De uma imagem voce cria quantos containers quiser.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Confundir os dois gera bagunca. Entender a diferenca ajuda a saber o que apagar, o que reaproveitar e por que o container some mas a imagem fica.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">docker images</code> lista moldes; <code class="font-mono">docker ps -a</code> lista containers. Imagem = classe, container = objeto. Imagens vem do Docker Hub.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#128221;</span>
+            <div>
+              <span class="font-medium">Dockerfile: receita</span>
+              <span class="text-neutral-500 text-sm ml-2">- montar sua propria imagem</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O <code class="font-mono">Dockerfile</code> e um arquivo de texto com a receita da sua imagem: de qual base partir, o que copiar, o que instalar e qual comando rodar ao iniciar.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E como voce empacota o SEU app, e nao so usa os prontos. Com um Dockerfile, qualquer pessoa monta a mesma imagem com um unico comando.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Instrucoes em maiusculas: <code class="font-mono">FROM</code> (base), <code class="font-mono">COPY</code>, <code class="font-mono">RUN</code> (instala), <code class="font-mono">EXPOSE</code> (porta), <code class="font-mono">CMD</code> (comando de inicio). Cada linha vira uma camada.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#128640;</span>
+            <div>
+              <span class="font-medium">Build e push</span>
+              <span class="text-neutral-500 text-sm ml-2">- gerar e publicar a imagem</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O <code class="font-mono">docker build</code> transforma o Dockerfile numa imagem real; o <code class="font-mono">docker push</code> envia essa imagem para um registro (como o Docker Hub) para usar em qualquer servidor.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o ciclo completo: da receita ao app publicado. Com a imagem no registro, fazer deploy vira so um <code class="font-mono">docker pull</code> no servidor.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">docker build -t usuario/app:1.0 .</code> gera e nomeia (tag). Faca <code class="font-mono">docker login</code> antes do push. A tag <code class="font-mono">latest</code> e a versao padrao.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-4-1')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-4-1.html" class="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ===== MODULO 4.2 ===== -->
+    <div id="modulo-4-2" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-amber-400 font-bold">4.2</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#127932; Docker Compose</h3>
+        <p class="text-neutral-400 text-sm">O Compose e o maestro: em vez de subir cada container na mao, voce descreve toda a orquestra de servicos num arquivo e sobe tudo junto com um comando.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#127911;</span>
+            <div>
+              <span class="font-medium">O que e Compose</span>
+              <span class="text-neutral-500 text-sm ml-2">- varios containers de uma vez</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O Docker Compose e uma ferramenta para definir e rodar varios containers juntos. Voce descreve a aplicacao inteira (app + banco + cache) num arquivo so.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Apps reais raramente sao um container. Sem o Compose, subir app + banco vira uma sequencia chata de comandos longos e frageis.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Toda a stack vive num <code class="font-mono">docker-compose.yml</code>. <code class="font-mono">docker compose up</code> sobe tudo, <code class="font-mono">down</code> derruba. Um arquivo versionado = ambiente reproduzivel.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#128196;</span>
+            <div>
+              <span class="font-medium">docker-compose.yml basico</span>
+              <span class="text-neutral-500 text-sm ml-2">- o arquivo da stack</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Um arquivo em formato YAML que lista os servicos da sua aplicacao. Cada servico aponta para uma imagem (ou um build) e suas configuracoes.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o coracao do Compose. Entender a estrutura basica permite ler e escrever qualquer stack que voce encontrar pela frente.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">YAML usa indentacao (espacos, nunca Tab). Comece por <code class="font-mono">services:</code> e, sob ele, cada servico com <code class="font-mono">image</code> ou <code class="font-mono">build</code> e <code class="font-mono">ports</code>.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#128279;</span>
+            <div>
+              <span class="font-medium">Servicos, redes, volumes</span>
+              <span class="text-neutral-500 text-sm ml-2">- as pecas do Compose</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Servicos sao os containers; redes deixam eles conversarem entre si pelo nome; volumes guardam dados que precisam sobreviver quando o container e recriado.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Sem volume, voce perde o banco de dados a cada restart. Sem rede certa, o app nao acha o banco. Esses tres conceitos sustentam qualquer stack.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Containers da mesma stack se acham pelo nome do servico (ex.: <code class="font-mono">db</code>). Volumes mapeiam uma pasta persistente. Dados no container somem; dados no volume ficam.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#127981;</span>
+            <div>
+              <span class="font-medium">Subir stack (app + banco)</span>
+              <span class="text-neutral-500 text-sm ml-2">- tudo no ar com um comando</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O momento de juntar tudo: definir um servico de app e um de banco no mesmo arquivo e subir a aplicacao completa com um unico <code class="font-mono">docker compose up</code>.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o cenario mais comum de verdade. Quando voce sobe app + banco juntos, ja consegue rodar uma aplicacao completa no seu servidor.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">docker compose up -d</code> sobe em segundo plano. O app acha o banco pelo nome do servico. Use <code class="font-mono">depends_on</code> para definir a ordem de subida.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#128269;</span>
+            <div>
+              <span class="font-medium">Logs e debug</span>
+              <span class="text-neutral-500 text-sm ml-2">- enxergar o que acontece</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">As ferramentas para ver o que cada container esta fazendo: <code class="font-mono">logs</code> mostra a saida, <code class="font-mono">ps</code> mostra o estado e <code class="font-mono">exec</code> entra dentro do container.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Quando algo nao sobe, o log diz o porque. Sem saber ler logs, voce fica adivinhando; com eles, voce resolve em minutos.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">docker compose logs -f</code> acompanha em tempo real. <code class="font-mono">docker compose exec app sh</code> abre um terminal dentro do container para investigar.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#128260;</span>
+            <div>
+              <span class="font-medium">Atualizacao e rollback</span>
+              <span class="text-neutral-500 text-sm ml-2">- subir nova versao com seguranca</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O fluxo de atualizar a aplicacao: baixar a nova imagem, recriar os containers e, se algo der errado, voltar (rollback) para a versao anterior.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Toda app evolui. Saber atualizar sem derrubar tudo e voltar atras rapido evita aquele susto de "quebrei a producao e nao sei desfazer".</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">docker compose pull</code> baixa o novo, <code class="font-mono">up -d</code> recria so o que mudou. Fixar a tag da imagem (e nao usar so <code class="font-mono">latest</code>) torna o rollback simples.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-4-2')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-4-2.html" class="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ===== MODULO 4.3 ===== -->
+    <div id="modulo-4-3" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-amber-400 font-bold">4.3</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#9881;&#65039; Systemd</h3>
+        <p class="text-neutral-400 text-sm">O systemd e o gerente de plantao do Linux: ele liga seus servicos no boot, vigia se caem e os reinicia sozinho. Servicos que nunca param.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#129518;</span>
+            <div>
+              <span class="font-medium">O que e systemd</span>
+              <span class="text-neutral-500 text-sm ml-2">- o gerente do Linux</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O systemd e o sistema que liga e gerencia tudo que roda no Linux: e o primeiro programa a subir no boot e o responsavel por iniciar os demais servicos.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E ele que mantem seu app no ar 24h. Sem o systemd, voce teria que reiniciar tudo na mao toda vez que o servidor reiniciasse.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">A unidade basica e o "service" (.service). Voce conversa com o systemd pelo comando <code class="font-mono">systemctl</code>. Quase todo Linux moderno usa systemd.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#128221;</span>
+            <div>
+              <span class="font-medium">Criar um service file</span>
+              <span class="text-neutral-500 text-sm ml-2">- ensinar o systemd a rodar seu app</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Um arquivo <code class="font-mono">.service</code> que descreve seu app para o systemd: qual comando rodar, em que pasta, com qual usuario e o que fazer se ele cair.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E como voce transforma um script solto num servico de verdade, gerenciado pelo sistema, que sobe sozinho e e tratado como peca seria.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Tres secoes: <code class="font-mono">[Unit]</code> (descricao e dependencias), <code class="font-mono">[Service]</code> (<code class="font-mono">ExecStart</code>, usuario) e <code class="font-mono">[Install]</code>. Os arquivos ficam em <code class="font-mono">/etc/systemd/system/</code>.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#127918;</span>
+            <div>
+              <span class="font-medium">start, stop, restart, enable</span>
+              <span class="text-neutral-500 text-sm ml-2">- os controles do servico</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Os comandos do dia a dia: <code class="font-mono">start</code> liga, <code class="font-mono">stop</code> desliga, <code class="font-mono">restart</code> reinicia e <code class="font-mono">enable</code> garante que o servico suba no boot.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Sao os botoes de controle do seu servico. Com eles voce sobe, derruba e reinicia sem reiniciar o servidor inteiro.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Diferenca-chave: <code class="font-mono">start</code> liga agora; <code class="font-mono">enable</code> liga em todo boot. Use <code class="font-mono">systemctl status nome</code> para conferir se esta ativo (active/running).</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#128203;</span>
+            <div>
+              <span class="font-medium">Logs com journalctl</span>
+              <span class="text-neutral-500 text-sm ml-2">- ver o historico do servico</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O <code class="font-mono">journalctl</code> e a central de logs do systemd. Ele guarda tudo que cada servico escreveu, com data e hora, para voce consultar quando precisar.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Quando um servico falha, o log conta a historia. Saber filtrar o journal e o que separa "nao sei o que houve" de "achei o erro em 30 segundos".</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">journalctl -u nome</code> filtra por servico; <code class="font-mono">-f</code> acompanha ao vivo; <code class="font-mono">-e</code> pula para o fim. Combine com <code class="font-mono">--since</code> para um intervalo.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#128279;</span>
+            <div>
+              <span class="font-medium">Dependencias entre servicos</span>
+              <span class="text-neutral-500 text-sm ml-2">- ordem de subida</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">A forma de dizer ao systemd que um servico depende de outro: por exemplo, seu app so deve subir depois que o banco de dados ja estiver pronto.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Sem a ordem certa, o app sobe antes do banco e quebra no boot. Definir dependencias garante que tudo ligue na sequencia correta, sozinho.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">No <code class="font-mono">[Unit]</code>: <code class="font-mono">After=</code> define ordem; <code class="font-mono">Requires=</code> obriga o outro a estar ativo; <code class="font-mono">Wants=</code> e uma dependencia suave (recomendada).</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#128259;</span>
+            <div>
+              <span class="font-medium">Restart automatico</span>
+              <span class="text-neutral-500 text-sm ml-2">- voltar do tombo sozinho</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">A configuracao que faz o systemd reiniciar automaticamente um servico que travou ou caiu, sem que voce precise estar acordado para isso.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Apps caem. Com restart automatico, o servidor se cura sozinho e seu app volta ao ar em segundos, mesmo as 3 da manha.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">No <code class="font-mono">[Service]</code>: <code class="font-mono">Restart=always</code> (ou <code class="font-mono">on-failure</code>) e <code class="font-mono">RestartSec=5</code> (espera antes de tentar). Apos editar, rode <code class="font-mono">systemctl daemon-reload</code>.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-4-3')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-4-3.html" class="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ===== MODULO 4.4 ===== -->
+    <div id="modulo-4-4" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-amber-400 font-bold">4.4</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#9200; Cron Jobs</h3>
+        <p class="text-neutral-400 text-sm">O cron e o despertador do servidor: voce agenda tarefas para rodarem sozinhas em horarios fixos, como backups todo dia de madrugada ou limpezas semanais.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#9200;</span>
+            <div>
+              <span class="font-medium">O que e cron</span>
+              <span class="text-neutral-500 text-sm ml-2">- tarefas no horario certo</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O cron e um agendador que roda no Linux o tempo todo, vigiando o relogio. Quando chega a hora marcada, ele dispara o comando que voce agendou.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o jeito classico de automatizar tarefas repetitivas: backups, relatorios, limpezas. Voce configura uma vez e ele faz para sempre, sozinho.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Cada tarefa agendada e um "cron job". A lista de jobs vive numa tabela chamada "crontab". O cron roda em segundo plano e nao precisa de ninguem logado.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#128290;</span>
+            <div>
+              <span class="font-medium">Sintaxe crontab</span>
+              <span class="text-neutral-500 text-sm ml-2">- os cinco campos de tempo</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">A linha de um cron job comeca com cinco campos que definem quando rodar: minuto, hora, dia do mes, mes e dia da semana, seguidos do comando.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Errar a sintaxe e o erro numero um. Entender os cinco campos faz a diferenca entre "rodar todo dia as 3h" e "rodar a cada minuto sem parar".</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Ordem: <code class="font-mono">min hora dia mes diasemana</code>. O <code class="font-mono">*</code> significa "todo". <code class="font-mono">0 3 * * *</code> = todo dia as 3h. Use o site crontab.guru para conferir.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#9999;&#65039;</span>
+            <div>
+              <span class="font-medium">crontab -e</span>
+              <span class="text-neutral-500 text-sm ml-2">- editar seus agendamentos</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O comando <code class="font-mono">crontab -e</code> abre, num editor, a sua tabela de agendamentos. Cada linha que voce escreve ali vira um job ativo ao salvar.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E a porta de entrada para criar, editar e remover seus jobs. Sem isso, voce nao consegue de fato agendar nada no servidor.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">crontab -e</code> edita, <code class="font-mono">crontab -l</code> lista. Cada usuario tem sua propria crontab. Use caminhos absolutos nos comandos para evitar surpresas.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#128190;</span>
+            <div>
+              <span class="font-medium">Exemplos praticos</span>
+              <span class="text-neutral-500 text-sm ml-2">- backup e limpeza</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Casos reais de cron job: um backup do banco todo dia de madrugada, uma limpeza de arquivos temporarios toda semana, um script de manutencao mensal.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Ver exemplos prontos acelera tudo. Com poucos modelos na mao, voce adapta para qualquer rotina que o seu servidor precise.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Backup: <code class="font-mono">0 2 * * *</code> chama um script de dump. Limpeza: <code class="font-mono">0 4 * * 0</code> (domingo) apaga temporarios. Sempre aponte para um script, nao um comando gigante.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#128221;</span>
+            <div>
+              <span class="font-medium">Logs de cron</span>
+              <span class="text-neutral-500 text-sm ml-2">- conferir se rodou</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">As formas de saber se um cron job rodou e o que ele fez: redirecionar a saida do comando para um arquivo de log e consultar o log do sistema.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Cron roda em silencio. Sem log, voce nunca sabe se o backup aconteceu de verdade, ate o dia que precisa dele e descobre que falhava ha meses.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Acrescente <code class="font-mono">&gt;&gt; /var/log/meujob.log 2&gt;&amp;1</code> ao fim da linha para gravar saida e erros. No journal, filtre por <code class="font-mono">journalctl -u cron</code> (ou <code class="font-mono">crond</code>).</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#9201;&#65039;</span>
+            <div>
+              <span class="font-medium">Alternativas: systemd timers</span>
+              <span class="text-neutral-500 text-sm ml-2">- o agendador moderno</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-amber-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Os systemd timers sao a alternativa moderna ao cron: um arquivo <code class="font-mono">.timer</code> agenda quando um <code class="font-mono">.service</code> deve rodar, integrado ao systemd.</p></div>
+              <div><span class="text-amber-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Timers tem logs no journal, sabem recuperar execucoes perdidas e se integram aos servicos. Em servidores modernos, muitas vezes sao a escolha melhor.</p></div>
+              <div><span class="text-amber-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Um par: o <code class="font-mono">.service</code> faz a tarefa, o <code class="font-mono">.timer</code> diz quando. <code class="font-mono">OnCalendar=</code> define o horario; <code class="font-mono">systemctl list-timers</code> mostra os proximos disparos.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-4-4')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-4-4.html" class="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- NAVEGACAO FINAL                              -->
+    <!-- ============================================ -->
+    <div class="flex flex-col sm:flex-row gap-4 mt-12">
+      <a href="../../index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">
+        &#8592; Voltar para o inicio
+      </a>
+      <a href="../trilha5/index.html" class="flex-1 text-center px-6 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-500 transition-colors">
+        Proxima Trilha &#8594;
+      </a>
+    </div>
+
+  </main>
+
+  <!-- ============================================ -->
+  <!-- MODAIS                                        -->
+  <!-- ============================================ -->
+  <div id="modal-4-1" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-amber-400 font-bold">4.1</span>
+          <span class="font-semibold">Docker Basico</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-4-1.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <div id="modal-4-2" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-amber-400 font-bold">4.2</span>
+          <span class="font-semibold">Docker Compose</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-4-2.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <div id="modal-4-3" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-amber-400 font-bold">4.3</span>
+          <span class="font-semibold">Systemd</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-4-3.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <div id="modal-4-4" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-amber-400 font-bold">4.4</span>
+          <span class="font-semibold">Cron Jobs</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-4-4.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-dark-600 py-8 mt-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+      <p>Do Zero ao Deploy - 2026</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Toggle de Topicos
+    function toggleTopic(button) {
+      const topicItem = button.closest('.topic-item');
+      const explanation = topicItem.querySelector('.topic-explanation');
+      const moduleCard = button.closest('.bg-dark-800');
+
+      // Fecha outros topicos do mesmo modulo
+      moduleCard.querySelectorAll('.topic-explanation.active').forEach(exp => {
+        if (exp !== explanation) {
+          exp.classList.remove('active');
+        }
+      });
+
+      // Toggle do topico atual
+      explanation.classList.toggle('active');
+    }
+
+    // Modal com iframe
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeModal() {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.add('hidden');
+      });
+      document.body.style.overflow = 'auto';
+    }
+
+    // Fechar com ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+
+  <script src="../../assets/learn.js"></script>
+  <script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

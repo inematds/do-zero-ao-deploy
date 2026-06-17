@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="inema-course" content="dzd">
+  <title>Supabase: Seu Banco de Dados | Do Zero ao Deploy</title>
+
+  <!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+  <script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'blue' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'blue');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/learn.css">
+
+  <!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+  <script type="application/json" data-inema-manifest>
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha blue) */
+    html:not(.dark) .text-blue-400 { color: #2563eb; }
+    html:not(.dark) .bg-blue-500\/20 { background-color: rgba(37, 99, 235, 0.12); }
+    html:not(.dark) .bg-blue-500\/10 { background-color: rgba(37, 99, 235, 0.08); }
+    html:not(.dark) .border-blue-500\/30 { border-color: rgba(37, 99, 235, 0.25); }
+    html:not(.dark) .hover\:bg-blue-500\/30:hover { background-color: rgba(37, 99, 235, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+
+  <!-- NAVIGATION -->
+  <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-14">
+        <div class="flex items-center space-x-4">
+          <a href="../../index.html" class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300">
+            <span class="text-2xl">&#128640;</span>
+            <span class="font-bold text-lg hidden sm:inline">Do Zero ao Deploy</span>
+          </a>
+          <span class="text-neutral-600">|</span>
+          <a href="https://inema.club" target="_blank" class="text-sky-400 hover:text-sky-300 text-sm font-medium">INEMA.CLUB</a>
+        </div>
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <a href="../trilha1/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+            <span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal & Git</span>
+          </a>
+          <a href="index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-blue-400 bg-blue-500/10">
+            <span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy Moderno</span>
+          </a>
+          <a href="../trilha3/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors">
+            <span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor Proprio</span>
+          </a>
+          <a href="../trilha4/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
+            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+          </a>
+          <a href="../trilha5/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors">
+            <span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+          </a>
+          <button id="theme-toggle" class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2">
+            <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMB -->
+  <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex items-center space-x-2 text-sm text-neutral-400">
+      <a href="../../index.html" class="hover:text-blue-400">Inicio</a>
+      <span>/</span>
+      <a href="index.html" class="hover:text-blue-400">Trilha 2</a>
+      <span>/</span>
+      <span class="text-blue-400">Modulo 2.2</span>
+    </div>
+  </nav>
+
+  <!-- HEADER -->
+  <header class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full mb-4">MODULO 2.2</span>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">&#128451;&#65039; Supabase: Seu Banco de Dados</h1>
+      <p class="text-lg text-neutral-400 max-w-3xl">Seu site ja esta no ar, mas onde ele guarda informacoes? Cadastros, mensagens, produtos, pontuacoes. Tudo isso precisa de um lugar seguro para morar: um banco de dados. Aqui voce vai aprender a criar e usar um banco de verdade com o Supabase, de graca.</p>
+      <div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-blue-400">6</div>
+          <div class="text-xs text-neutral-400">Topicos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-blue-400">45</div>
+          <div class="text-xs text-neutral-400">Minutos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-blue-400">Basico</div>
+          <div class="text-xs text-neutral-400">Nivel</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-blue-400">Pratico</div>
+          <div class="text-xs text-neutral-400">Tipo</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEUDO -->
+  <main id="conteudo" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="2-2" data-inema-track="2">
+
+    <!-- ============================================ -->
+    <!-- TOPICO 1: O que e um banco de dados          -->
+    <!-- ============================================ -->
+    <section id="topico-1" data-inema-topic="modulo-2-2#topico-1" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">1</span>
+        <h2 class="text-2xl font-bold">O Que e um Banco de Dados</h2>
+      </div>
+
+      <p data-inema-block="m2-2-t1-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Um <strong class="text-blue-400">banco de dados</strong> e um lugar organizado para guardar informacoes que seu aplicativo precisa lembrar. Quando alguem se cadastra no seu site, esse cadastro tem que ser salvo em algum lugar para ainda existir amanha. Esse lugar e o banco de dados. Ele guarda tudo em <strong class="text-blue-400">tabelas</strong>, parecidas com planilhas, e responde rapido quando voce pede uma informacao.
+      </p>
+
+      <!-- SVG: app -> Supabase (tabelas) -> resposta -->
+      <div class="rounded-2xl border border-blue-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+        <svg viewBox="0 0 800 240" class="w-full h-auto" role="img" aria-label="Diagrama de fluxo: aplicativo envia uma pergunta para o Supabase, que guarda tabelas, e o Supabase devolve a resposta com os dados">
+          <defs>
+            <linearGradient id="m22-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#3b82f6"/>
+            </linearGradient>
+            <filter id="m22-glow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <pattern id="m22-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="1.3" cy="1.3" r="1.3" fill="#60a5fa" opacity="0.12"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="800" height="240" fill="url(#m22-grid)"/>
+
+          <!-- App -->
+          <rect x="30" y="80" width="170" height="90" rx="14" fill="#0e1622" stroke="#60a5fa" stroke-width="2"/>
+          <text x="115" y="74" text-anchor="middle" fill="#60a5fa" font-family="Inter,sans-serif" font-weight="600" font-size="13">SEU APP</text>
+          <text x="115" y="125" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="24">&#128187;</text>
+          <text x="115" y="152" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">site / aplicativo</text>
+
+          <!-- Seta pergunta -->
+          <line class="wf-a" x1="205" y1="110" x2="295" y2="110" stroke="#38bdf8" stroke-width="2.5"/>
+          <polygon class="wf-a" points="295,110 285,105 285,115" fill="#38bdf8"/>
+          <text x="250" y="100" text-anchor="middle" fill="#38bdf8" font-family="monospace" font-size="11">select...</text>
+
+          <!-- Supabase (tabelas) -->
+          <g filter="url(#m22-glow)">
+            <rect x="300" y="40" width="200" height="170" rx="14" fill="#0e1622" stroke="url(#m22-grad)" stroke-width="2"/>
+          </g>
+          <text x="400" y="34" text-anchor="middle" fill="#60a5fa" font-family="Inter,sans-serif" font-weight="600" font-size="13">SUPABASE</text>
+          <!-- tabela mock -->
+          <rect x="320" y="60" width="160" height="22" rx="4" fill="#1f2937" stroke="#3b82f6" stroke-width="1"/>
+          <text x="330" y="75" fill="#60a5fa" font-family="monospace" font-size="11">id  nome  email</text>
+          <rect x="320" y="86" width="160" height="20" rx="4" fill="#111827"/>
+          <text x="330" y="100" fill="#9ca3af" font-family="monospace" font-size="11">1   Ana   ana@..</text>
+          <rect x="320" y="108" width="160" height="20" rx="4" fill="#111827"/>
+          <text x="330" y="122" fill="#9ca3af" font-family="monospace" font-size="11">2   Beto  beto@.</text>
+          <rect x="320" y="130" width="160" height="20" rx="4" fill="#111827"/>
+          <text x="330" y="144" fill="#9ca3af" font-family="monospace" font-size="11">3   Caio  caio@.</text>
+          <text x="400" y="178" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">tabela: usuarios</text>
+          <text x="400" y="197" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-size="11">banco na nuvem</text>
+
+          <!-- Seta resposta -->
+          <line class="wf-a" x1="505" y1="130" x2="595" y2="130" stroke="#38bdf8" stroke-width="2.5"/>
+          <polygon class="wf-a" points="595,130 585,125 585,135" fill="#38bdf8"/>
+          <text x="550" y="120" text-anchor="middle" fill="#38bdf8" font-family="monospace" font-size="11">dados</text>
+
+          <!-- Resposta -->
+          <rect x="600" y="80" width="170" height="90" rx="14" fill="#0e1622" stroke="#60a5fa" stroke-width="2"/>
+          <text x="685" y="74" text-anchor="middle" fill="#60a5fa" font-family="Inter,sans-serif" font-weight="600" font-size="13">RESPOSTA</text>
+          <text x="685" y="118" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="24">&#9989;</text>
+          <text x="685" y="145" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">3 usuarios</text>
+        </svg>
+      </div>
+
+      <div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: Uma Planilha Turbinada
+        </h3>
+        <p data-inema-block="m2-2-t1-p2" class="text-neutral-300 mb-4">Imagine uma planilha do Excel: linhas, colunas, cada celula com uma informacao. Um banco de dados e essa planilha, so que <strong>turbinada</strong>. As diferencas:</p>
+        <ul class="space-y-2 text-neutral-300">
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">&#8226;</span><span>Ela vive na <strong>nuvem</strong>, nao no seu computador. Esta sempre online.</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">&#8226;</span><span><strong>Varios aplicativos</strong> consultam a mesma planilha ao mesmo tempo, sem brigar.</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">&#8226;</span><span>Ela aguenta <strong>milhoes de linhas</strong> e ainda responde em milissegundos.</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">&#8226;</span><span>Voce pede o que quer com uma "pergunta" (uma consulta) e ela devolve so o que importa.</span></li>
+        </ul>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> O que e o Supabase
+        </h3>
+        <p data-inema-block="m2-2-t1-p3" class="text-neutral-300">O <strong>Supabase</strong> e um servico gratuito que entrega um banco de dados pronto para usar, sem voce precisar instalar nada. Por dentro, ele usa o <strong>PostgreSQL</strong>, um dos bancos mais respeitados do mundo. Mas voce nao precisa saber disso para comecar: o Supabase coloca uma interface visual bonita por cima, parecida com uma planilha, e ainda cria automaticamente uma API para o seu site falar com o banco. E o jeito mais rapido de um iniciante ter um banco de verdade no ar.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 2: Criar projeto no Supabase          -->
+    <!-- ============================================ -->
+    <section id="topico-2" data-inema-topic="modulo-2-2#topico-2" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">2</span>
+        <h2 class="text-2xl font-bold">Criando Seu Projeto no Supabase</h2>
+      </div>
+
+      <p data-inema-block="m2-2-t2-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Antes de criar tabelas, voce precisa de um <strong class="text-blue-400">projeto</strong> no Supabase. Pense no projeto como a "caixa" que vai guardar tudo: o banco, os arquivos, a autenticacao. Tudo de um aplicativo fica dentro de um projeto. Vamos criar o seu passo a passo.
+      </p>
+
+      <!-- Timeline: passo a passo -->
+      <div class="space-y-6 mb-6">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">1</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Crie sua conta</h4>
+            <p class="text-sm text-neutral-400">Acesse <strong class="text-blue-400">supabase.com</strong> e clique em "Start your project". O mais simples e entrar com sua conta do <strong>GitHub</strong> (a mesma que voce ja criou na Trilha 1). Um clique e voce esta dentro.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">2</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Crie uma organizacao</h4>
+            <p class="text-sm text-neutral-400">Na primeira vez, o Supabase pede o nome de uma <strong>organizacao</strong>. E so um agrupamento de projetos (ex.: "meus-estudos"). Escolha o plano <strong class="text-blue-400">Free</strong>: e gratis e suficiente para aprender e ate para projetos pequenos no ar.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">3</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Configure o projeto</h4>
+            <p class="text-sm text-neutral-400 mb-3">Agora os dados do projeto. Tres campos importam:</p>
+            <ul class="space-y-2 text-sm text-neutral-300">
+              <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#8226;</span><span><strong>Name:</strong> o nome do projeto, ex.: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">meu-primeiro-app</code></span></li>
+              <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#8226;</span><span><strong>Database Password:</strong> uma senha forte para o banco. <strong class="text-blue-400">Salve essa senha</strong>, voce vai precisar dela depois.</span></li>
+              <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#8226;</span><span><strong>Region:</strong> escolha a regiao mais perto de voce (ex.: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">South America (Sao Paulo)</code>) para o banco responder mais rapido.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">4</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Espere o banco "acordar"</h4>
+            <p class="text-sm text-neutral-400">Clique em "Create new project". O Supabase leva cerca de <strong>1 a 2 minutos</strong> montando seu banco na nuvem. Quando terminar, voce cai no painel do projeto. Pronto: voce ja tem um banco de dados de verdade rodando.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- O que voce vai ver -->
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#128065;</span> O que voce vai ver na tela
+        </h3>
+        <p data-inema-block="m2-2-t2-p2" class="text-neutral-300 text-sm mb-3">Ao abrir o painel do projeto, repare na <strong class="text-blue-400">barra lateral esquerda</strong>. E ali que voce vai trabalhar o curso inteiro:</p>
+        <ul class="space-y-2 text-sm text-neutral-300">
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#128202;</span><span><strong>Table Editor:</strong> sua "planilha" para criar e ver tabelas.</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#128187;</span><span><strong>SQL Editor:</strong> onde voce escreve comandos para o banco.</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#128273;</span><span><strong>Authentication:</strong> cadastro e login de usuarios.</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#9881;&#65039;</span><span><strong>Settings &gt; API:</strong> as chaves para o seu site se conectar.</span></li>
+        </ul>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m2-2-t2-p3" class="text-neutral-300"><strong>Problema:</strong> "Perdi a senha do banco (Database Password) e agora nao sei conectar." <br><strong>Solucao:</strong> Para a maioria das coisas no curso voce vai usar as chaves de API, nao essa senha. Mas se precisar dela e tiver perdido, va em <strong>Settings &gt; Database</strong> e clique em "Reset database password" para gerar uma nova. Da proxima vez, salve a senha num gerenciador de senhas assim que criar o projeto.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 3: Tabelas, colunas e tipos           -->
+    <!-- ============================================ -->
+    <section id="topico-3" data-inema-topic="modulo-2-2#topico-3" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">3</span>
+        <h2 class="text-2xl font-bold">Tabelas, Colunas e Tipos</h2>
+      </div>
+
+      <p data-inema-block="m2-2-t3-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Dentro do banco, os dados moram em <strong class="text-blue-400">tabelas</strong>. Cada tabela guarda um tipo de coisa: uma tabela <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-blue-400">usuarios</code>, outra <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-blue-400">tarefas</code>, outra <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-blue-400">mensagens</code>. As <strong class="text-blue-400">colunas</strong> sao as informacoes de cada item, e cada coluna tem um <strong class="text-blue-400">tipo</strong> que diz que conteudo ela aceita.
+      </p>
+
+      <div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: Tabela = Folha, Linha = Ficha, Coluna = Campo
+        </h3>
+        <p data-inema-block="m2-2-t3-p2" class="text-neutral-300">Pense num fichario. A <strong>tabela</strong> e uma gaveta ("Usuarios"). Cada <strong>linha</strong> e uma ficha de uma pessoa. Cada <strong>coluna</strong> e um campo da ficha: "Nome", "Email", "Data de cadastro". O <strong>tipo</strong> e a regra do campo: "Idade" so aceita numero, "Cadastrado?" so aceita sim ou nao.</p>
+      </div>
+
+      <!-- Tipos de dados -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Os tipos que voce mais vai usar</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="bg-dark-700 rounded-lg p-4">
+            <code class="text-blue-400 font-mono text-sm font-bold">text</code>
+            <p class="text-sm text-neutral-300 mt-1">Texto: nomes, emails, mensagens, qualquer palavra ou frase.</p>
+          </div>
+          <div class="bg-dark-700 rounded-lg p-4">
+            <code class="text-blue-400 font-mono text-sm font-bold">int</code> <span class="text-neutral-500 text-xs">(int8)</span>
+            <p class="text-sm text-neutral-300 mt-1">Numero inteiro: idade, quantidade, pontuacao.</p>
+          </div>
+          <div class="bg-dark-700 rounded-lg p-4">
+            <code class="text-blue-400 font-mono text-sm font-bold">bool</code>
+            <p class="text-sm text-neutral-300 mt-1">Verdadeiro ou falso: "ativo?", "concluido?". So aceita true/false.</p>
+          </div>
+          <div class="bg-dark-700 rounded-lg p-4">
+            <code class="text-blue-400 font-mono text-sm font-bold">timestamp</code>
+            <p class="text-sm text-neutral-300 mt-1">Data e hora: quando algo foi criado ou atualizado.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chave primaria -->
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-3 flex items-center">
+          <span class="mr-2">&#128273;</span> A chave primaria (Primary Key)
+        </h3>
+        <p data-inema-block="m2-2-t3-p3" class="text-neutral-300 text-sm">Toda tabela tem uma coluna especial, geralmente chamada <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono text-blue-400">id</code>, que e a <strong>chave primaria</strong>. Ela e o numero de identidade de cada linha: nunca se repete e nunca fica vazia. E assim que o banco sabe que a linha "Ana com id 1" e diferente de outra "Ana com id 7". No Supabase, ao criar uma tabela, a coluna <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">id</code> ja vem pronta como chave primaria que se preenche sozinha.</p>
+      </div>
+
+      <!-- Exemplo de tabela -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Exemplo: a tabela <code class="text-blue-400 font-mono">tarefas</code></h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+          <p class="text-neutral-400"># Colunas e tipos</p>
+          <p class="text-blue-400">id          int8       (chave primaria)</p>
+          <p class="text-blue-400">titulo      text       "Comprar pao"</p>
+          <p class="text-blue-400">concluida   bool       false</p>
+          <p class="text-blue-400">criada_em   timestamp  2026-06-17 10:00</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">No Table Editor, voce monta isso clicando em "New table", dando o nome <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">tarefas</code> e adicionando cada coluna com seu tipo.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+          <h4 class="font-bold text-emerald-400 mb-4">&#10003; O que FAZER</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Nomes de tabela no plural e minusculo: <code class="font-mono text-sm">usuarios</code></span></li>
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Escolher o tipo certo (numero em <code class="font-mono text-sm">int</code>, texto em <code class="font-mono text-sm">text</code>)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Deixar a coluna <code class="font-mono text-sm">id</code> como chave primaria automatica</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; O que NAO fazer</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Guardar numero em coluna <code class="font-mono text-sm">text</code> se for fazer contas</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Usar acentos ou espacos no nome das colunas</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Criar uma tabela gigante para tudo (separe por assunto)</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 4: Inserir e consultar dados          -->
+    <!-- ============================================ -->
+    <section id="topico-4" data-inema-topic="modulo-2-2#topico-4" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">4</span>
+        <h2 class="text-2xl font-bold">Inserir e Consultar Dados</h2>
+      </div>
+
+      <p data-inema-block="m2-2-t4-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Tabela criada, agora vem a parte divertida: <strong class="text-blue-400">colocar dados dentro</strong> e <strong class="text-blue-400">pedir esses dados de volta</strong>. Voce pode fazer isso de dois jeitos no Supabase: clicando na interface (o Table Editor) ou escrevendo comandos SQL. Vamos ver os dois, comecando pelo mais facil.
+      </p>
+
+      <!-- Pela interface -->
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#128065;</span> Pela interface: Table Editor
+        </h3>
+        <p data-inema-block="m2-2-t4-p2" class="text-neutral-300 text-sm mb-3">No Table Editor, e igual a editar uma planilha:</p>
+        <ul class="space-y-2 text-sm text-neutral-300">
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#8226;</span><span>Clique na sua tabela <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">tarefas</code> na lista da esquerda.</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#8226;</span><span>Clique em <strong>"Insert" &gt; "Insert row"</strong> para adicionar uma linha nova.</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#8226;</span><span>Preencha os campos (deixe o <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">id</code> em branco, ele se preenche) e salve.</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#8226;</span><span>A linha aparece na hora na tabela. Pronto, voce inseriu um dado.</span></li>
+        </ul>
+      </div>
+
+      <!-- SQL: insert -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Pelo SQL: <code class="text-blue-400 font-mono">insert</code> (inserir dados)</h3>
+        <p data-inema-block="m2-2-t4-p3" class="text-neutral-300 text-sm mb-4">No <strong>SQL Editor</strong>, voce escreve um comando para inserir. Le-se quase como ingles: "insira na tabela tarefas, nas colunas titulo e concluida, os valores...".</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-blue-400">insert into tarefas (titulo, concluida)</p>
+          <p class="text-blue-400">values ('Comprar pao', false);</p>
+          <p class="text-neutral-400 mt-3"># O que o banco responde:</p>
+          <p class="text-neutral-300">Success. 1 row inserted</p>
+        </div>
+      </div>
+
+      <!-- SQL: select -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Pelo SQL: <code class="text-blue-400 font-mono">select</code> (consultar dados)</h3>
+        <p data-inema-block="m2-2-t4-p4" class="text-neutral-300 text-sm mb-4">O <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">select</code> e como voce pergunta: "me mostra os dados". O <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">*</code> significa "todas as colunas".</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Pegar tudo da tabela</p>
+          <p class="text-blue-400">select * from tarefas;</p>
+          <p class="text-neutral-400 mt-3"># O que o banco devolve:</p>
+          <p class="text-neutral-300">id | titulo        | concluida</p>
+          <p class="text-neutral-300">1  | Comprar pao   | false</p>
+          <p class="text-neutral-400 mt-4"># So as tarefas ainda nao concluidas</p>
+          <p class="text-blue-400">select titulo from tarefas where concluida = false;</p>
+          <p class="text-neutral-300 mt-1">titulo</p>
+          <p class="text-neutral-300">Comprar pao</p>
+        </div>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Dica: O <code class="font-mono">where</code> e seu filtro
+        </h3>
+        <p data-inema-block="m2-2-t4-p5" class="text-neutral-300">Quase sempre voce nao quer TODOS os dados, so alguns. A palavra <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">where</code> e o filtro: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">where concluida = false</code> traz so as nao concluidas. Sem <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">where</code>, vem tudo. Comece sempre testando com <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">select</code> antes de mexer pra valer nos dados.</p>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m2-2-t4-p6" class="text-neutral-300"><strong>Problema:</strong> "Escrevi o texto sem aspas e deu erro de sintaxe." <br><strong>Solucao:</strong> No SQL, todo valor de texto (<code class="font-mono text-sm">text</code>) vai entre <strong>aspas simples</strong>: <code class="font-mono text-sm text-red-400">'Comprar pao'</code>, nao <code class="font-mono text-sm">Comprar pao</code>. Numeros (<code class="font-mono text-sm">int</code>) e booleanos (<code class="font-mono text-sm">true</code>/<code class="font-mono text-sm">false</code>) vao sem aspas. E nao esqueca o <code class="font-mono text-sm">;</code> no fim do comando.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 5: A API automatica do Supabase       -->
+    <!-- ============================================ -->
+    <section id="topico-5" data-inema-topic="modulo-2-2#topico-5" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">5</span>
+        <h2 class="text-2xl font-bold">A API Automatica do Supabase</h2>
+      </div>
+
+      <p data-inema-block="m2-2-t5-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Aqui vem a magica. Assim que voce cria uma tabela, o Supabase <strong class="text-blue-400">cria sozinho uma API</strong> para o seu site falar com o banco. Voce nao precisa programar servidor nenhum. Seu site no Vercel chama essa API e recebe os dados de volta. E como se o banco ganhasse um "telefone" para o seu app ligar.
+      </p>
+
+      <div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: O banco ganhou um garcom
+        </h3>
+        <p data-inema-block="m2-2-t5-p2" class="text-neutral-300">Imagine o banco de dados como a cozinha de um restaurante. Seu site nao entra na cozinha (seria perigoso). Em vez disso, ele fala com um <strong>garcom</strong>: a API. O site faz o pedido ("me traz as tarefas"), o garcom vai a cozinha, pega e volta com o prato. A API e esse garcom: organizada, segura e sempre disponivel.</p>
+      </div>
+
+      <!-- onde achar as chaves -->
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#128273;</span> Onde estao a URL e a chave (anon key)
+        </h3>
+        <p data-inema-block="m2-2-t5-p3" class="text-neutral-300 text-sm mb-3">Para o seu site se conectar, ele precisa de duas coisas, que ficam em <strong>Settings &gt; API</strong>:</p>
+        <ul class="space-y-2 text-sm text-neutral-300">
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#8226;</span><span><strong>Project URL:</strong> o endereco do seu banco, algo como <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">https://abc123.supabase.co</code></span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">&#8226;</span><span><strong>anon key:</strong> a chave publica, que o site usa no navegador. Pode aparecer no seu codigo do front-end.</span></li>
+        </ul>
+        <p class="text-neutral-400 text-sm mt-3">A <strong>anon key</strong> e segura de expor porque sozinha ela so consegue o que voce permitir (e o tema do proximo topico). Ja a outra chave, a <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">service_role</code>, e secreta: nunca coloque no front-end.</p>
+      </div>
+
+      <!-- Codigo JS client -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Usando o cliente JS do Supabase</h3>
+        <p data-inema-block="m2-2-t5-p4" class="text-neutral-300 text-sm mb-4">O jeito mais comum num site e usar a biblioteca <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">supabase-js</code>. Voce conecta uma vez com a URL e a anon key, depois pede os dados em uma linha:</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+          <p class="text-neutral-400">// 1. conectar ao seu banco</p>
+          <p class="text-blue-400">const supabase = createClient(</p>
+          <p class="text-blue-400">  'https://abc123.supabase.co',</p>
+          <p class="text-blue-400">  'sua-anon-key-aqui'</p>
+          <p class="text-blue-400">)</p>
+          <p class="text-neutral-400 mt-3">// 2. pedir os dados (mesmo que: select * from tarefas)</p>
+          <p class="text-blue-400">const { data, error } = await supabase</p>
+          <p class="text-blue-400">  .from('tarefas')</p>
+          <p class="text-blue-400">  .select('*')</p>
+          <p class="text-neutral-400 mt-3">// 3. o que volta em "data":</p>
+          <p class="text-neutral-300">[ { id: 1, titulo: 'Comprar pao', concluida: false } ]</p>
+        </div>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Tambem da pra usar via REST puro
+        </h3>
+        <p data-inema-block="m2-2-t5-p5" class="text-neutral-300">Se voce nao usar a biblioteca, a mesma API responde por <strong>REST</strong> (HTTP). Uma chamada <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">GET</code> para <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">/rest/v1/tarefas</code> com a anon key no cabecalho devolve o mesmo JSON. Voce vai aprofundar isso no modulo 2.3, sobre APIs. Por enquanto, basta saber: tabela criada = API pronta, de graca.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 6: Autenticacao basica                -->
+    <!-- ============================================ -->
+    <section id="topico-6" data-inema-topic="modulo-2-2#topico-6" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">6</span>
+        <h2 class="text-2xl font-bold">Autenticacao Basica e RLS</h2>
+      </div>
+
+      <p data-inema-block="m2-2-t6-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Quase todo aplicativo precisa de <strong class="text-blue-400">login</strong>: um usuario cria conta, entra com email e senha, e ve so o que e dele. O Supabase ja traz isso pronto na secao <strong class="text-blue-400">Authentication</strong>. Voce nao precisa guardar senhas (o Supabase faz isso com seguranca), nem montar telas de cadastro do zero no servidor.
+      </p>
+
+      <!-- sign up / sign in -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Cadastrar e entrar (sign up / sign in)</h3>
+        <p data-inema-block="m2-2-t6-p2" class="text-neutral-300 text-sm mb-4">Com o cliente JS, criar conta e fazer login sao duas chamadas simples:</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+          <p class="text-neutral-400">// criar uma conta nova (sign up)</p>
+          <p class="text-blue-400">await supabase.auth.signUp({</p>
+          <p class="text-blue-400">  email: 'ana@email.com',</p>
+          <p class="text-blue-400">  password: 'senha-secreta'</p>
+          <p class="text-blue-400">})</p>
+          <p class="text-neutral-400 mt-3">// entrar com conta existente (sign in)</p>
+          <p class="text-blue-400">await supabase.auth.signInWithPassword({</p>
+          <p class="text-blue-400">  email: 'ana@email.com',</p>
+          <p class="text-blue-400">  password: 'senha-secreta'</p>
+          <p class="text-blue-400">})</p>
+          <p class="text-neutral-400 mt-3">// resposta do sign in: um usuario logado</p>
+          <p class="text-neutral-300">{ user: { id: 'uuid...', email: 'ana@email.com' } }</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">O usuario cadastrado aparece na lista em <strong>Authentication &gt; Users</strong> no painel.</p>
+      </div>
+
+      <!-- RLS resumido -->
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-3 flex items-center">
+          <span class="mr-2">&#128274;</span> RLS em uma frase
+        </h3>
+        <p data-inema-block="m2-2-t6-p3" class="text-neutral-300 text-sm"><strong>RLS</strong> (Row Level Security, "seguranca por linha") e a regra que decide <strong>quem pode ver e mexer em cada linha</strong> da tabela. Sem RLS, ou tudo fica trancado, ou qualquer um com a anon key le tudo. Com RLS ligado, voce escreve uma regra do tipo "cada usuario so ve as proprias tarefas". E o cadeado que faz a anon key ser segura no navegador.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+          <h4 class="font-bold text-emerald-400 mb-4">&#10003; O que FAZER</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Ligar o RLS em toda tabela com dados de usuario</span></li>
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Usar a <code class="font-mono text-sm">anon key</code> no front-end (e a publica)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Deixar o Supabase guardar as senhas por voce</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; O que NAO fazer</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Expor a chave <code class="font-mono text-sm">service_role</code> no site</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Deixar tabela com dados sensiveis sem RLS</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Guardar senha em texto numa coluna sua</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m2-2-t6-p4" class="text-neutral-300"><strong>Problema:</strong> "Liguei o RLS e agora minha consulta volta vazia, mesmo tendo dados." <br><strong>Solucao:</strong> Quando voce liga o RLS, por padrao tudo fica <strong>bloqueado</strong> ate voce criar uma policy (regra) que libere. Va em <strong>Authentication &gt; Policies</strong> e crie uma regra de leitura. Para testar enquanto aprende, da pra criar uma policy simples de "permitir leitura para usuarios logados".</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- RESUMO -->
+    <section class="mb-12">
+      <div class="bg-gradient-to-br from-blue-900/40 via-dark-800 to-dark-800 rounded-xl border border-blue-500/30 p-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+          <span class="mr-3">&#128218;</span> Resumo do Modulo
+        </h2>
+        <div class="space-y-4 mb-8">
+          <div class="flex items-start space-x-3">
+            <span class="text-blue-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Banco de dados e uma planilha turbinada</strong><span class="text-neutral-400"> - na nuvem, varios apps consultam ao mesmo tempo</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-blue-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Projeto no Supabase</strong><span class="text-neutral-400"> - conta, organizacao, regiao e senha do banco</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-blue-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Tabelas, colunas e tipos</strong><span class="text-neutral-400"> - text, int, bool, timestamp e a chave primaria id</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-blue-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">insert e select</strong><span class="text-neutral-400"> - inserir e consultar pelo Table Editor ou por SQL</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-blue-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">API automatica e autenticacao</strong><span class="text-neutral-400"> - anon key, cliente JS, login e RLS para proteger</span></div>
+          </div>
+        </div>
+
+        <div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+          <h3 class="font-semibold text-blue-400 mb-2">Proximo Modulo:</h3>
+          <p class="text-neutral-300">2.3 - APIs: Como Sistemas Conversam (entender requisicoes, JSON e consumir dados de fora)</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">
+            &#8592; Voltar para Trilha
+          </a>
+          <a href="modulo-2-3.html" class="flex-1 text-center px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-500 transition-colors">
+            Proximo Modulo &#8594;
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-dark-600 py-8 mt-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+      <p>Do Zero ao Deploy - 2026</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+
+  <script src="../../assets/learn.js"></script>
+  <script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

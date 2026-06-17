@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="inema-course" content="dzd">
+  <title>Git: Salvando Seu Trabalho | Do Zero ao Deploy</title>
+
+  <!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+  <script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'emerald');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/learn.css">
+
+  <!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+  <script type="application/json" data-inema-manifest>
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha emerald) */
+    html:not(.dark) .text-emerald-400 { color: #059669; }
+    html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(5, 150, 105, 0.12); }
+    html:not(.dark) .bg-emerald-500\/10 { background-color: rgba(5, 150, 105, 0.08); }
+    html:not(.dark) .border-emerald-500\/30 { border-color: rgba(5, 150, 105, 0.25); }
+    html:not(.dark) .hover\:bg-emerald-500\/30:hover { background-color: rgba(5, 150, 105, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+
+  <!-- NAVIGATION -->
+  <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-14">
+        <div class="flex items-center space-x-4">
+          <a href="../../index.html" class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300">
+            <span class="text-2xl">&#128640;</span>
+            <span class="font-bold text-lg hidden sm:inline">Do Zero ao Deploy</span>
+          </a>
+          <span class="text-neutral-600">|</span>
+          <a href="https://inema.club" target="_blank" class="text-sky-400 hover:text-sky-300 text-sm font-medium">INEMA.CLUB</a>
+        </div>
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <a href="index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-emerald-400 bg-emerald-500/10">
+            <span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal & Git</span>
+          </a>
+          <a href="../trilha2/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors">
+            <span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy Moderno</span>
+          </a>
+          <a href="../trilha3/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors">
+            <span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor Proprio</span>
+          </a>
+          <a href="../trilha4/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
+            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+          </a>
+          <a href="../trilha5/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors">
+            <span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+          </a>
+          <button id="theme-toggle" class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2">
+            <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMB -->
+  <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex items-center space-x-2 text-sm text-neutral-400">
+      <a href="../../index.html" class="hover:text-emerald-400">Inicio</a>
+      <span>/</span>
+      <a href="index.html" class="hover:text-emerald-400">Trilha 1</a>
+      <span>/</span>
+      <span class="text-emerald-400">Modulo 1.2</span>
+    </div>
+  </nav>
+
+  <!-- HEADER -->
+  <header class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full mb-4">MODULO 1.2</span>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">&#127807; Git: Salvando Seu Trabalho</h1>
+      <p class="text-lg text-neutral-400 max-w-3xl">O Git e o controle de versao do seu projeto. Com ele voce nunca mais perde codigo, e pode voltar no tempo do projeto para qualquer ponto onde tudo funcionava. Aqui voce vai aprender a salvar versoes do seu trabalho e dormir tranquilo.</p>
+      <div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-emerald-400">6</div>
+          <div class="text-xs text-neutral-400">Topicos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-emerald-400">45</div>
+          <div class="text-xs text-neutral-400">Minutos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-emerald-400">Zero</div>
+          <div class="text-xs text-neutral-400">Nivel</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-emerald-400">Pratico</div>
+          <div class="text-xs text-neutral-400">Tipo</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEUDO -->
+  <main id="conteudo" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="1-2" data-inema-track="1">
+
+    <!-- ============================================ -->
+    <!-- TOPICO 1: O que e controle de versao         -->
+    <!-- ============================================ -->
+    <section id="topico-1" data-inema-topic="modulo-1-2#topico-1" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">1</span>
+        <h2 class="text-2xl font-bold">O Que e Controle de Versao</h2>
+      </div>
+
+      <p data-inema-block="m1-2-t1-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Imagine um <strong class="text-emerald-400">Ctrl+Z infinito</strong> para o seu projeto inteiro. Nao so para o ultimo caractere que voce digitou, mas para qualquer ponto da historia: ontem de manha, na semana passada, antes daquela mudanca que quebrou tudo. Isso e controle de versao. O Git guarda uma <strong class="text-emerald-400">linha do tempo</strong> do seu projeto, e cada vez que voce salva (um "commit"), cria um ponto pra onde voce sempre pode voltar.
+      </p>
+
+      <!-- SVG: Linha do tempo de commits -->
+      <div class="rounded-2xl border border-emerald-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+        <svg viewBox="0 0 800 200" class="w-full h-auto" role="img" aria-label="Linha do tempo de commits do Git: cada commit e um ponto salvo pra onde voce pode voltar no tempo do projeto">
+          <defs>
+            <linearGradient id="m12-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/>
+            </linearGradient>
+            <filter id="m12-glow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <pattern id="m12-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="1.3" cy="1.3" r="1.3" fill="#34d399" opacity="0.12"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="800" height="200" fill="url(#m12-grid)"/>
+          <text x="400" y="28" text-anchor="middle" fill="#34d399" font-family="Inter,sans-serif" font-weight="600" font-size="14">LINHA DO TEMPO DO PROJETO</text>
+          <!-- linha base -->
+          <line x1="70" y1="110" x2="730" y2="110" stroke="#374151" stroke-width="3"/>
+          <line x1="70" y1="110" x2="650" y2="110" stroke="url(#m12-grad)" stroke-width="3"/>
+          <!-- commit 1 -->
+          <circle class="wf-a" cx="130" cy="110" r="14" fill="#0e2018" stroke="#34d399" stroke-width="2.5"/>
+          <text x="130" y="150" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">primeiro</text>
+          <text x="130" y="166" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">commit</text>
+          <text x="130" y="86" text-anchor="middle" fill="#38bdf8" font-family="monospace" font-size="11">a1b2c3</text>
+          <!-- commit 2 -->
+          <circle class="wf-a" cx="300" cy="110" r="14" fill="#0e2018" stroke="#34d399" stroke-width="2.5"/>
+          <text x="300" y="150" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">adiciona</text>
+          <text x="300" y="166" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">menu</text>
+          <text x="300" y="86" text-anchor="middle" fill="#38bdf8" font-family="monospace" font-size="11">d4e5f6</text>
+          <!-- commit 3 -->
+          <g filter="url(#m12-glow)">
+            <circle class="wf-a" cx="470" cy="110" r="14" fill="#0e2018" stroke="url(#m12-grad)" stroke-width="2.5"/>
+          </g>
+          <text x="470" y="150" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">arruma</text>
+          <text x="470" y="166" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">cores</text>
+          <text x="470" y="86" text-anchor="middle" fill="#38bdf8" font-family="monospace" font-size="11">7a8b9c</text>
+          <!-- commit 4 atual -->
+          <circle cx="650" cy="110" r="16" fill="#34d399" stroke="#10b981" stroke-width="2.5"/>
+          <text x="650" y="115" text-anchor="middle" fill="#0e2018" font-family="Inter,sans-serif" font-weight="600" font-size="13">HEAD</text>
+          <text x="650" y="150" text-anchor="middle" fill="#34d399" font-family="Inter,sans-serif" font-weight="600" font-size="11">agora</text>
+          <text x="650" y="86" text-anchor="middle" fill="#38bdf8" font-family="monospace" font-size="11">e0f1a2</text>
+          <!-- seta de voltar no tempo -->
+          <path d="M 640 70 Q 385 30 140 70" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="5 4"/>
+          <polygon points="140,70 152,64 150,78" fill="#38bdf8"/>
+          <text x="390" y="50" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-size="11">voltar no tempo a qualquer ponto</text>
+        </svg>
+      </div>
+
+      <div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: Um Ctrl+Z Infinito
+        </h3>
+        <p data-inema-block="m1-2-t1-p2" class="text-neutral-300 mb-4">No editor de texto, o Ctrl+Z desfaz a ultima coisa que voce digitou. Mas se voce fechar o programa, o historico some. O Git e como um Ctrl+Z que <strong>nunca</strong> some e funciona para o projeto inteiro.</p>
+        <ul class="space-y-2 text-neutral-300">
+          <li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">&#8226;</span><span>Cada vez que voce salva, vira uma <strong>foto</strong> do projeto naquele momento</span></li>
+          <li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">&#8226;</span><span>Voce pode olhar qualquer foto antiga e ver o que mudou</span></li>
+          <li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">&#8226;</span><span>Se algo quebrar, voce volta para a foto onde estava tudo bem</span></li>
+          <li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">&#8226;</span><span>Nada se perde: o historico inteiro fica guardado</span></li>
+        </ul>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Por que o Git existe
+        </h3>
+        <p data-inema-block="m1-2-t1-p3" class="text-neutral-300">Antes do Git, gente salvava pastas chamadas <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">projeto-final</code>, <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">projeto-final-2</code>, <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">projeto-final-AGORA-VAI</code>. Uma bagunca. O Git resolve isso: ele guarda todas as versoes de forma organizada, mostra exatamente o que mudou entre uma e outra, e ainda deixa varias pessoas trabalharem no mesmo projeto sem pisar no pe uma da outra.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 2: Instalar o Git                     -->
+    <!-- ============================================ -->
+    <section id="topico-2" data-inema-topic="modulo-1-2#topico-2" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">2</span>
+        <h2 class="text-2xl font-bold">Instalando e Configurando o Git</h2>
+      </div>
+
+      <p data-inema-block="m1-2-t2-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Antes de usar o Git, voce precisa <strong class="text-emerald-400">instala-lo</strong> e dizer quem voce e (nome e email). Isso e feito uma unica vez por computador. Cada sistema operacional tem seu jeito, mas no final o resultado e o mesmo: o comando <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">git</code> passa a funcionar no terminal.
+      </p>
+
+      <!-- Timeline: instalacao por OS -->
+      <div class="space-y-6 mb-6">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <span class="text-emerald-400 font-bold text-lg">W</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Windows</h4>
+            <p class="text-sm text-neutral-400 mb-3">Baixe o instalador oficial e siga o "Next, Next, Next"</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-neutral-400 mb-1"># Acesse o site oficial no navegador</p>
+              <p class="text-emerald-400">https://git-scm.com/download/win</p>
+              <p class="text-neutral-400 mt-3 mb-1"># Rode o instalador. Aceite as opcoes padrao.</p>
+              <p class="text-neutral-400 mb-1"># Vem junto o "Git Bash", um terminal so pra Git.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <span class="text-emerald-400 font-bold text-lg">&#127822;</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">macOS</h4>
+            <p class="text-sm text-neutral-400 mb-3">Via Homebrew ou pelas ferramentas de desenvolvedor</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-neutral-400 mb-1"># Opcao 1: com Homebrew (recomendado)</p>
+              <p class="text-emerald-400">$ brew install git</p>
+              <p class="text-neutral-400 mt-3 mb-1"># Opcao 2: ferramentas da Apple</p>
+              <p class="text-emerald-400">$ xcode-select --install</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <span class="text-emerald-400 font-bold text-lg">&#128039;</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Linux</h4>
+            <p class="text-sm text-neutral-400 mb-3">Pelo gerenciador de pacotes da sua distribuicao</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-neutral-400 mb-1"># Ubuntu / Debian</p>
+              <p class="text-emerald-400">$ sudo apt install git</p>
+              <p class="text-neutral-400 mt-3 mb-1"># Fedora</p>
+              <p class="text-emerald-400">$ sudo dnf install git</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conferir e configurar -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Confira a instalacao e configure quem voce e</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Confirme que o Git esta instalado</p>
+          <p class="text-emerald-400">$ git --version</p>
+          <p class="text-neutral-300">git version 2.43.0</p>
+          <p class="text-neutral-400 mt-3"># Diga ao Git seu nome (aparece em cada commit)</p>
+          <p class="text-emerald-400">$ git config --global user.name "Seu Nome"</p>
+          <p class="text-neutral-400 mt-3"># Diga ao Git seu email</p>
+          <p class="text-emerald-400">$ git config --global user.email "voce@email.com"</p>
+          <p class="text-neutral-400 mt-3"># Confira o que ficou configurado</p>
+          <p class="text-emerald-400">$ git config --list</p>
+          <p class="text-neutral-300">user.name=Seu Nome</p>
+          <p class="text-neutral-300">user.email=voce@email.com</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">O <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">--global</code> vale para todos os projetos do seu computador. Voce so faz isso uma vez.</p>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m1-2-t2-p2" class="text-neutral-300"><strong>Problema:</strong> Voce digita <code class="font-mono text-sm text-red-400">git --version</code> e aparece "git: command not found" (ou "nao reconhecido como comando"). <br><strong>Solucao:</strong> O Git nao foi instalado, ou o terminal antigo nao "viu" a instalacao. Feche o terminal e abra de novo. Se mesmo assim nao funcionar, refaca a instalacao do seu sistema operacional pelos passos acima.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 3: O ciclo basico                     -->
+    <!-- ============================================ -->
+    <section id="topico-3" data-inema-topic="modulo-1-2#topico-3" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">3</span>
+        <h2 class="text-2xl font-bold">O Ciclo Basico: init, add, commit</h2>
+      </div>
+
+      <p data-inema-block="m1-2-t3-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Existe um ciclo de tres passos que voce vai repetir mil vezes na vida: <strong class="text-emerald-400">iniciar</strong> o controle de versao numa pasta, <strong class="text-emerald-400">preparar</strong> os arquivos que mudaram, e <strong class="text-emerald-400">commitar</strong> (salvar a foto). Pense em cada commit como tirar uma <strong>foto do projeto</strong>: voce escolhe o que entra na foto, e depois bate a foto com uma legenda.
+      </p>
+
+      <!-- SVG: fluxo working -> staging -> commit -->
+      <div class="rounded-2xl border border-emerald-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+        <svg viewBox="0 0 800 220" class="w-full h-auto" role="img" aria-label="Fluxo do Git: os arquivos vao da area de trabalho para a area de preparo com git add, e da area de preparo para o repositorio com git commit">
+          <defs>
+            <linearGradient id="m12b-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/>
+            </linearGradient>
+            <filter id="m12b-glow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <pattern id="m12b-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="1.3" cy="1.3" r="1.3" fill="#34d399" opacity="0.12"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="800" height="220" fill="url(#m12b-grid)"/>
+          <!-- caixa 1: working -->
+          <rect x="30" y="60" width="200" height="100" rx="14" fill="#1a1a2e" stroke="#9ca3af" stroke-width="2"/>
+          <text x="130" y="50" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-weight="600" font-size="13">AREA DE TRABALHO</text>
+          <text x="130" y="100" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="12">onde voce edita</text>
+          <text x="130" y="122" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="12">index.html</text>
+          <text x="130" y="140" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="12">style.css</text>
+          <!-- seta add -->
+          <line x1="232" y1="110" x2="298" y2="110" stroke="#38bdf8" stroke-width="2.5"/>
+          <polygon points="298,110 286,104 286,116" fill="#38bdf8"/>
+          <text x="265" y="98" text-anchor="middle" fill="#38bdf8" font-family="monospace" font-size="11">git add</text>
+          <!-- caixa 2: staging -->
+          <rect x="300" y="60" width="200" height="100" rx="14" fill="#0e2018" stroke="#38bdf8" stroke-width="2"/>
+          <text x="400" y="50" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="13">AREA DE PREPARO</text>
+          <text x="400" y="100" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-size="12">o que entra na foto</text>
+          <text x="400" y="122" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="12">+ index.html</text>
+          <text x="400" y="140" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="12">+ style.css</text>
+          <!-- seta commit -->
+          <line x1="502" y1="110" x2="568" y2="110" stroke="url(#m12b-grad)" stroke-width="2.5"/>
+          <polygon points="568,110 556,104 556,116" fill="#10b981"/>
+          <text x="535" y="98" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="11">git commit</text>
+          <!-- caixa 3: repo -->
+          <g filter="url(#m12b-glow)">
+            <rect x="570" y="60" width="200" height="100" rx="14" fill="#0e2018" stroke="url(#m12b-grad)" stroke-width="2"/>
+          </g>
+          <text x="670" y="50" text-anchor="middle" fill="#34d399" font-family="Inter,sans-serif" font-weight="600" font-size="13">REPOSITORIO</text>
+          <text x="670" y="100" text-anchor="middle" fill="#34d399" font-family="Inter,sans-serif" font-size="12">historico salvo</text>
+          <circle cx="640" cy="128" r="9" fill="#0e2018" stroke="#34d399" stroke-width="2"/>
+          <circle cx="670" cy="128" r="9" fill="#0e2018" stroke="#34d399" stroke-width="2"/>
+          <circle cx="700" cy="128" r="9" fill="#34d399"/>
+          <line x1="649" y1="128" x2="661" y2="128" stroke="#34d399" stroke-width="2"/>
+          <line x1="679" y1="128" x2="691" y2="128" stroke="#34d399" stroke-width="2"/>
+          <text x="400" y="200" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="12">edita &#8594; prepara (add) &#8594; salva a foto (commit)</text>
+        </svg>
+      </div>
+
+      <!-- git init -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">git init</code> - Comecar o controle de versao</h3>
+        <p data-inema-block="m1-2-t3-p2" class="text-neutral-300 text-sm mb-4">Dentro da pasta do projeto, este comando cria um repositorio Git (uma pasta escondida <code class="font-mono">.git</code>) que vai guardar todo o historico.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-emerald-400">$ git init</p>
+          <p class="text-neutral-300">Initialized empty Git repository in /home/usuario/meu-site/.git/</p>
+        </div>
+      </div>
+
+      <!-- git status -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">git status</code> - Ver a situacao</h3>
+        <p data-inema-block="m1-2-t3-p3" class="text-neutral-300 text-sm mb-4">Mostra quais arquivos mudaram e ainda nao foram salvos. Use sempre que estiver em duvida.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-emerald-400">$ git status</p>
+          <p class="text-neutral-300">On branch main</p>
+          <p class="text-neutral-300">No commits yet</p>
+          <p class="text-neutral-300 mt-2">Untracked files:</p>
+          <p class="text-red-400">  index.html</p>
+          <p class="text-red-400">  style.css</p>
+          <p class="text-neutral-400 mt-1">(use "git add" para incluir no proximo commit)</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Vermelho = arquivo modificado mas ainda fora da foto.</p>
+      </div>
+
+      <!-- git add -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">git add</code> - Escolher o que entra na foto</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Adicionar um arquivo especifico</p>
+          <p class="text-emerald-400">$ git add index.html</p>
+          <p class="text-neutral-400 mt-3"># Adicionar TODOS os arquivos modificados</p>
+          <p class="text-emerald-400">$ git add .</p>
+          <p class="text-neutral-400 mt-3"># Confira: agora aparecem em verde</p>
+          <p class="text-emerald-400">$ git status</p>
+          <p class="text-neutral-300">Changes to be committed:</p>
+          <p class="text-emerald-400">  new file:   index.html</p>
+          <p class="text-emerald-400">  new file:   style.css</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">O ponto <code class="font-mono">.</code> significa "tudo nesta pasta". Verde = pronto para entrar na foto.</p>
+      </div>
+
+      <!-- git commit -->
+      <div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
+          <span class="mr-2">&#128247;</span> <code class="font-mono ml-1">git commit</code> - Bater a foto
+        </h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># O -m e a legenda da foto (mensagem do commit)</p>
+          <p class="text-emerald-400">$ git commit -m "Primeira versao do site"</p>
+          <p class="text-neutral-300">[main (root-commit) a1b2c3d] Primeira versao do site</p>
+          <p class="text-neutral-300"> 2 files changed, 12 insertions(+)</p>
+          <p class="text-neutral-300"> create mode 100644 index.html</p>
+          <p class="text-neutral-300"> create mode 100644 style.css</p>
+        </div>
+        <p class="text-neutral-300 text-sm mt-3">Pronto! A foto foi salva no historico. O <code class="font-mono text-emerald-400">a1b2c3d</code> e o "codigo" unico desse commit.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+          <h4 class="font-bold text-emerald-400 mb-4">&#10003; Boas mensagens de commit</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span><code class="font-mono text-sm">"Adiciona menu de navegacao"</code></span></li>
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span><code class="font-mono text-sm">"Corrige cor do botao de envio"</code></span></li>
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Curtas, claras, dizem O QUE mudou</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; Mensagens ruins</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span><code class="font-mono text-sm">"alteracoes"</code> (alteracoes de que?)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span><code class="font-mono text-sm">"asdasd"</code> ou <code class="font-mono text-sm">"."</code></span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Commits gigantes com 50 arquivos misturados</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 4: Entendendo o que mudou             -->
+    <!-- ============================================ -->
+    <section id="topico-4" data-inema-topic="modulo-1-2#topico-4" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">4</span>
+        <h2 class="text-2xl font-bold">Entendendo o Que Mudou: status, log, diff</h2>
+      </div>
+
+      <p data-inema-block="m1-2-t4-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        O Git nao serve so para salvar. Ele tambem te conta a <strong class="text-emerald-400">historia do projeto</strong>: o que mudou agora, o que mudou ao longo do tempo, e exatamente quais linhas foram alteradas. Tres comandos respondem essas perguntas: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">status</code>, <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">log</code> e <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">diff</code>.
+      </p>
+
+      <!-- git status (de novo, foco em ler) -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">git status</code> - O que mudou agora</h3>
+        <p data-inema-block="m1-2-t4-p2" class="text-neutral-300 text-sm mb-4">Depois de editar um arquivo ja commitado, o status mostra que ele foi modificado:</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-emerald-400">$ git status</p>
+          <p class="text-neutral-300">On branch main</p>
+          <p class="text-neutral-300 mt-1">Changes not staged for commit:</p>
+          <p class="text-red-400">  modified:   index.html</p>
+          <p class="text-neutral-400 mt-1">(use "git add" para incluir no proximo commit)</p>
+        </div>
+      </div>
+
+      <!-- git log -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">git log</code> - A historia completa</h3>
+        <p data-inema-block="m1-2-t4-p3" class="text-neutral-300 text-sm mb-4">Lista todos os commits, do mais novo para o mais antigo, com autor, data e mensagem:</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-emerald-400">$ git log</p>
+          <p class="text-yellow-400">commit 7a8b9c2d (HEAD -&gt; main)</p>
+          <p class="text-neutral-300">Author: Seu Nome &lt;voce@email.com&gt;</p>
+          <p class="text-neutral-300">Date:   Mon Jun 16 10:20 2026</p>
+          <p class="text-neutral-300 mt-1">    Arruma as cores do menu</p>
+          <p class="text-yellow-400 mt-3">commit a1b2c3d4</p>
+          <p class="text-neutral-300">Author: Seu Nome &lt;voce@email.com&gt;</p>
+          <p class="text-neutral-300">    Primeira versao do site</p>
+          <p class="text-neutral-400 mt-3"># Versao resumida, uma linha por commit</p>
+          <p class="text-emerald-400">$ git log --oneline</p>
+          <p class="text-neutral-300">7a8b9c2 Arruma as cores do menu</p>
+          <p class="text-neutral-300">a1b2c3d Primeira versao do site</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Para sair do log quando ele ocupa a tela inteira, aperte a tecla <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">q</code>.</p>
+      </div>
+
+      <!-- git diff -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">git diff</code> - Exatamente quais linhas mudaram</h3>
+        <p data-inema-block="m1-2-t4-p4" class="text-neutral-300 text-sm mb-4">Mostra linha por linha o que foi removido (vermelho, com <code class="font-mono">-</code>) e o que foi adicionado (verde, com <code class="font-mono">+</code>):</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-emerald-400">$ git diff</p>
+          <p class="text-neutral-300">diff --git a/index.html b/index.html</p>
+          <p class="text-neutral-300">@@ -3,3 +3,3 @@</p>
+          <p class="text-red-400">-  &lt;h1&gt;Ola mundo&lt;/h1&gt;</p>
+          <p class="text-emerald-400">+  &lt;h1&gt;Bem-vindo ao meu site&lt;/h1&gt;</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Linha com <code class="font-mono text-red-400">-</code> foi a versao antiga; com <code class="font-mono text-emerald-400">+</code> e a nova.</p>
+      </div>
+
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#128065;</span> Como ler a saida na pratica
+        </h3>
+        <ul class="space-y-2 text-neutral-300 text-sm">
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">&#8226;</span><span><strong class="text-blue-400">status</strong> antes de commitar: "o que vou salvar?"</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">&#8226;</span><span><strong class="text-blue-400">diff</strong> antes de add: "as mudancas estao certas?"</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">&#8226;</span><span><strong class="text-blue-400">log</strong> depois: "como o projeto evoluiu?"</span></li>
+        </ul>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 5: Branches                           -->
+    <!-- ============================================ -->
+    <section id="topico-5" data-inema-topic="modulo-1-2#topico-5" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">5</span>
+        <h2 class="text-2xl font-bold">Branches: Realidades Paralelas do Projeto</h2>
+      </div>
+
+      <p data-inema-block="m1-2-t5-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Uma <strong class="text-emerald-400">branch</strong> (ramo) e uma copia paralela do projeto onde voce pode testar uma ideia sem mexer na versao principal. E como ter um <strong class="text-emerald-400">rascunho</strong>: se a ideia der certo, voce junta de volta; se der errado, voce joga fora e nada foi afetado.
+      </p>
+
+      <div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: Realidades Paralelas
+        </h3>
+        <p data-inema-block="m1-2-t5-p2" class="text-neutral-300 mb-4">Imagine que voce pudesse criar um universo paralelo do seu projeto, testar uma reforma maluca nele, e so trazer a reforma para o universo "real" se ela ficar boa. A branch <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">main</code> e a realidade principal (a que vai pro ar); cada nova branch e um universo de testes.</p>
+      </div>
+
+      <!-- SVG: branches -->
+      <div class="rounded-2xl border border-emerald-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+        <svg viewBox="0 0 800 200" class="w-full h-auto" role="img" aria-label="Branches do Git: a branch main segue reto, uma branch nova-cor sai para testar e depois e juntada de volta com merge">
+          <defs>
+            <linearGradient id="m12c-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/>
+            </linearGradient>
+            <pattern id="m12c-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="1.3" cy="1.3" r="1.3" fill="#34d399" opacity="0.12"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="800" height="200" fill="url(#m12c-grid)"/>
+          <!-- linha main -->
+          <line x1="60" y1="140" x2="740" y2="140" stroke="url(#m12c-grad)" stroke-width="3"/>
+          <text x="60" y="172" fill="#34d399" font-family="monospace" font-size="13" font-weight="600">main</text>
+          <circle cx="120" cy="140" r="11" fill="#0e2018" stroke="#34d399" stroke-width="2.5"/>
+          <circle cx="260" cy="140" r="11" fill="#0e2018" stroke="#34d399" stroke-width="2.5"/>
+          <circle cx="660" cy="140" r="13" fill="#34d399" stroke="#10b981" stroke-width="2.5"/>
+          <!-- branch nova -->
+          <path d="M 260 140 Q 340 60 420 60 L 560 60" fill="none" stroke="#38bdf8" stroke-width="3"/>
+          <path d="M 560 60 Q 620 60 660 140" fill="none" stroke="#38bdf8" stroke-width="3" stroke-dasharray="6 4"/>
+          <text x="345" y="44" fill="#38bdf8" font-family="monospace" font-size="13" font-weight="600">nova-cor</text>
+          <circle cx="420" cy="60" r="11" fill="#0e2018" stroke="#38bdf8" stroke-width="2.5"/>
+          <circle cx="560" cy="60" r="11" fill="#0e2018" stroke="#38bdf8" stroke-width="2.5"/>
+          <!-- rotulos -->
+          <text x="260" y="118" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="10">switch -c</text>
+          <text x="620" y="118" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="10">merge</text>
+          <text x="660" y="172" text-anchor="middle" fill="#34d399" font-family="Inter,sans-serif" font-size="11" font-weight="600">juntado</text>
+        </svg>
+      </div>
+
+      <!-- comandos de branch -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Comandos de branch</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Ver em qual branch voce esta e quais existem</p>
+          <p class="text-emerald-400">$ git branch</p>
+          <p class="text-neutral-300">* main</p>
+          <p class="text-neutral-400 mt-3"># Criar e ir para uma branch nova de uma vez</p>
+          <p class="text-emerald-400">$ git switch -c nova-cor</p>
+          <p class="text-neutral-300">Switched to a new branch 'nova-cor'</p>
+          <p class="text-neutral-400 mt-3"># ... aqui voce edita, add e commit a vontade ...</p>
+          <p class="text-neutral-400 mt-3"># Voltar para a branch principal</p>
+          <p class="text-emerald-400">$ git switch main</p>
+          <p class="text-neutral-300">Switched to branch 'main'</p>
+          <p class="text-neutral-400 mt-3"># Trazer as mudancas da nova-cor para a main</p>
+          <p class="text-emerald-400">$ git merge nova-cor</p>
+          <p class="text-neutral-300">Updating a1b2c3d..7a8b9c2</p>
+          <p class="text-neutral-300">Fast-forward</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+          <h4 class="font-bold text-emerald-400 mb-4">&#10003; Quando usar branch</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Testar uma feature nova sem quebrar a main</span></li>
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Experimentar um design diferente</span></li>
+            <li class="flex items-start space-x-2"><span class="text-emerald-400">&#10003;</span><span>Trabalhar em equipe, cada um na sua branch</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; O que evitar</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Fazer tudo direto na main em projetos serios</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Deixar branches velhas acumularem sem merge</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Trocar de branch com mudancas nao salvas</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 6: .gitignore                          -->
+    <!-- ============================================ -->
+    <section id="topico-6" data-inema-topic="modulo-1-2#topico-6" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">6</span>
+        <h2 class="text-2xl font-bold">.gitignore: O Que Nunca Versionar</h2>
+      </div>
+
+      <p data-inema-block="m1-2-t6-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Nem tudo no seu projeto deve entrar no Git. Senhas, arquivos gerados automaticamente e pastas gigantes de dependencias so atrapalham (e podem ser perigosos). O arquivo <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">.gitignore</code> e uma lista do que o Git deve <strong class="text-emerald-400">ignorar completamente</strong>: ele finge que esses arquivos nem existem.
+      </p>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum (e perigoso)
+        </h3>
+        <p data-inema-block="m1-2-t6-p2" class="text-neutral-300"><strong>Problema:</strong> Voce comita um arquivo <code class="font-mono text-sm text-red-400">.env</code> com a senha do banco de dados e sobe no GitHub. Agora a senha esta publica para o mundo inteiro. <br><strong>Solucao:</strong> Crie o <code class="font-mono text-sm text-red-400">.gitignore</code> <strong>antes</strong> do primeiro commit e coloque <code class="font-mono text-sm text-red-400">.env</code> nele. O Git nunca vai versionar esse arquivo, e a senha fica so na sua maquina.</p>
+      </div>
+
+      <!-- o que ignorar -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+          <div class="text-2xl mb-2">&#128230;</div>
+          <code class="text-red-400 font-mono text-sm font-bold">node_modules</code>
+          <p class="text-xs text-neutral-400 mt-1">Dependencias (enorme)</p>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+          <div class="text-2xl mb-2">&#128273;</div>
+          <code class="text-red-400 font-mono text-sm font-bold">.env</code>
+          <p class="text-xs text-neutral-400 mt-1">Senhas e chaves</p>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+          <div class="text-2xl mb-2">&#127959;&#65039;</div>
+          <code class="text-red-400 font-mono text-sm font-bold">dist / build</code>
+          <p class="text-xs text-neutral-400 mt-1">Arquivos gerados</p>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+          <div class="text-2xl mb-2">&#128187;</div>
+          <code class="text-red-400 font-mono text-sm font-bold">.DS_Store</code>
+          <p class="text-xs text-neutral-400 mt-1">Lixo do sistema</p>
+        </div>
+      </div>
+
+      <!-- exemplo de .gitignore -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Exemplo de arquivo <code class="text-emerald-400 font-mono">.gitignore</code></h3>
+        <p data-inema-block="m1-2-t6-p3" class="text-neutral-300 text-sm mb-4">Crie o arquivo na raiz do projeto (<code class="font-mono">touch .gitignore</code>) e coloque dentro, uma regra por linha:</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Dependencias instaladas</p>
+          <p class="text-neutral-300">node_modules/</p>
+          <p class="text-neutral-400 mt-2"># Variaveis de ambiente e senhas</p>
+          <p class="text-neutral-300">.env</p>
+          <p class="text-neutral-300">.env.local</p>
+          <p class="text-neutral-400 mt-2"># Arquivos gerados pelo build</p>
+          <p class="text-neutral-300">dist/</p>
+          <p class="text-neutral-300">build/</p>
+          <p class="text-neutral-400 mt-2"># Lixo do sistema operacional</p>
+          <p class="text-neutral-300">.DS_Store</p>
+          <p class="text-neutral-300">Thumbs.db</p>
+          <p class="text-neutral-400 mt-2"># Logs</p>
+          <p class="text-neutral-300">*.log</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">A barra <code class="font-mono">/</code> no fim indica pasta. O <code class="font-mono">*</code> em <code class="font-mono">*.log</code> significa "qualquer arquivo terminado em .log".</p>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Dica: nao precisa decorar
+        </h3>
+        <p data-inema-block="m1-2-t6-p4" class="text-neutral-300">Existem <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">.gitignore</code> prontos para cada tipo de projeto no site <strong class="text-primary">gitignore.io</strong>. Voce digita "node", "python", etc., e ele gera o arquivo completo. No comeco, copie de la e va aprendendo o que cada linha faz.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- RESUMO -->
+    <section class="mb-12">
+      <div class="bg-gradient-to-br from-emerald-900/40 via-dark-800 to-dark-800 rounded-xl border border-emerald-500/30 p-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+          <span class="mr-3">&#128218;</span> Resumo do Modulo
+        </h2>
+        <div class="space-y-4 mb-8">
+          <div class="flex items-start space-x-3">
+            <span class="text-emerald-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Controle de versao</strong><span class="text-neutral-400"> - um Ctrl+Z infinito e uma linha do tempo do projeto</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-emerald-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">init, add, commit</strong><span class="text-neutral-400"> - iniciar, preparar e bater a foto do projeto</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-emerald-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">status, log, diff</strong><span class="text-neutral-400"> - ver o que mudou agora, o historico e cada linha</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-emerald-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">branches</strong><span class="text-neutral-400"> - realidades paralelas para testar sem quebrar a main</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-emerald-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">.gitignore</strong><span class="text-neutral-400"> - nunca versionar node_modules, .env e arquivos de senha</span></div>
+          </div>
+        </div>
+
+        <div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+          <h3 class="font-semibold text-emerald-400 mb-2">Proximo Modulo:</h3>
+          <p class="text-neutral-300">1.3 - GitHub e Pages (suba seu codigo para a nuvem e publique seu site de graca)</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">
+            &#8592; Voltar para Trilha
+          </a>
+          <a href="modulo-1-3.html" class="flex-1 text-center px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-500 transition-colors">
+            Proximo Modulo &#8594;
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-dark-600 py-8 mt-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+      <p>Do Zero ao Deploy - 2026</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+
+  <script src="../../assets/learn.js"></script>
+  <script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="inema-course" content="dzd">
+  <title>Trilha 2: Deploy Moderno | Do Zero ao Deploy</title>
+
+  <!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+  <script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'blue' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'blue');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/learn.css">
+
+  <!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+  <script type="application/json" data-inema-manifest>
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha blue) */
+    html:not(.dark) .text-blue-400 { color: #2563eb; }
+    html:not(.dark) .bg-blue-500\/20 { background-color: rgba(37, 99, 235, 0.12); }
+    html:not(.dark) .bg-blue-500\/10 { background-color: rgba(37, 99, 235, 0.08); }
+    html:not(.dark) .border-blue-500\/30 { border-color: rgba(37, 99, 235, 0.25); }
+    html:not(.dark) .hover\:bg-blue-500\/30:hover { background-color: rgba(37, 99, 235, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+
+    /* Topicos expansiveis */
+    .topic-explanation { display: none; }
+    .topic-explanation.active { display: block; }
+  </style>
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+
+  <!-- NAVIGATION -->
+  <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-14">
+        <div class="flex items-center space-x-4">
+          <a href="../../index.html" class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300">
+            <span class="text-2xl">&#128640;</span>
+            <span class="font-bold text-lg hidden sm:inline">Do Zero ao Deploy</span>
+          </a>
+          <span class="text-neutral-600">|</span>
+          <a href="https://inema.club" target="_blank" class="text-sky-400 hover:text-sky-300 text-sm font-medium">INEMA.CLUB</a>
+        </div>
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <a href="../trilha1/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+            <span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal & Git</span>
+          </a>
+          <a href="index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-blue-400 bg-blue-500/10">
+            <span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy Moderno</span>
+          </a>
+          <a href="../trilha3/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors">
+            <span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor Proprio</span>
+          </a>
+          <a href="../trilha4/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
+            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+          </a>
+          <a href="../trilha5/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors">
+            <span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+          </a>
+          <button id="theme-toggle" class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2">
+            <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HEADER DE TRILHA -->
+  <header class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full mb-4">TRILHA 2</span>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">&#9889; Deploy Moderno</h1>
+      <p class="text-lg text-neutral-400 max-w-3xl">Colocar projetos no ar de verdade: Vercel para deploy em um clique, banco de dados sem dor com o Supabase, APIs conectando servicos e variaveis de ambiente para guardar seus segredos com seguranca.</p>
+      <div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-blue-400">4</div>
+          <div class="text-xs text-neutral-400">Modulos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-blue-400">24</div>
+          <div class="text-xs text-neutral-400">Topicos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-blue-400">~3h</div>
+          <div class="text-xs text-neutral-400">Duracao</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-blue-400">Basico</div>
+          <div class="text-xs text-neutral-400">Nivel</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEUDO -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <!-- HERO SVG: fan-out (seu codigo -> Vercel/Supabase/APIs/Env -> app no ar) -->
+    <div class="rounded-2xl border border-blue-500/30 bg-dark-900/40 p-3 sm:p-4 mb-10 overflow-hidden">
+      <svg viewBox="0 0 800 280" class="w-full h-auto" role="img" aria-label="Diagrama de fluxo: seu codigo ramifica em Vercel, Supabase, APIs e variaveis de ambiente, e os quatro convergem em uma aplicacao moderna no ar">
+        <defs>
+          <linearGradient id="t2hero-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#3b82f6"/>
+          </linearGradient>
+          <filter id="t2hero-glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <pattern id="t2hero-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <circle cx="1.3" cy="1.3" r="1.3" fill="#60a5fa" opacity="0.10"/>
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="800" height="280" fill="url(#t2hero-grid)"/>
+
+        <!-- Origem: SEU CODIGO -->
+        <g filter="url(#t2hero-glow)">
+          <rect x="24" y="108" width="124" height="64" rx="14" fill="#0e1622" stroke="url(#t2hero-grad)" stroke-width="2"/>
+        </g>
+        <text x="86" y="136" text-anchor="middle" fill="#60a5fa" font-family="Inter,sans-serif" font-weight="600" font-size="15">SEU CODIGO</text>
+        <text x="86" y="156" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">no GitHub</text>
+
+        <!-- Ramos (linhas) -->
+        <path class="wf-a" d="M148 140 C 250 140, 250 40, 350 40" fill="none" stroke="#60a5fa" stroke-width="2.5"/>
+        <path class="wf-a" d="M148 140 C 250 140, 250 107, 350 107" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+        <path class="wf-a" d="M148 140 C 250 140, 250 174, 350 174" fill="none" stroke="#60a5fa" stroke-width="2.5"/>
+        <path class="wf-a" d="M148 140 C 250 140, 250 240, 350 240" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+
+        <!-- Ramo 1: VERCEL -->
+        <rect x="350" y="18" width="168" height="44" rx="11" fill="#1a1a2e" stroke="#60a5fa" stroke-width="1.8"/>
+        <text x="434" y="38" text-anchor="middle" fill="#60a5fa" font-family="Inter,sans-serif" font-weight="600" font-size="13">VERCEL</text>
+        <text x="434" y="54" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="10">deploy em 1 clique</text>
+
+        <!-- Ramo 2: SUPABASE -->
+        <rect x="350" y="85" width="168" height="44" rx="11" fill="#1a1a2e" stroke="#38bdf8" stroke-width="1.8"/>
+        <text x="434" y="105" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="13">SUPABASE</text>
+        <text x="434" y="121" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="10">banco de dados</text>
+
+        <!-- Ramo 3: APIs -->
+        <rect x="350" y="152" width="168" height="44" rx="11" fill="#1a1a2e" stroke="#60a5fa" stroke-width="1.8"/>
+        <text x="434" y="172" text-anchor="middle" fill="#60a5fa" font-family="Inter,sans-serif" font-weight="600" font-size="13">APIs</text>
+        <text x="434" y="188" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="10">GET / POST</text>
+
+        <!-- Ramo 4: VARIAVEIS -->
+        <rect x="350" y="219" width="168" height="44" rx="11" fill="#1a1a2e" stroke="#38bdf8" stroke-width="1.8"/>
+        <text x="434" y="239" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="13">VARIAVEIS</text>
+        <text x="434" y="255" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="10">.env secreto</text>
+
+        <!-- Convergencia -->
+        <path d="M518 40 C 600 40, 600 140, 652 140" fill="none" stroke="#60a5fa" stroke-width="2.5" opacity="0.8"/>
+        <path d="M518 107 C 600 107, 600 140, 652 140" fill="none" stroke="#38bdf8" stroke-width="2.5" opacity="0.8"/>
+        <path d="M518 174 C 600 174, 600 140, 652 140" fill="none" stroke="#60a5fa" stroke-width="2.5" opacity="0.8"/>
+        <path d="M518 240 C 600 240, 600 140, 652 140" fill="none" stroke="#38bdf8" stroke-width="2.5" opacity="0.8"/>
+
+        <!-- Resultado: APP NO AR -->
+        <g filter="url(#t2hero-glow)">
+          <rect x="652" y="106" width="124" height="68" rx="14" fill="#0e1622" stroke="url(#t2hero-grad)" stroke-width="2.4"/>
+        </g>
+        <text x="714" y="136" text-anchor="middle" fill="#60a5fa" font-family="Inter,sans-serif" font-weight="600" font-size="15">&#9889; APP</text>
+        <text x="714" y="156" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">no ar de verdade</text>
+      </svg>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MAPA DA TRILHA                               -->
+    <!-- ============================================ -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-6">Mapa da trilha</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <a href="#modulo-2-1" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-blue-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-blue-400 font-bold text-sm">2.1</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-blue-400 transition-colors">&#9889; Vercel</h3>
+          <p class="text-xs text-neutral-400">Deploy em 1 clique</p>
+        </a>
+        <a href="#modulo-2-2" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-blue-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-blue-400 font-bold text-sm">2.2</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-blue-400 transition-colors">&#128451;&#65039; Supabase</h3>
+          <p class="text-xs text-neutral-400">Banco sem dor</p>
+        </a>
+        <a href="#modulo-2-3" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-blue-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-blue-400 font-bold text-sm">2.3</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-blue-400 transition-colors">&#128268; APIs</h3>
+          <p class="text-xs text-neutral-400">Servicos conversando</p>
+        </a>
+        <a href="#modulo-2-4" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-blue-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-blue-400 font-bold text-sm">2.4</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-blue-400 transition-colors">&#128273; Variaveis de Ambiente</h3>
+          <p class="text-xs text-neutral-400">Segredos seguros</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- CONTEUDO DETALHADO                           -->
+    <!-- ============================================ -->
+    <h2 class="text-2xl font-bold mb-6">Conteudo detalhado</h2>
+
+    <!-- ===== MODULO 2.1 ===== -->
+    <div id="modulo-2-1" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-blue-400 font-bold">2.1</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#9889; Vercel</h3>
+        <p class="text-neutral-400 text-sm">A forma mais rapida de colocar um site no ar: voce conecta o GitHub e, a cada push, a Vercel publica seu projeto sozinha. Deploy em um clique.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#128640;</span>
+            <div>
+              <span class="font-medium">O que e deploy e por que Vercel</span>
+              <span class="text-neutral-500 text-sm ml-2">- do seu PC para o mundo</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Deploy e o ato de pegar seu projeto e coloca-lo num servidor publico, com um endereco que qualquer pessoa acessa. A Vercel e uma plataforma que faz isso de forma quase automatica.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Codigo no seu computador so voce ve. Deploy e o que transforma o projeto em algo real e compartilhavel. A Vercel torna esse passo simples e gratuito.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">A Vercel e ideal para sites e apps modernos (React, Next.js, HTML). Ela observa seu repositorio e refaz o deploy a cada mudanca, sem comando manual.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#128279;</span>
+            <div>
+              <span class="font-medium">Criar conta e conectar GitHub</span>
+              <span class="text-neutral-500 text-sm ml-2">- ligar os dois servicos</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O cadastro na Vercel usando sua conta do GitHub e a autorizacao para a Vercel enxergar seus repositorios.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E a ponte que liga onde seu codigo vive (GitHub) a onde ele sera publicado (Vercel). Sem essa conexao, nao ha deploy automatico.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Use "Sign up with GitHub" para criar a conta ja conectada. Autorize so os repositorios que voce quer publicar. O plano gratuito (Hobby) basta para comecar.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#9889;</span>
+            <div>
+              <span class="font-medium">Primeiro deploy automatico</span>
+              <span class="text-neutral-500 text-sm ml-2">- seu site no ar</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O passo de importar um repositorio na Vercel e clicar em "Deploy". Em segundos, seu projeto ganha um endereco publico funcionando.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o momento "no ar" da Trilha 2: ver seu site rodando num link real prova que o ciclo de deploy funciona de ponta a ponta.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">A Vercel detecta o tipo do projeto sozinha. Voce recebe um endereco <code class="font-mono">projeto.vercel.app</code>. A partir dai, cada <code class="font-mono">git push</code> refaz o deploy.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#127795;</span>
+            <div>
+              <span class="font-medium">Preview deploys por branch</span>
+              <span class="text-neutral-500 text-sm ml-2">- testar antes de publicar</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">A cada branch ou pull request, a Vercel cria um deploy de "preview": uma copia do site com endereco proprio, separada da versao de producao.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Permite testar uma mudanca num link real antes de mexer no site principal. Voce mostra a novidade para alguem sem riscos para a versao no ar.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">A branch <code class="font-mono">main</code> vira producao; as outras viram previews. Cada preview tem URL unica e some quando a branch e removida.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#9881;&#65039;</span>
+            <div>
+              <span class="font-medium">Configuracoes de projeto</span>
+              <span class="text-neutral-500 text-sm ml-2">- build, root, redeploy</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O painel de configuracoes da Vercel: comando de build, pasta raiz do projeto, dominios e o botao de refazer (redeploy) um deploy.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Projetos crescem e precisam de ajustes. Saber onde mexer evita aquele "funciona no meu PC, mas quebra no deploy".</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Na maioria dos casos os padroes ja servem. Mude o "Root Directory" se o projeto esta numa subpasta. O "Redeploy" repete o ultimo deploy.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#127760;</span>
+            <div>
+              <span class="font-medium">Dominios customizados</span>
+              <span class="text-neutral-500 text-sm ml-2">- seu nome proprio</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Trocar o endereco padrao <code class="font-mono">projeto.vercel.app</code> por um dominio proprio que voce comprou, como <code class="font-mono">seusite.com</code>.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Um dominio proprio passa profissionalismo e e mais facil de divulgar. A Vercel cuida do HTTPS automaticamente, de graca.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Adicione o dominio em "Domains" e aponte o DNS conforme a Vercel indicar. O certificado HTTPS (cadeado) e gerado sozinho.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-2-1')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-2-1.html" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ===== MODULO 2.2 ===== -->
+    <div id="modulo-2-2" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-blue-400 font-bold">2.2</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#128451;&#65039; Supabase</h3>
+        <p class="text-neutral-400 text-sm">Banco de dados sem dor: o Supabase te entrega um banco pronto, com API automatica e login de usuarios, tudo pela tela do navegador.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#128202;</span>
+            <div>
+              <span class="font-medium">O que e um banco de dados</span>
+              <span class="text-neutral-500 text-sm ml-2">- onde os dados ficam</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Um banco de dados e um lugar organizado para guardar informacao de forma permanente: usuarios, pedidos, mensagens. Pense numa planilha gigante e confiavel que muitos programas podem ler e escrever ao mesmo tempo.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Quase todo app de verdade precisa lembrar de algo entre uma visita e outra. Sem banco, tudo se perde quando a pagina fecha.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Os dados ficam em tabelas (linhas e colunas). O Supabase usa PostgreSQL, um banco poderoso e gratuito, por baixo dos panos.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#128296;</span>
+            <div>
+              <span class="font-medium">Criar projeto no Supabase</span>
+              <span class="text-neutral-500 text-sm ml-2">- seu banco em minutos</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O passo de criar uma conta, abrir um novo projeto e deixar o Supabase provisionar um banco PostgreSQL pronto para uso.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Montar um banco do zero costumava ser complicado. O Supabase entrega isso em poucos cliques, sem voce instalar nada.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Escolha uma regiao perto de voce e guarde a senha do banco com cuidado. O plano gratuito ja serve para aprender e prototipar.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#128203;</span>
+            <div>
+              <span class="font-medium">Tabelas, colunas, tipos</span>
+              <span class="text-neutral-500 text-sm ml-2">- a estrutura dos dados</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">A organizacao do banco: cada tabela guarda um tipo de coisa (ex.: "usuarios"), as colunas sao os campos (nome, email) e o tipo define o que cabe em cada coluna (texto, numero, data).</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Uma boa estrutura evita bagunca e erros. Definir tabelas e tipos certos no inicio poupa muita dor de cabeca depois.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Crie tabelas pelo "Table Editor" visual. Tipos comuns: <code class="font-mono">text</code>, <code class="font-mono">int</code>, <code class="font-mono">bool</code>, <code class="font-mono">timestamp</code>. Toda linha tem um <code class="font-mono">id</code> unico.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#9999;&#65039;</span>
+            <div>
+              <span class="font-medium">Inserir e consultar dados</span>
+              <span class="text-neutral-500 text-sm ml-2">- escrever e ler</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">As duas acoes mais comuns num banco: inserir (gravar uma nova linha) e consultar (buscar linhas que atendem a um criterio). E o "escrever e ler" do banco.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Todo app vive disso: salva o que o usuario digita e mostra de volta o que ja foi salvo. Sem inserir e consultar, o banco fica parado.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Voce pode inserir pela tela ou por codigo. A linguagem por tras e o SQL (<code class="font-mono">insert</code>, <code class="font-mono">select</code>), mas o Supabase deixa fazer tudo de forma visual tambem.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#128268;</span>
+            <div>
+              <span class="font-medium">API automatica</span>
+              <span class="text-neutral-500 text-sm ml-2">- banco acessivel por HTTP</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Assim que voce cria uma tabela, o Supabase gera sozinho uma API: enderecos prontos para o seu site ler e gravar dados no banco pela internet.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Normalmente seria preciso programar um servidor inteiro para isso. Ter a API de graca conecta seu frontend ao banco em minutos.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Cada projeto tem uma URL e uma chave (anon key). A biblioteca <code class="font-mono">supabase-js</code> facilita as chamadas. Esse e o gancho para o modulo de APIs.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#128272;</span>
+            <div>
+              <span class="font-medium">Autenticacao basica</span>
+              <span class="text-neutral-500 text-sm ml-2">- login de usuarios</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O sistema pronto do Supabase para cadastro e login de usuarios: email e senha, ou entrar com Google e GitHub, sem voce programar isso do zero.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Login seguro e dificil de fazer certo. Usar uma solucao pronta evita falhas graves e te deixa focar no resto do app.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">O Supabase gerencia senhas e sessoes. Com regras de acesso (RLS), cada usuario so enxerga os proprios dados. Ative os provedores na aba Authentication.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-2-2')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-2-2.html" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ===== MODULO 2.3 ===== -->
+    <div id="modulo-2-3" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-blue-400 font-bold">2.3</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#128268; APIs</h3>
+        <p class="text-neutral-400 text-sm">APIs sao a forma como os servicos conversam entre si pela internet. Aprenda a pedir e enviar dados, testar e tratar erros com seguranca.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#128172;</span>
+            <div>
+              <span class="font-medium">O que e uma API</span>
+              <span class="text-neutral-500 text-sm ml-2">- o garcom dos programas</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">API e um conjunto de enderecos por onde um programa pede informacao a outro. Pense num garcom: voce faz um pedido, ele leva a cozinha e traz o prato; voce nao precisa saber como a cozinha funciona.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Tudo na web moderna conversa por API: clima, mapas, pagamentos, seu banco no Supabase. Entender API e entender como apps se conectam.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Voce envia uma requisicao a uma URL e recebe uma resposta, quase sempre em formato JSON. A maioria das APIs web fala por HTTP.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#128260;</span>
+            <div>
+              <span class="font-medium">GET, POST, PUT, DELETE</span>
+              <span class="text-neutral-500 text-sm ml-2">- os verbos do HTTP</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Os quatro verbos basicos de uma API: <code class="font-mono">GET</code> le, <code class="font-mono">POST</code> cria, <code class="font-mono">PUT</code> atualiza e <code class="font-mono">DELETE</code> apaga. Cada um descreve a intencao do pedido.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Usar o verbo certo deixa a API previsivel e organizada. E o vocabulario padrao que todo servico web entende.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Lembre pelo CRUD: Create=POST, Read=GET, Update=PUT, Delete=DELETE. <code class="font-mono">GET</code> nunca deve mudar dados; <code class="font-mono">POST</code> e <code class="font-mono">PUT</code> enviam um corpo com a informacao.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#129514;</span>
+            <div>
+              <span class="font-medium">Testar com curl e Thunder Client</span>
+              <span class="text-neutral-500 text-sm ml-2">- chamar a API na mao</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Duas formas de testar uma API sem escrever um app: o <code class="font-mono">curl</code> faz a chamada pelo terminal; o Thunder Client e uma extensao do VS Code com tela visual para isso.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Antes de ligar a API ao seu site, e essencial conferir se ela responde como esperado. Testar primeiro economiza horas de depuracao.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">curl -X GET url</code> faz a chamada mais simples. O Thunder Client guarda suas requisicoes e mostra a resposta formatada. Veja sempre o codigo de status.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#128279;</span>
+            <div>
+              <span class="font-medium">Conectar frontend a API</span>
+              <span class="text-neutral-500 text-sm ml-2">- fetch no navegador</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Usar o JavaScript do seu site para chamar uma API e mostrar o resultado na tela. A ferramenta padrao do navegador para isso e o <code class="font-mono">fetch</code>.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o que torna um site "vivo": ele busca dados na hora e atualiza a pagina sem recarregar. Esse e o coracao de qualquer app dinamico.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">fetch(url)</code> retorna uma promessa; use <code class="font-mono">await</code> e <code class="font-mono">.json()</code> para ler a resposta. Chamadas sao assincronas: o codigo espera a resposta chegar.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#127758;</span>
+            <div>
+              <span class="font-medium">APIs publicas (clima, CEP)</span>
+              <span class="text-neutral-500 text-sm ml-2">- dados de graca</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">APIs abertas que qualquer um pode usar para buscar dados prontos: previsao do tempo, endereco a partir do CEP (ViaCEP), cotacao de moedas e muito mais.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Sao a forma mais facil de praticar: voce ja recebe dados reais sem montar um servidor. Da para enriquecer seu app com pouco esforco.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Algumas pedem uma chave (API key) gratuita; outras, como a ViaCEP, sao abertas. Leia a documentacao para saber a URL e o formato da resposta.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#9888;&#65039;</span>
+            <div>
+              <span class="font-medium">Tratamento de erros</span>
+              <span class="text-neutral-500 text-sm ml-2">- quando a API falha</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">A pratica de prever que a API pode falhar (internet caiu, dado nao existe, servico fora do ar) e mostrar uma mensagem clara em vez de quebrar o app.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">No mundo real, requisicoes falham. Um app que trata erros bem parece profissional; um que trava na primeira falha frustra o usuario.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Status <code class="font-mono">200</code> e sucesso; <code class="font-mono">404</code> nao encontrado; <code class="font-mono">500</code> erro do servidor. Use <code class="font-mono">try/catch</code> e cheque <code class="font-mono">response.ok</code> antes de usar os dados.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-2-3')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-2-3.html" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ===== MODULO 2.4 ===== -->
+    <div id="modulo-2-4" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-blue-400 font-bold">2.4</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#128273; Variaveis de Ambiente</h3>
+        <p class="text-neutral-400 text-sm">Segredos seguros: senhas e chaves nunca devem ficar no codigo. As variaveis de ambiente guardam esses segredos fora do projeto, com seguranca.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#129300;</span>
+            <div>
+              <span class="font-medium">O que sao e por que existem</span>
+              <span class="text-neutral-500 text-sm ml-2">- configuracao fora do codigo</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Variaveis de ambiente sao valores guardados fora do codigo, como uma chave de API ou senha do banco. O programa as le na hora de rodar, sem que elas estejam escritas no projeto.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Permitem separar o "como o app funciona" (codigo) do "com quais segredos ele funciona" (configuracao). Trocar um segredo nao exige mexer no codigo.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Sao pares <code class="font-mono">NOME=valor</code>. O mesmo codigo roda diferente em cada ambiente (seu PC, producao) so trocando as variaveis.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#128196;</span>
+            <div>
+              <span class="font-medium">.env local</span>
+              <span class="text-neutral-500 text-sm ml-2">- segredos na sua maquina</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Um arquivo chamado <code class="font-mono">.env</code> na raiz do projeto onde voce escreve suas variaveis, uma por linha, para usar enquanto desenvolve no seu computador.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E a forma padrao de guardar segredos durante o desenvolvimento, sem escrever a chave direto no codigo que vai para o GitHub.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Formato <code class="font-mono">CHAVE=valor</code>, sem espacos. O <code class="font-mono">.env</code> precisa ir no <code class="font-mono">.gitignore</code> (visto na Trilha 1) para nunca subir.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#9889;</span>
+            <div>
+              <span class="font-medium">Variaveis no Vercel</span>
+              <span class="text-neutral-500 text-sm ml-2">- segredos em producao</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O painel da Vercel onde voce cadastra as mesmas variaveis do <code class="font-mono">.env</code>, mas para o site que esta no ar. Como o <code class="font-mono">.env</code> nao sobe, a Vercel precisa receber os segredos por aqui.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Sem isso, seu site publicado nao consegue acessar o banco ou as APIs. E o passo que liga o deploy aos seus segredos com seguranca.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Adicione em "Settings &#8594; Environment Variables". Da para separar por ambiente (Production, Preview). Apos mudar, refaca o deploy.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#129302;</span>
+            <div>
+              <span class="font-medium">Variaveis no GitHub Actions</span>
+              <span class="text-neutral-500 text-sm ml-2">- segredos na automacao</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O GitHub Actions roda tarefas automaticas (testes, deploy) a cada push. Os "Secrets" sao onde voce guarda chaves para essas tarefas usarem com seguranca.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Automacoes tambem precisam de segredos, mas nunca devem te-los escritos no arquivo de configuracao. Os Secrets resolvem isso.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Cadastre em "Settings &#8594; Secrets and variables &#8594; Actions". No fluxo, voce os acessa por <code class="font-mono">${{ secrets.NOME }}</code>. Eles aparecem mascarados nos logs.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#128683;</span>
+            <div>
+              <span class="font-medium">O que NUNCA commitar</span>
+              <span class="text-neutral-500 text-sm ml-2">- evitar vazar segredos</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">A regra de ouro: senhas, chaves de API, tokens e o proprio <code class="font-mono">.env</code> nunca devem ir para o GitHub. Uma vez no historico, ficam la para sempre.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Vazar um segredo num repositorio publico e um dos erros mais comuns e perigosos: bots varrem o GitHub atras de chaves para usar indevidamente.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Sempre coloque <code class="font-mono">.env</code> no <code class="font-mono">.gitignore</code>. Confira com <code class="font-mono">git status</code> antes do commit. Se vazou, considere a chave comprometida e troque-a.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#128260;</span>
+            <div>
+              <span class="font-medium">Rotacao de secrets</span>
+              <span class="text-neutral-500 text-sm ml-2">- trocar chaves com seguranca</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-blue-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Rotacao e o ato de gerar uma chave nova e descartar a antiga, periodicamente ou quando ha suspeita de vazamento. E como trocar a fechadura por seguranca.</p></div>
+              <div><span class="text-blue-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Chaves antigas que ja circularam sao um risco. Rotacionar limita o estrago: mesmo que uma chave vaze, ela logo deixa de funcionar.</p></div>
+              <div><span class="text-blue-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Gere a nova chave no servico, atualize em todos os lugares (.env, Vercel, Actions) e so depois revogue a antiga, para nao quebrar o app no meio.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-2-4')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-2-4.html" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- NAVEGACAO FINAL                              -->
+    <!-- ============================================ -->
+    <div class="flex flex-col sm:flex-row gap-4 mt-12">
+      <a href="../../index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">
+        &#8592; Voltar para o inicio
+      </a>
+      <a href="../trilha3/index.html" class="flex-1 text-center px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-500 transition-colors">
+        Proxima Trilha &#8594;
+      </a>
+    </div>
+
+  </main>
+
+  <!-- ============================================ -->
+  <!-- MODAIS                                        -->
+  <!-- ============================================ -->
+  <div id="modal-2-1" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-blue-400 font-bold">2.1</span>
+          <span class="font-semibold">Vercel</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-2-1.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <div id="modal-2-2" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-blue-400 font-bold">2.2</span>
+          <span class="font-semibold">Supabase</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-2-2.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <div id="modal-2-3" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-blue-400 font-bold">2.3</span>
+          <span class="font-semibold">APIs</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-2-3.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <div id="modal-2-4" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-blue-400 font-bold">2.4</span>
+          <span class="font-semibold">Variaveis de Ambiente</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-2-4.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-dark-600 py-8 mt-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+      <p>Do Zero ao Deploy - 2026</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Toggle de Topicos
+    function toggleTopic(button) {
+      const topicItem = button.closest('.topic-item');
+      const explanation = topicItem.querySelector('.topic-explanation');
+      const moduleCard = button.closest('.bg-dark-800');
+
+      // Fecha outros topicos do mesmo modulo
+      moduleCard.querySelectorAll('.topic-explanation.active').forEach(exp => {
+        if (exp !== explanation) {
+          exp.classList.remove('active');
+        }
+      });
+
+      // Toggle do topico atual
+      explanation.classList.toggle('active');
+    }
+
+    // Modal com iframe
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeModal() {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.add('hidden');
+      });
+      document.body.style.overflow = 'auto';
+    }
+
+    // Fechar com ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+
+  <script src="../../assets/learn.js"></script>
+  <script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

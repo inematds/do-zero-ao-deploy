@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="inema-course" content="dzd">
+  <title>Systemd: Servicos que Nunca Param | Do Zero ao Deploy</title>
+
+  <!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+  <script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'amber' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'amber');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/learn.css">
+
+  <!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+  <script type="application/json" data-inema-manifest>
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha amber) */
+    html:not(.dark) .text-amber-400 { color: #b45309; }
+    html:not(.dark) .bg-amber-500\/20 { background-color: rgba(180, 83, 9, 0.12); }
+    html:not(.dark) .bg-amber-500\/10 { background-color: rgba(180, 83, 9, 0.08); }
+    html:not(.dark) .border-amber-500\/30 { border-color: rgba(180, 83, 9, 0.25); }
+    html:not(.dark) .hover\:bg-amber-500\/30:hover { background-color: rgba(180, 83, 9, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+
+  <!-- NAVIGATION -->
+  <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-14">
+        <div class="flex items-center space-x-4">
+          <a href="../../index.html" class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300">
+            <span class="text-2xl">&#128640;</span>
+            <span class="font-bold text-lg hidden sm:inline">Do Zero ao Deploy</span>
+          </a>
+          <span class="text-neutral-600">|</span>
+          <a href="https://inema.club" target="_blank" class="text-sky-400 hover:text-sky-300 text-sm font-medium">INEMA.CLUB</a>
+        </div>
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <a href="../trilha1/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+            <span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal & Git</span>
+          </a>
+          <a href="../trilha2/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors">
+            <span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy Moderno</span>
+          </a>
+          <a href="../trilha3/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors">
+            <span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor Proprio</span>
+          </a>
+          <a href="index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-amber-400 bg-amber-500/10">
+            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+          </a>
+          <a href="../trilha5/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors">
+            <span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+          </a>
+          <button id="theme-toggle" class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2">
+            <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMB -->
+  <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex items-center space-x-2 text-sm text-neutral-400">
+      <a href="../../index.html" class="hover:text-amber-400">Inicio</a>
+      <span>/</span>
+      <a href="index.html" class="hover:text-amber-400">Trilha 4</a>
+      <span>/</span>
+      <span class="text-amber-400">Modulo 4.3</span>
+    </div>
+  </nav>
+
+  <!-- HEADER -->
+  <header class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full mb-4">MODULO 4.3</span>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">&#9881;&#65039; Systemd: Servicos que Nunca Param</h1>
+      <p class="text-lg text-neutral-400 max-w-3xl">Voce subiu sua aplicacao no servidor, mas o que acontece quando o servidor reinicia? Ou quando o programa trava? O systemd e o gerente que mantem seus servicos de pe 24 horas por dia, 7 dias por semana. Aqui voce aprende a transformar qualquer programa em um servico que nunca para.</p>
+      <div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-amber-400">6</div>
+          <div class="text-xs text-neutral-400">Topicos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-amber-400">45</div>
+          <div class="text-xs text-neutral-400">Minutos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-amber-400">Basico</div>
+          <div class="text-xs text-neutral-400">Nivel</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-amber-400">Pratico</div>
+          <div class="text-xs text-neutral-400">Tipo</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEUDO -->
+  <main id="conteudo" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="4-3" data-inema-track="4">
+
+    <!-- ============================================ -->
+    <!-- TOPICO 1: O que e systemd                    -->
+    <!-- ============================================ -->
+    <section id="topico-1" data-inema-topic="modulo-4-3#topico-1" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">1</span>
+        <h2 class="text-2xl font-bold">O Que e o Systemd</h2>
+      </div>
+
+      <p data-inema-block="m4-3-t1-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        O systemd e o <strong class="text-amber-400">gerente de plantao</strong> do seu servidor Linux. Ele e o primeiro programa que liga quando a maquina inicia e fica responsavel por subir, vigiar e religar todos os outros servicos. Sem ele, voce teria que abrir o terminal e iniciar seu programa na mao toda vez que o servidor reiniciasse. Com ele, voce define uma vez como o servico deve rodar e o systemd cuida do resto, dia e noite.
+      </p>
+
+      <!-- SVG: systemd supervisionando processos com auto-restart -->
+      <div class="rounded-2xl border border-amber-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+        <svg viewBox="0 0 800 240" class="w-full h-auto" role="img" aria-label="Diagrama do systemd como gerente central supervisionando tres servicos e religando automaticamente um que travou">
+          <defs>
+            <linearGradient id="m43-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#f59e0b"/>
+            </linearGradient>
+            <filter id="m43-glow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <pattern id="m43-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="1.3" cy="1.3" r="1.3" fill="#fbbf24" opacity="0.12"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="800" height="240" fill="url(#m43-grid)"/>
+          <!-- systemd central -->
+          <g filter="url(#m43-glow)">
+            <rect x="300" y="20" width="200" height="64" rx="14" fill="#1f1604" stroke="url(#m43-grad)" stroke-width="2"/>
+          </g>
+          <text x="400" y="48" text-anchor="middle" fill="#fbbf24" font-family="Inter,sans-serif" font-weight="600" font-size="16">systemd (PID 1)</text>
+          <text x="400" y="70" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-size="12">gerente de plantao 24/7</text>
+          <!-- Linhas de supervisao -->
+          <path d="M360 84 L160 150" stroke="#f59e0b" stroke-width="2" fill="none" opacity="0.7"/>
+          <path d="M400 84 L400 150" stroke="#f59e0b" stroke-width="2" fill="none" opacity="0.7"/>
+          <path d="M440 84 L640 150" stroke="#f59e0b" stroke-width="2" fill="none" opacity="0.7"/>
+          <!-- Servico 1: ativo -->
+          <rect x="70" y="150" width="180" height="64" rx="12" fill="#1a1a2e" stroke="url(#m43-grad)" stroke-width="2"/>
+          <circle cx="98" cy="182" r="7" fill="#34d399" class="wf-a"/>
+          <text x="118" y="178" fill="#e5e7eb" font-family="monospace" font-size="13">meuapp.service</text>
+          <text x="118" y="197" fill="#34d399" font-family="Inter,sans-serif" font-size="11">active (running)</text>
+          <!-- Servico 2: religando -->
+          <rect x="310" y="150" width="180" height="64" rx="12" fill="#1a1a2e" stroke="#f87171" stroke-width="2"/>
+          <circle cx="338" cy="182" r="7" fill="#f87171" class="wf-a"/>
+          <text x="358" y="178" fill="#e5e7eb" font-family="monospace" font-size="13">api.service</text>
+          <text x="358" y="197" fill="#fbbf24" font-family="Inter,sans-serif" font-size="11">travou &#8594; restart</text>
+          <!-- Seta de auto-restart -->
+          <path d="M400 150 C470 120 470 120 412 96" stroke="#fbbf24" stroke-width="2" fill="none" marker-end="url(#m43-arrow)"/>
+          <!-- Servico 3: ativo -->
+          <rect x="550" y="150" width="180" height="64" rx="12" fill="#1a1a2e" stroke="url(#m43-grad)" stroke-width="2"/>
+          <circle cx="578" cy="182" r="7" fill="#34d399" class="wf-a"/>
+          <text x="598" y="178" fill="#e5e7eb" font-family="monospace" font-size="13">nginx.service</text>
+          <text x="598" y="197" fill="#34d399" font-family="Inter,sans-serif" font-size="11">active (running)</text>
+          <defs>
+            <marker id="m43-arrow" markerWidth="9" markerHeight="9" refX="5" refY="4" orient="auto">
+              <path d="M0 0 L8 4 L0 8 z" fill="#fbbf24"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <div class="bg-gradient-to-br from-amber-900/30 to-dark-800 rounded-xl border border-amber-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-amber-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: O Gerente de Plantao
+        </h3>
+        <p data-inema-block="m4-3-t1-p2" class="text-neutral-300 mb-4">Imagine um predio comercial com um gerente que nunca dorme. A funcao dele e simples: manter as luzes acesas, os elevadores funcionando e a recepcao aberta. Se um equipamento desliga, ele liga de novo na hora. Se acaba a energia e volta, ele reabre tudo automaticamente. Esse gerente e o systemd, e os equipamentos sao os seus servicos.</p>
+        <ul class="space-y-2 text-neutral-300">
+          <li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">&#8226;</span><span><strong>Liga os servicos:</strong> quando o servidor inicia</span></li>
+          <li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">&#8226;</span><span><strong>Vigia os servicos:</strong> verifica se continuam de pe</span></li>
+          <li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">&#8226;</span><span><strong>Religa os servicos:</strong> se algum travar ou cair</span></li>
+          <li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">&#8226;</span><span><strong>Anota tudo:</strong> guarda os registros (logs) do que aconteceu</span></li>
+        </ul>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Vocabulario: unit, service e PID 1
+        </h3>
+        <p data-inema-block="m4-3-t1-p3" class="text-neutral-300">No mundo do systemd, cada coisa que ele gerencia e uma <strong>unit</strong> (unidade). O tipo mais comum de unit e o <strong>service</strong> (servico), que e um programa que roda em segundo plano. O systemd em si e o <strong>PID 1</strong>: o processo de numero 1, o pai de todos os outros processos da maquina. Quando voce ouvir "criar um service", entenda "ensinar o gerente a cuidar do seu programa".</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 2: Criar um service file              -->
+    <!-- ============================================ -->
+    <section id="topico-2" data-inema-topic="modulo-4-3#topico-2" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">2</span>
+        <h2 class="text-2xl font-bold">Criando Seu Primeiro Service File</h2>
+      </div>
+
+      <p data-inema-block="m4-3-t2-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Para o systemd cuidar do seu programa, voce precisa <strong class="text-amber-400">escrever um arquivo de servico</strong>. E um arquivo de texto simples que termina em <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">.service</code> e fica na pasta <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">/etc/systemd/system/</code>. Nele voce explica para o gerente o que rodar, como rodar e quando rodar.
+      </p>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Crie o arquivo com o nano</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Precisa de sudo: a pasta e do sistema</p>
+          <p class="text-amber-400">$ sudo nano /etc/systemd/system/meuapp.service</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">O nome antes do <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">.service</code> e como voce vai chamar o servico depois. Escolha algo curto e sem espacos.</p>
+      </div>
+
+      <div class="bg-gradient-to-br from-amber-900/30 to-dark-800 rounded-xl border border-amber-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-amber-400 mb-4 flex items-center">
+          <span class="mr-2">&#128221;</span> As tres secoes: Unit, Service e Install
+        </h3>
+        <p data-inema-block="m4-3-t2-p2" class="text-neutral-300 mb-4">Todo service file tem tres blocos. Cada um responde uma pergunta diferente:</p>
+        <div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+          <p class="text-amber-400">[Unit]</p>
+          <p class="text-neutral-300">Description=Minha aplicacao Node</p>
+          <p class="text-neutral-300">After=network.target</p>
+          <p class="text-neutral-500 mt-3 mb-1"># ------------------------------</p>
+          <p class="text-amber-400">[Service]</p>
+          <p class="text-neutral-300">ExecStart=/usr/bin/node /home/deploy/app/server.js</p>
+          <p class="text-neutral-300">WorkingDirectory=/home/deploy/app</p>
+          <p class="text-neutral-300">User=deploy</p>
+          <p class="text-neutral-300">Restart=always</p>
+          <p class="text-neutral-500 mt-3 mb-1"># ------------------------------</p>
+          <p class="text-amber-400">[Install]</p>
+          <p class="text-neutral-300">WantedBy=multi-user.target</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-dark-800 rounded-xl p-5 border border-dark-600">
+          <code class="text-amber-400 font-mono text-sm font-bold">[Unit]</code>
+          <p class="text-neutral-400 text-sm mt-2">"Quem sou eu?" Descricao do servico e de quem ele depende para iniciar.</p>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-5 border border-dark-600">
+          <code class="text-amber-400 font-mono text-sm font-bold">[Service]</code>
+          <p class="text-neutral-400 text-sm mt-2">"Como me executar?" O comando que liga o programa, a pasta, o usuario e a politica de restart.</p>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-5 border border-dark-600">
+          <code class="text-amber-400 font-mono text-sm font-bold">[Install]</code>
+          <p class="text-neutral-400 text-sm mt-2">"Quando me ligar no boot?" Em que momento da inicializacao o servico entra.</p>
+        </div>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m4-3-t2-p3" class="text-neutral-300"><strong>Problema:</strong> "Coloquei so <code class="font-mono text-sm">node server.js</code> no ExecStart e deu erro." <br><strong>Solucao:</strong> O systemd nao sabe onde fica o <code class="font-mono text-sm">node</code>. Sempre use o <strong>caminho completo</strong> do executavel. Descubra com <code class="font-mono text-sm text-amber-400">which node</code> (vai mostrar algo como <code class="font-mono text-sm">/usr/bin/node</code>) e use esse caminho inteiro no ExecStart.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 3: start/stop/restart/enable          -->
+    <!-- ============================================ -->
+    <section id="topico-3" data-inema-topic="modulo-4-3#topico-3" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">3</span>
+        <h2 class="text-2xl font-bold">Controlando o Servico: start, stop, restart, enable</h2>
+      </div>
+
+      <p data-inema-block="m4-3-t3-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Depois de escrever o arquivo, voce conversa com o systemd usando o comando <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">systemctl</code>. Pense nele como o <strong class="text-amber-400">controle remoto</strong> do gerente: liga, desliga, reinicia e agenda os servicos para o boot.
+      </p>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Sempre que mudar o arquivo: recarregue</h3>
+        <p data-inema-block="m4-3-t3-p2" class="text-neutral-300 text-sm mb-4">Toda vez que voce cria ou edita um <code class="font-mono text-sm">.service</code>, o systemd precisa reler os arquivos:</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-amber-400">$ sudo systemctl daemon-reload</p>
+          <p class="text-neutral-400"># sem saida = deu certo</p>
+        </div>
+      </div>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Ligar, parar e reiniciar</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Iniciar o servico agora</p>
+          <p class="text-amber-400">$ sudo systemctl start meuapp</p>
+          <p class="text-neutral-400 mt-3"># Parar o servico</p>
+          <p class="text-amber-400">$ sudo systemctl stop meuapp</p>
+          <p class="text-neutral-400 mt-3"># Reiniciar (parar e ligar de novo)</p>
+          <p class="text-amber-400">$ sudo systemctl restart meuapp</p>
+          <p class="text-neutral-400 mt-3"># Ver o estado atual</p>
+          <p class="text-amber-400">$ sudo systemctl status meuapp</p>
+          <p class="text-neutral-300 mt-1">&#9679; meuapp.service - Minha aplicacao Node</p>
+          <p class="text-neutral-300">   Loaded: loaded (/etc/systemd/system/meuapp.service)</p>
+          <p class="text-green-400">   Active: active (running) since Tue 2026-06-17 12:30:01</p>
+          <p class="text-neutral-300">   Main PID: 4821 (node)</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Note: voce nao precisa digitar o <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">.service</code> no fim. O systemd entende <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">meuapp</code> sozinho.</p>
+      </div>
+
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#128065;</span> enable: a diferenca que conta
+        </h3>
+        <p data-inema-block="m4-3-t3-p3" class="text-neutral-300 text-sm mb-4">O <code class="font-mono text-sm text-blue-400">start</code> liga o servico <strong>agora</strong>, mas se o servidor reiniciar ele nao volta. O <code class="font-mono text-sm text-blue-400">enable</code> marca o servico para <strong>iniciar sozinho no boot</strong>. Quase sempre voce quer os dois.</p>
+        <div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Iniciar no boot (mas nao agora)</p>
+          <p class="text-amber-400">$ sudo systemctl enable meuapp</p>
+          <p class="text-neutral-400 mt-3"># Iniciar agora E no boot (o mais usado)</p>
+          <p class="text-amber-400">$ sudo systemctl enable --now meuapp</p>
+          <p class="text-neutral-400 mt-3"># Desfazer: nao iniciar mais no boot</p>
+          <p class="text-amber-400">$ sudo systemctl disable meuapp</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-6">
+          <h4 class="font-bold text-amber-400 mb-4">&#10003; O que FAZER</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-amber-400">&#10003;</span><span>Rodar <code class="font-mono text-sm">daemon-reload</code> apos editar o arquivo</span></li>
+            <li class="flex items-start space-x-2"><span class="text-amber-400">&#10003;</span><span>Conferir com <code class="font-mono text-sm">status</code> se ficou ativo</span></li>
+            <li class="flex items-start space-x-2"><span class="text-amber-400">&#10003;</span><span>Usar <code class="font-mono text-sm">enable --now</code> para producao</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; O que NAO fazer</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Esquecer o <code class="font-mono text-sm">enable</code> e perder o servico no reboot</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Confundir <code class="font-mono text-sm">start</code> (agora) com <code class="font-mono text-sm">enable</code> (boot)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Editar o arquivo e nao recarregar o daemon</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 4: Logs com journalctl                -->
+    <!-- ============================================ -->
+    <section id="topico-4" data-inema-topic="modulo-4-3#topico-4" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">4</span>
+        <h2 class="text-2xl font-bold">Lendo os Logs com journalctl</h2>
+      </div>
+
+      <p data-inema-block="m4-3-t4-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Quando um servico falha, a primeira pergunta e: <strong class="text-amber-400">"o que ele disse antes de cair?"</strong>. O systemd guarda tudo que cada servico imprime na tela em um diario central. Voce le esse diario com o comando <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">journalctl</code>. E o seu detetive de problemas.
+      </p>
+
+      <div class="bg-gradient-to-br from-amber-900/30 to-dark-800 rounded-xl border border-amber-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-amber-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: O Diario de Bordo
+        </h3>
+        <p data-inema-block="m4-3-t4-p2" class="text-neutral-300">Pense no journalctl como o diario de bordo de um navio. Tudo que acontece fica anotado com data e hora: quando o servico subiu, quando reiniciou, qual erro apareceu. Quando algo da errado, voce abre o diario na pagina certa e descobre o que aconteceu, sem adivinhar.</p>
+      </div>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Os filtros essenciais: -u, -f e --since</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># -u = filtra por um servico (unit)</p>
+          <p class="text-amber-400">$ journalctl -u meuapp</p>
+          <p class="text-neutral-300">jun 17 12:30:01 srv node[4821]: Servidor na porta 3000</p>
+          <p class="text-neutral-300">jun 17 12:34:18 srv node[4821]: GET /api/users 200</p>
+          <p class="text-neutral-400 mt-3"># -f = acompanha ao vivo (follow), como assistir</p>
+          <p class="text-amber-400">$ journalctl -u meuapp -f</p>
+          <p class="text-neutral-500">(novas linhas aparecem em tempo real... Ctrl+C para sair)</p>
+          <p class="text-neutral-400 mt-3"># --since = a partir de quando</p>
+          <p class="text-amber-400">$ journalctl -u meuapp --since "hoje"</p>
+          <p class="text-amber-400">$ journalctl -u meuapp --since "10 min ago"</p>
+          <p class="text-neutral-400 mt-3"># Combinando: so erros das ultimas 30 linhas</p>
+          <p class="text-amber-400">$ journalctl -u meuapp -n 30 --no-pager</p>
+        </div>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Dica: o trio que resolve 90% dos casos
+        </h3>
+        <p data-inema-block="m4-3-t4-p3" class="text-neutral-300">Quando seu servico nao sobe, rode <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">systemctl status meuapp</code> para ver o resumo, depois <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">journalctl -u meuapp -n 50</code> para ler as ultimas linhas de erro. Se quiser ver acontecendo na hora, deixe <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">journalctl -u meuapp -f</code> aberto e reinicie o servico em outra aba.</p>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m4-3-t4-p4" class="text-neutral-300"><strong>Problema:</strong> "O journalctl abre uma tela esquisita e nao sai." <br><strong>Solucao:</strong> Por padrao ele abre no paginador. Use as setas para rolar, <strong>q</strong> para sair, ou adicione <code class="font-mono text-sm text-red-400">--no-pager</code> para jogar tudo direto na tela. Para ir ao fim do log, aperte <strong>Shift+G</strong>.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 5: Dependencias entre servicos        -->
+    <!-- ============================================ -->
+    <section id="topico-5" data-inema-topic="modulo-4-3#topico-5" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">5</span>
+        <h2 class="text-2xl font-bold">Dependencias: After e Requires</h2>
+      </div>
+
+      <p data-inema-block="m4-3-t5-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Servicos raramente vivem sozinhos. Sua aplicacao talvez precise do <strong class="text-amber-400">banco de dados ligado antes</strong> de subir, ou da rede pronta. O systemd deixa voce declarar essa ordem com duas chaves: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">After</code> (ordem) e <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">Requires</code> (obrigatoriedade).
+      </p>
+
+      <!-- Timeline: ordem de subida com dependencias -->
+      <div class="space-y-6 mb-6">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <span class="text-amber-400 font-bold text-lg">1</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">network.target sobe</h4>
+            <p class="text-sm text-neutral-400">A rede fica pronta. Quase todo servico de internet espera por isso primeiro.</p>
+          </div>
+        </div>
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <span class="text-amber-400 font-bold text-lg">2</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">postgresql.service sobe</h4>
+            <p class="text-sm text-neutral-400">O banco de dados liga. Sua aplicacao precisa dele de pe para se conectar.</p>
+          </div>
+        </div>
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <span class="text-amber-400 font-bold text-lg">3</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">meuapp.service sobe por ultimo</h4>
+            <p class="text-sm text-neutral-400">So agora, com rede e banco prontos, sua aplicacao inicia sem erros de conexao.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Declarando a ordem no service file</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-amber-400">[Unit]</p>
+          <p class="text-neutral-300">Description=Minha aplicacao</p>
+          <p class="text-neutral-400 mt-2"># Sobe DEPOIS da rede e do banco</p>
+          <p class="text-neutral-300">After=network.target postgresql.service</p>
+          <p class="text-neutral-400 mt-2"># O banco e OBRIGATORIO: se ele cair, eu caio junto</p>
+          <p class="text-neutral-300">Requires=postgresql.service</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-6">
+          <h4 class="font-bold text-amber-400 mb-3"><code class="font-mono">After=</code></h4>
+          <p class="text-neutral-300 text-sm mb-3">Define so a <strong>ordem</strong>: "me ligue depois deste". Nao obriga o outro a existir. Se o servico citado nao subir, o seu sobe mesmo assim.</p>
+          <p class="text-neutral-400 text-xs">Use para: garantir que a rede esteja pronta antes.</p>
+        </div>
+        <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6">
+          <h4 class="font-bold text-blue-400 mb-3"><code class="font-mono">Requires=</code></h4>
+          <p class="text-neutral-300 text-sm mb-3">Cria <strong>dependencia forte</strong>: "eu nao funciono sem ele". Se o servico exigido falhar, o seu tambem para. Costuma vir junto com After.</p>
+          <p class="text-neutral-400 text-xs">Use para: o banco de dados sem o qual o app nao roda.</p>
+        </div>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Dica: After e Requires sao independentes
+        </h3>
+        <p data-inema-block="m4-3-t5-p2" class="text-neutral-300"><code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">Requires</code> garante que o outro servico seja iniciado junto, mas <strong>nao garante a ordem</strong>. Para ter ordem E obrigatoriedade, declare os dois: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">Requires=db.service</code> mais <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">After=db.service</code>. Esse par e o jeito correto de dizer "preciso do banco, e ligado depois dele".</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 6: Restart automatico                 -->
+    <!-- ============================================ -->
+    <section id="topico-6" data-inema-topic="modulo-4-3#topico-6" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">6</span>
+        <h2 class="text-2xl font-bold">Restart Automatico: o Superpoder do Systemd</h2>
+      </div>
+
+      <p data-inema-block="m4-3-t6-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Aqui esta o motivo de usar systemd: ele <strong class="text-amber-400">religa seu servico sozinho</strong> quando ele cai. Travou por um bug? Acabou a memoria? O gerente percebe e sobe tudo de novo em segundos, sem voce precisar acordar de madrugada. Isso se configura com duas chaves: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">Restart</code> e <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">RestartSec</code>.
+      </p>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">No bloco [Service]</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-amber-400">[Service]</p>
+          <p class="text-neutral-300">ExecStart=/usr/bin/node /home/deploy/app/server.js</p>
+          <p class="text-neutral-400 mt-2"># Sempre religa, nao importa o motivo</p>
+          <p class="text-neutral-300">Restart=always</p>
+          <p class="text-neutral-400 mt-2"># Espera 5 segundos antes de tentar de novo</p>
+          <p class="text-neutral-300">RestartSec=5</p>
+        </div>
+      </div>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Os valores mais usados de Restart</h3>
+        <div class="space-y-3">
+          <div class="flex items-start space-x-3">
+            <code class="text-amber-400 font-mono text-sm font-bold flex-shrink-0 w-28">always</code>
+            <span class="text-neutral-300 text-sm">Religa sempre, mesmo se o programa saiu sem erro. O mais comum para apps web.</span>
+          </div>
+          <div class="flex items-start space-x-3">
+            <code class="text-amber-400 font-mono text-sm font-bold flex-shrink-0 w-28">on-failure</code>
+            <span class="text-neutral-300 text-sm">Religa so quando o programa termina com erro (codigo diferente de zero).</span>
+          </div>
+          <div class="flex items-start space-x-3">
+            <code class="text-amber-400 font-mono text-sm font-bold flex-shrink-0 w-28">no</code>
+            <span class="text-neutral-300 text-sm">Nunca religa (e o padrao se voce nao definir nada). Evite em producao.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#128065;</span> O que voce vai ver no status apos um crash
+        </h3>
+        <div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-300">&#9679; meuapp.service - Minha aplicacao Node</p>
+          <p class="text-green-400">   Active: active (running) since Tue 12:40:09</p>
+          <p class="text-neutral-300">   Main PID: 5102 (node)</p>
+          <p class="text-neutral-400 mt-2"># No journalctl, o systemd anota o religamento:</p>
+          <p class="text-neutral-300">12:40:04 systemd: meuapp.service: Main process exited, code=killed</p>
+          <p class="text-amber-400">12:40:09 systemd: meuapp.service: Scheduled restart, attempt 1</p>
+          <p class="text-green-400">12:40:09 systemd: Started Minha aplicacao Node.</p>
+        </div>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m4-3-t6-p2" class="text-neutral-300"><strong>Problema:</strong> "Meu app tem um bug que faz ele cair na hora, e o systemd fica religando em loop sem parar." <br><strong>Solucao:</strong> Sem <code class="font-mono text-sm">RestartSec</code>, ele tenta religar instantaneamente e o systemd bloqueia por excesso de tentativas (start-limit). Coloque <code class="font-mono text-sm text-red-400">RestartSec=5</code> para dar um respiro entre as tentativas, e conserte o bug olhando o <code class="font-mono text-sm text-red-400">journalctl</code>. Restart nao substitui corrigir o erro.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-6">
+          <h4 class="font-bold text-amber-400 mb-4">&#10003; O que FAZER</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-amber-400">&#10003;</span><span>Usar <code class="font-mono text-sm">Restart=always</code> em apps web</span></li>
+            <li class="flex items-start space-x-2"><span class="text-amber-400">&#10003;</span><span>Definir <code class="font-mono text-sm">RestartSec=5</code> para evitar loop</span></li>
+            <li class="flex items-start space-x-2"><span class="text-amber-400">&#10003;</span><span>Olhar o log para entender por que caiu</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; O que NAO fazer</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Deixar <code class="font-mono text-sm">Restart=no</code> em producao</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Usar o restart para mascarar bugs sem corrigir</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Esquecer <code class="font-mono text-sm">daemon-reload</code> apos mudar as chaves</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- RESUMO -->
+    <section class="mb-12">
+      <div class="bg-gradient-to-br from-amber-900/40 via-dark-800 to-dark-800 rounded-xl border border-amber-500/30 p-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+          <span class="mr-3">&#128218;</span> Resumo do Modulo
+        </h2>
+        <div class="space-y-4 mb-8">
+          <div class="flex items-start space-x-3">
+            <span class="text-amber-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Systemd e o gerente de plantao</strong><span class="text-neutral-400"> - mantem seus servicos de pe 24/7</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-amber-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">O service file tem [Unit], [Service] e [Install]</strong><span class="text-neutral-400"> - vive em /etc/systemd/system/</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-amber-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">systemctl start/stop/restart/enable</strong><span class="text-neutral-400"> - enable faz iniciar no boot</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-amber-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">journalctl -u, -f, --since</strong><span class="text-neutral-400"> - le os logs para descobrir o que aconteceu</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-amber-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">After/Requires e Restart=always</strong><span class="text-neutral-400"> - ordem entre servicos e religamento automatico</span></div>
+          </div>
+        </div>
+
+        <div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+          <h3 class="font-semibold text-amber-400 mb-2">Proximo Modulo:</h3>
+          <p class="text-neutral-300">4.4 - Cron Jobs: Tarefas Agendadas (rodar comandos sozinho em horarios definidos)</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">
+            &#8592; Voltar para Trilha
+          </a>
+          <a href="modulo-4-4.html" class="flex-1 text-center px-6 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-500 transition-colors">
+            Proximo Modulo &#8594;
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-dark-600 py-8 mt-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+      <p>Do Zero ao Deploy - 2026</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+
+  <script src="../../assets/learn.js"></script>
+  <script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

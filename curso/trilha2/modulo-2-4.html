@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="inema-course" content="dzd">
+  <title>Variaveis de Ambiente | Do Zero ao Deploy</title>
+
+  <!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+  <script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'blue' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'blue');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/learn.css">
+
+  <!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+  <script type="application/json" data-inema-manifest>
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha blue) */
+    html:not(.dark) .text-blue-400 { color: #2563eb; }
+    html:not(.dark) .bg-blue-500\/20 { background-color: rgba(37, 99, 235, 0.12); }
+    html:not(.dark) .bg-blue-500\/10 { background-color: rgba(37, 99, 235, 0.08); }
+    html:not(.dark) .border-blue-500\/30 { border-color: rgba(37, 99, 235, 0.25); }
+    html:not(.dark) .hover\:bg-blue-500\/30:hover { background-color: rgba(37, 99, 235, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+
+  <!-- NAVIGATION -->
+  <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-14">
+        <div class="flex items-center space-x-4">
+          <a href="../../index.html" class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300">
+            <span class="text-2xl">&#128640;</span>
+            <span class="font-bold text-lg hidden sm:inline">Do Zero ao Deploy</span>
+          </a>
+          <span class="text-neutral-600">|</span>
+          <a href="https://inema.club" target="_blank" class="text-sky-400 hover:text-sky-300 text-sm font-medium">INEMA.CLUB</a>
+        </div>
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <a href="../trilha1/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+            <span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal & Git</span>
+          </a>
+          <a href="index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-blue-400 bg-blue-500/10">
+            <span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy Moderno</span>
+          </a>
+          <a href="../trilha3/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors">
+            <span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor Proprio</span>
+          </a>
+          <a href="../trilha4/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
+            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+          </a>
+          <a href="../trilha5/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors">
+            <span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+          </a>
+          <button id="theme-toggle" class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2">
+            <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMB -->
+  <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex items-center space-x-2 text-sm text-neutral-400">
+      <a href="../../index.html" class="hover:text-blue-400">Inicio</a>
+      <span>/</span>
+      <a href="index.html" class="hover:text-blue-400">Trilha 2</a>
+      <span>/</span>
+      <span class="text-blue-400">Modulo 2.4</span>
+    </div>
+  </nav>
+
+  <!-- HEADER -->
+  <header class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full mb-4">MODULO 2.4</span>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">&#128273; Variaveis de Ambiente</h1>
+      <p class="text-lg text-neutral-400 max-w-3xl">Sua chave da API, a senha do banco, o token secreto: nada disso pode morar dentro do codigo. As variaveis de ambiente sao o cofre onde a configuracao fica separada do app. Aqui voce aprende a guardar segredos com seguranca no .env, na Vercel e no GitHub Actions.</p>
+      <div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-blue-400">6</div>
+          <div class="text-xs text-neutral-400">Topicos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-blue-400">45</div>
+          <div class="text-xs text-neutral-400">Minutos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-blue-400">Basico</div>
+          <div class="text-xs text-neutral-400">Nivel</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-blue-400">Pratico</div>
+          <div class="text-xs text-neutral-400">Tipo</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEUDO -->
+  <main id="conteudo" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="2-4" data-inema-track="2">
+
+    <!-- ============================================ -->
+    <!-- TOPICO 1: O que sao variaveis de ambiente    -->
+    <!-- ============================================ -->
+    <section id="topico-1" data-inema-topic="modulo-2-4#topico-1" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">1</span>
+        <h2 class="text-2xl font-bold">O Que Sao Variaveis de Ambiente e Por Que Existem</h2>
+      </div>
+
+      <p data-inema-block="m2-4-t1-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Toda aplicacao precisa de informacoes para funcionar: o endereco do banco de dados, a chave de uma API, a senha de um servico. Essas informacoes mudam de um lugar para o outro. No seu computador, o banco e local. Na Vercel, o banco e na nuvem. Uma <strong class="text-blue-400">variavel de ambiente</strong> e uma forma de guardar esses valores <strong class="text-blue-400">fora do codigo</strong>, para que o mesmo app rode em qualquer lugar so trocando a configuracao.
+      </p>
+
+      <!-- SVG: codigo lendo de um cofre .env -> ambientes -->
+      <div class="rounded-2xl border border-blue-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+        <svg viewBox="0 0 800 260" class="w-full h-auto" role="img" aria-label="Diagrama: o codigo le segredos de um cofre de variaveis de ambiente, que tem versoes diferentes para os ambientes local, Vercel e GitHub Actions">
+          <defs>
+            <linearGradient id="m24-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#3b82f6"/>
+            </linearGradient>
+            <filter id="m24-glow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <pattern id="m24-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="1.3" cy="1.3" r="1.3" fill="#60a5fa" opacity="0.12"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="800" height="260" fill="url(#m24-grid)"/>
+
+          <!-- App / Codigo -->
+          <rect x="30" y="80" width="180" height="100" rx="14" fill="#0e1622" stroke="#9ca3af" stroke-width="2"/>
+          <text x="120" y="74" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-weight="600" font-size="13">SEU APP</text>
+          <text x="48" y="116" fill="#9ca3af" font-family="monospace" font-size="12">const key =</text>
+          <text x="48" y="136" fill="#38bdf8" font-family="monospace" font-size="12">  process.env</text>
+          <text x="48" y="156" fill="#38bdf8" font-family="monospace" font-size="12">  .API_KEY</text>
+
+          <!-- Seta para o cofre -->
+          <line x1="210" y1="130" x2="290" y2="130" stroke="url(#m24-grad)" stroke-width="2.5"/>
+          <polygon points="290,130 280,125 280,135" fill="#60a5fa"/>
+          <text x="250" y="120" text-anchor="middle" fill="#60a5fa" font-family="Inter,sans-serif" font-size="11">le</text>
+
+          <!-- Cofre .env -->
+          <g filter="url(#m24-glow)">
+            <rect x="295" y="70" width="200" height="120" rx="16" fill="#0e1622" stroke="url(#m24-grad)" stroke-width="2.5"/>
+          </g>
+          <circle cx="395" cy="100" r="14" fill="none" stroke="#60a5fa" stroke-width="2.5"/>
+          <circle cx="395" cy="100" r="4" fill="#60a5fa"/>
+          <line x1="395" y1="104" x2="395" y2="114" stroke="#60a5fa" stroke-width="2.5"/>
+          <text x="395" y="142" text-anchor="middle" fill="#60a5fa" font-family="Inter,sans-serif" font-weight="600" font-size="14">COFRE .env</text>
+          <text x="395" y="164" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="11">API_KEY=********</text>
+          <text x="395" y="180" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="11">DB_URL=********</text>
+
+          <!-- Tres ambientes -->
+          <rect class="wf-a" x="560" y="20" width="210" height="58" rx="12" fill="#0e1622" stroke="#38bdf8" stroke-width="1.8"/>
+          <text x="580" y="46" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="13">Local</text>
+          <text x="580" y="64" fill="#9ca3af" font-family="monospace" font-size="11">arquivo .env</text>
+
+          <rect class="wf-a" x="560" y="100" width="210" height="58" rx="12" fill="#0e1622" stroke="#60a5fa" stroke-width="1.8"/>
+          <text x="580" y="126" fill="#60a5fa" font-family="Inter,sans-serif" font-weight="600" font-size="13">Vercel</text>
+          <text x="580" y="144" fill="#9ca3af" font-family="monospace" font-size="11">Settings &gt; Env Vars</text>
+
+          <rect class="wf-a" x="560" y="180" width="210" height="58" rx="12" fill="#0e1622" stroke="#38bdf8" stroke-width="1.8"/>
+          <text x="580" y="206" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="13">GitHub Actions</text>
+          <text x="580" y="224" fill="#9ca3af" font-family="monospace" font-size="11">Secrets do repo</text>
+
+          <!-- Linhas do cofre para ambientes -->
+          <line x1="495" y1="110" x2="560" y2="49" stroke="#38bdf8" stroke-width="1.5" opacity="0.6"/>
+          <line x1="495" y1="130" x2="560" y2="129" stroke="#60a5fa" stroke-width="1.5" opacity="0.6"/>
+          <line x1="495" y1="150" x2="560" y2="209" stroke="#38bdf8" stroke-width="1.5" opacity="0.6"/>
+        </svg>
+      </div>
+
+      <div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: O Cofre Separado do Codigo
+        </h3>
+        <p data-inema-block="m2-4-t1-p2" class="text-neutral-300 mb-4">Imagine que o seu app e uma casa, e o codigo e a planta da casa. A planta voce pode mostrar para qualquer um, publicar na internet, colocar no GitHub. Mas a <strong>chave da porta</strong> voce nao desenha na planta. Voce guarda num cofre separado.</p>
+        <ul class="space-y-2 text-neutral-300">
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">&#8226;</span><span><strong>O codigo</strong> e a planta: igual em todo lugar, pode ser publico.</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">&#8226;</span><span><strong>As variaveis de ambiente</strong> sao a chave no cofre: secretas, mudam por lugar.</span></li>
+          <li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">&#8226;</span><span>Trocar a chave (config) <strong>nao</strong> exige reconstruir a casa (o app).</span></li>
+        </ul>
+      </div>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Como o codigo le uma variavel</h3>
+        <p data-inema-block="m2-4-t1-p3" class="text-neutral-300 text-sm mb-4">Em vez de escrever o valor direto no codigo, voce le da variavel de ambiente. O nome consagrado e <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-blue-400">process.env</code> no Node.js.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># ERRADO: segredo no codigo (qualquer um ve)</p>
+          <p class="text-red-400">const apiKey = "sk-live-9f8a7b6c5d4e3f2a1b0c";</p>
+          <p class="text-neutral-400 mt-3"># CERTO: o codigo le a variavel de ambiente</p>
+          <p class="text-blue-400">const apiKey = process.env.API_KEY;</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">O codigo continua igual em todo lugar. Quem define o valor de <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">API_KEY</code> e o ambiente onde o app roda.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 2: Arquivo .env local                 -->
+    <!-- ============================================ -->
+    <section id="topico-2" data-inema-topic="modulo-2-4#topico-2" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">2</span>
+        <h2 class="text-2xl font-bold">O Arquivo .env Local</h2>
+      </div>
+
+      <p data-inema-block="m2-4-t2-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        No seu computador, o cofre tem um nome: o arquivo <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-blue-400">.env</code> (com ponto na frente). E um arquivo de texto simples, com uma variavel por linha, no formato <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-blue-400">CHAVE=valor</code>. Ele fica na raiz do projeto e <strong class="text-blue-400">nunca</strong> vai para o GitHub.
+      </p>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Criando o arquivo .env</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Na raiz do projeto, crie o arquivo</p>
+          <p class="text-blue-400">$ touch .env</p>
+          <p class="text-blue-400">$ nano .env</p>
+          <p class="text-neutral-400 mt-3"># Dentro do .env, uma variavel por linha:</p>
+          <p class="text-neutral-300">API_KEY=sk-live-9f8a7b6c5d4e3f2a1b0c</p>
+          <p class="text-neutral-300">DATABASE_URL=postgres://user:senha@host:5432/db</p>
+          <p class="text-neutral-300">PORT=3000</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Sem aspas, sem espaco em volta do <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">=</code>. Por convencao, os nomes ficam em MAIUSCULAS_COM_UNDERLINE.</p>
+      </div>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Lendo o .env com dotenv</h3>
+        <p data-inema-block="m2-4-t2-p2" class="text-neutral-300 text-sm mb-4">O Node.js nao le o arquivo <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">.env</code> sozinho. A biblioteca <strong class="text-blue-400">dotenv</strong> carrega o arquivo e coloca as variaveis em <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">process.env</code>.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Instalar a biblioteca</p>
+          <p class="text-blue-400">$ npm install dotenv</p>
+          <p class="text-neutral-300 mt-1">added 1 package in 1s</p>
+          <p class="text-neutral-400 mt-3"># No topo do seu arquivo principal (index.js):</p>
+          <p class="text-blue-400">require('dotenv').config();</p>
+          <p class="text-neutral-400 mt-2"># Agora process.env.API_KEY funciona</p>
+          <p class="text-blue-400">console.log(process.env.PORT);</p>
+          <p class="text-neutral-300">3000</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Frameworks como Next.js e Vite ja leem o <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">.env</code> automaticamente, sem precisar do dotenv.</p>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Dica: Crie um .env.example
+        </h3>
+        <p data-inema-block="m2-4-t2-p3" class="text-neutral-300">Como o <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">.env</code> nao vai para o GitHub, quem clonar o projeto nao sabe quais variaveis preencher. A solucao e criar um <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">.env.example</code> com as chaves mas <strong>sem os valores</strong> (ex: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">API_KEY=</code>). Esse sim voce commita: ele serve de modelo, sem vazar segredo.</p>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m2-4-t2-p4" class="text-neutral-300"><strong>Problema:</strong> "Defini a variavel no .env mas <code class="font-mono text-sm">process.env.API_KEY</code> aparece como undefined." <br><strong>Solucao:</strong> Geralmente sao tres causas: (1) esqueceu de chamar <code class="font-mono text-sm">require('dotenv').config()</code> no topo do arquivo; (2) o <code class="font-mono text-sm">.env</code> nao esta na raiz onde o app roda; (3) colocou espaco ou aspas no valor. Verifique os tres e reinicie o app (variaveis sao lidas so na inicializacao).</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 3: Variaveis no Vercel                -->
+    <!-- ============================================ -->
+    <section id="topico-3" data-inema-topic="modulo-2-4#topico-3" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">3</span>
+        <h2 class="text-2xl font-bold">Variaveis no Vercel</h2>
+      </div>
+
+      <p data-inema-block="m2-4-t3-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Quando o app sobe para a Vercel, ele nao tem o seu <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-blue-400">.env</code> local (que nem foi enviado). Entao voce precisa cadastrar as mesmas variaveis no painel da Vercel. Elas ficam guardadas com seguranca e sao injetadas no app a cada deploy. O melhor: a Vercel separa as variaveis <strong class="text-blue-400">por ambiente</strong> (Production, Preview, Development).
+      </p>
+
+      <!-- Timeline: passo a passo no painel Vercel -->
+      <div class="space-y-6 mb-6">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">1</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Abra as configuracoes do projeto</h4>
+            <p class="text-sm text-neutral-400">No painel da Vercel, escolha o projeto e va em <strong class="text-blue-400">Settings &gt; Environment Variables</strong>.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">2</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Adicione cada variavel</h4>
+            <p class="text-sm text-neutral-400 mb-3">Preencha o nome (Key) e o valor (Value), iguais ao seu .env.</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-neutral-400"># Exemplo de uma variavel</p>
+              <p class="text-blue-400">Key:    API_KEY</p>
+              <p class="text-blue-400">Value:  sk-live-9f8a7b6c5d4e3f2a1b0c</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">3</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Escolha o ambiente</h4>
+            <p class="text-sm text-neutral-400">Marque onde a variavel vale: <strong class="text-blue-400">Production</strong> (site no ar), <strong class="text-blue-400">Preview</strong> (deploys de branch) e/ou <strong class="text-blue-400">Development</strong> (local com vercel dev). Voce pode ter um banco de testes no Preview e o banco real so na Production.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">4</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Faca um novo deploy</h4>
+            <p class="text-sm text-neutral-400">As variaveis sao aplicadas no proximo build. Se voce adicionou uma variavel depois do deploy, precisa fazer um <strong class="text-blue-400">Redeploy</strong> para ela entrar em vigor.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- O que voce vai ver na tela -->
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#128065;</span> O que voce vai ver na tela
+        </h3>
+        <p data-inema-block="m2-4-t3-p2" class="text-neutral-300 text-sm mb-4">Na pagina Environment Variables, cada variavel cadastrada aparece como uma linha. O valor fica oculto (mostrado como pontinhos) e voce ve em quais ambientes ela esta ativa:</p>
+        <div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Lista de variaveis no painel</p>
+          <p class="text-blue-400">API_KEY        &bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;   Production, Preview</p>
+          <p class="text-blue-400">DATABASE_URL   &bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;   Production</p>
+          <p class="text-blue-400">NEXT_PUBLIC_URL  myapp.com    All Environments</p>
+        </div>
+        <p class="text-neutral-300 text-sm mt-4">No Next.js, variaveis com prefixo <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">NEXT_PUBLIC_</code> ficam visiveis no navegador. Use so para valores que <strong class="text-blue-400">nao sao secretos</strong> (como a URL publica do site).</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 4: Variaveis no GitHub Actions        -->
+    <!-- ============================================ -->
+    <section id="topico-4" data-inema-topic="modulo-2-4#topico-4" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">4</span>
+        <h2 class="text-2xl font-bold">Variaveis no GitHub Actions</h2>
+      </div>
+
+      <p data-inema-block="m2-4-t4-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Se voce usa GitHub Actions para automatizar testes ou deploy, os scripts tambem precisam de segredos: token de deploy, chave de API, senha do banco. O GitHub guarda esses valores nos <strong class="text-blue-400">Secrets</strong> do repositorio. Eles ficam criptografados, ninguem consegue ler, e voce os usa dentro do workflow.
+      </p>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Cadastrando um Secret</h3>
+        <p data-inema-block="m2-4-t4-p2" class="text-neutral-300 text-sm mb-4">No repositorio do GitHub, va em <strong class="text-blue-400">Settings &gt; Secrets and variables &gt; Actions</strong> e clique em <strong class="text-blue-400">New repository secret</strong>.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Exemplo de secret cadastrado</p>
+          <p class="text-blue-400">Name:    DEPLOY_TOKEN</p>
+          <p class="text-blue-400">Secret:  ghp_xxxxxxxxxxxxxxxxxxxx</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Depois de salvar, o GitHub nunca mais mostra o valor. Se esquecer, e so cadastrar de novo.</p>
+      </div>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Usando o Secret no workflow</h3>
+        <p data-inema-block="m2-4-t4-p3" class="text-neutral-300 text-sm mb-4">Dentro do arquivo do workflow (<code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">.github/workflows/deploy.yml</code>), voce le o secret com a sintaxe <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">${{ secrets.NOME }}</code>.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-500">name: Deploy</p>
+          <p class="text-neutral-500">on: [push]</p>
+          <p class="text-neutral-500">jobs:</p>
+          <p class="text-neutral-500">  build:</p>
+          <p class="text-neutral-500">    runs-on: ubuntu-latest</p>
+          <p class="text-neutral-500">    steps:</p>
+          <p class="text-neutral-500">      - uses: actions/checkout@v4</p>
+          <p class="text-neutral-500">      - name: Fazer deploy</p>
+          <p class="text-neutral-400 mt-1">        # injeta o secret como variavel de ambiente</p>
+          <p class="text-neutral-500">        env:</p>
+          <p class="text-blue-400">          API_KEY: ${{ secrets.API_KEY }}</p>
+          <p class="text-blue-400">          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}</p>
+          <p class="text-neutral-500">        run: npm run deploy</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Dentro do step, o app le <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">process.env.API_KEY</code> como sempre. O secret nunca aparece nos logs: o GitHub esconde o valor automaticamente.</p>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Dica: Secrets vs Variables
+        </h3>
+        <p data-inema-block="m2-4-t4-p4" class="text-neutral-300">O GitHub tem duas abas: <strong>Secrets</strong> (valores secretos, escondidos para sempre) e <strong>Variables</strong> (valores nao-secretos, visiveis). Use <strong>Secrets</strong> para tokens, chaves e senhas. Use <strong>Variables</strong> (lidas com <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">${{ vars.NOME }}</code>) para configuracoes publicas, como o nome do ambiente ou a regiao.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 5: Seguranca - o que NUNCA commitar   -->
+    <!-- ============================================ -->
+    <section id="topico-5" data-inema-topic="modulo-2-4#topico-5" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">5</span>
+        <h2 class="text-2xl font-bold">Seguranca: O Que NUNCA Commitar</h2>
+      </div>
+
+      <p data-inema-block="m2-4-t5-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        A regra de ouro e simples: <strong class="text-blue-400">segredo nenhum vai para o Git</strong>. Quando voce comita um arquivo, ele entra no historico para sempre, e se o repositorio for publico, qualquer pessoa no mundo pode ver. Robos varrem o GitHub o dia inteiro procurando chaves vazadas para abusar delas. A defesa principal e o arquivo <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-blue-400">.gitignore</code>.
+      </p>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">O .gitignore protege o seu .env</h3>
+        <p data-inema-block="m2-4-t5-p2" class="text-neutral-300 text-sm mb-4">O <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">.gitignore</code> e uma lista de arquivos que o Git deve <strong class="text-blue-400">ignorar</strong>. Adicione o <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">.env</code> nessa lista antes de qualquer commit.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Conteudo do arquivo .gitignore</p>
+          <p class="text-blue-400">.env</p>
+          <p class="text-blue-400">.env.local</p>
+          <p class="text-blue-400">.env*.local</p>
+          <p class="text-blue-400">node_modules/</p>
+          <p class="text-neutral-400 mt-3"># Confirme que o Git esta ignorando:</p>
+          <p class="text-blue-400">$ git status</p>
+          <p class="text-neutral-300">nothing to commit, working tree clean</p>
+          <p class="text-neutral-400 mt-1"># O .env NAO aparece na lista. Protegido.</p>
+        </div>
+      </div>
+
+      <!-- Grid Fazer / Evitar #1 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6">
+          <h4 class="font-bold text-blue-400 mb-4">&#10003; Pode commitar</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-blue-400">&#10003;</span><span>O <code class="font-mono text-sm">.gitignore</code> (a lista de exclusao)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-blue-400">&#10003;</span><span>O <code class="font-mono text-sm">.env.example</code> (so as chaves, sem valores)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-blue-400">&#10003;</span><span>Codigo que le <code class="font-mono text-sm">process.env</code></span></li>
+            <li class="flex items-start space-x-2"><span class="text-blue-400">&#10003;</span><span>Config publica (URL do site, nome do app)</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; NUNCA commitar</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>O arquivo <code class="font-mono text-sm">.env</code> com valores reais</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Chaves de API e tokens no codigo</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Senhas de banco de dados</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Arquivos de credencial (<code class="font-mono text-sm">.pem</code>, <code class="font-mono text-sm">.key</code>, JSON de service account)</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m2-4-t5-p3" class="text-neutral-300"><strong>Problema:</strong> "Commitei o .env por engano antes de criar o .gitignore. Apaguei o arquivo e commitei de novo. Resolvido?" <br><strong>Solucao:</strong> Nao. O valor continua no <strong>historico</strong> do Git e pode ser recuperado por qualquer um. Apagar agora nao adianta. Trate a chave como <strong>vazada</strong>: revogue e gere uma nova no servico (veja o topico 6). Reescrever o historico (com <code class="font-mono text-sm">git filter-repo</code>) ajuda, mas se ja foi para o GitHub publico, considere o segredo comprometido.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 6: Rotacao de secrets                 -->
+    <!-- ============================================ -->
+    <section id="topico-6" data-inema-topic="modulo-2-4#topico-6" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">6</span>
+        <h2 class="text-2xl font-bold">Rotacao de Secrets</h2>
+      </div>
+
+      <p data-inema-block="m2-4-t6-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Mesmo bem guardado, um segredo nao deve durar para sempre. <strong class="text-blue-400">Rotacionar</strong> e trocar a chave por uma nova de tempos em tempos, e revogar a antiga. Assim, se uma chave vazou sem voce perceber, ela tem um prazo de validade curto. E se voce <strong class="text-blue-400">sabe</strong> que vazou, a rotacao e imediata e obrigatoria.
+      </p>
+
+      <div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: Trocar a Fechadura
+        </h3>
+        <p data-inema-block="m2-4-t6-p2" class="text-neutral-300">Voce nunca saberia se um ex-funcionario fez copia da chave da sua casa. Por isso, ao trocar de inquilino, voce <strong>troca a fechadura</strong>: todas as copias antigas param de funcionar de uma vez. Rotacionar um secret e exatamente isso. A chave nova passa a valer; a velha vira lixo, mesmo que alguem tenha uma copia.</p>
+      </div>
+
+      <!-- Timeline: passos da rotacao -->
+      <div class="space-y-6 mb-6">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">1</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Gere a chave nova</h4>
+            <p class="text-sm text-neutral-400">No painel do servico (Supabase, Stripe, etc.), crie uma nova chave. A maioria deixa as duas chaves ativas por um tempo, para a troca nao quebrar o app.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">2</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Atualize em todos os lugares</h4>
+            <p class="text-sm text-neutral-400 mb-3">Troque o valor no <code class="font-mono text-sm">.env</code> local, no painel da Vercel e nos Secrets do GitHub. Os tres precisam apontar para a chave nova.</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-neutral-400"># Lugares onde o segredo vive</p>
+              <p class="text-blue-400">.env (local)</p>
+              <p class="text-blue-400">Vercel &gt; Settings &gt; Environment Variables</p>
+              <p class="text-blue-400">GitHub &gt; Settings &gt; Secrets</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">3</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Faca o redeploy e teste</h4>
+            <p class="text-sm text-neutral-400">Suba a nova versao e confirme que o app funciona com a chave nova. So depois passe para o ultimo passo.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <span class="text-blue-400 font-bold text-lg">4</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Revogue a chave antiga</h4>
+            <p class="text-sm text-neutral-400">No painel do servico, apague ou desative a chave velha. A partir daqui, qualquer copia antiga para de funcionar. Esse e o passo que de fato fecha a porta.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid Fazer / Evitar #2 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6">
+          <h4 class="font-bold text-blue-400 mb-4">&#10003; Boas praticas</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-blue-400">&#10003;</span><span>Rotacionar segredos importantes a cada 60-90 dias</span></li>
+            <li class="flex items-start space-x-2"><span class="text-blue-400">&#10003;</span><span>Revogar IMEDIATAMENTE qualquer chave que vazou</span></li>
+            <li class="flex items-start space-x-2"><span class="text-blue-400">&#10003;</span><span>Usar chaves diferentes por ambiente (dev / prod)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-blue-400">&#10003;</span><span>Dar a cada chave so a permissao que ela precisa</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; Evitar</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Usar a mesma chave por anos sem trocar</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Compartilhar segredos por chat ou e-mail</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Reusar a chave de producao no ambiente de testes</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Deixar a chave antiga ativa "por garantia"</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#127942;</span> Voce fechou a Trilha 2!
+        </h3>
+        <p data-inema-block="m2-4-t6-p3" class="text-neutral-300">Voce ja sabe subir um app na Vercel, conectar um banco no Supabase, consumir APIs e agora guardar segredos com seguranca. Esse e o ciclo completo do deploy moderno: codigo no Git, app na nuvem, dados no banco e configuracao no cofre. Na proxima trilha, voce vai descer um nivel e aprender a rodar tudo no seu <strong class="text-blue-400">proprio servidor</strong>.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- RESUMO -->
+    <section class="mb-12">
+      <div class="bg-gradient-to-br from-blue-900/40 via-dark-800 to-dark-800 rounded-xl border border-blue-500/30 p-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+          <span class="mr-3">&#128218;</span> Resumo do Modulo
+        </h2>
+        <div class="space-y-4 mb-8">
+          <div class="flex items-start space-x-3">
+            <span class="text-blue-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Variavel de ambiente = cofre fora do codigo</strong><span class="text-neutral-400"> - config muda sem mexer no app</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-blue-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">.env local com CHAVE=valor</strong><span class="text-neutral-400"> - lido pelo dotenv, nunca commitado</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-blue-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Vercel: Settings &gt; Environment Variables</strong><span class="text-neutral-400"> - por ambiente (Production / Preview / Development)</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-blue-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">GitHub Actions: Secrets do repo</strong><span class="text-neutral-400"> - lidos com ${{ secrets.NOME }}</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-blue-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">.gitignore protege e rotacao revoga</strong><span class="text-neutral-400"> - segredo nenhum vai para o Git; chave vazada se troca na hora</span></div>
+          </div>
+        </div>
+
+        <div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+          <h3 class="font-semibold text-blue-400 mb-2">Proxima Trilha:</h3>
+          <p class="text-neutral-300">Trilha 3 - Servidor Proprio (VPS, SSH, firewall e tokens: rode tudo na sua propria maquina na nuvem)</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">
+            &#8592; Voltar para Trilha
+          </a>
+          <a href="../trilha3/index.html" class="flex-1 text-center px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-500 transition-colors">
+            Proxima Trilha &#8594;
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-dark-600 py-8 mt-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+      <p>Do Zero ao Deploy - 2026</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+
+  <script src="../../assets/learn.js"></script>
+  <script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

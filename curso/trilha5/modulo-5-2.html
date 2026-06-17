@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="inema-course" content="dzd">
+  <title>Intelecto: IA Autonoma | Do Zero ao Deploy</title>
+
+  <!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+  <script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'teal' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'teal');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/learn.css">
+
+  <!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+  <script type="application/json" data-inema-manifest>
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha teal) */
+    html:not(.dark) .text-teal-400 { color: #0d9488; }
+    html:not(.dark) .bg-teal-500\/20 { background-color: rgba(13, 148, 136, 0.12); }
+    html:not(.dark) .bg-teal-500\/10 { background-color: rgba(13, 148, 136, 0.08); }
+    html:not(.dark) .border-teal-500\/30 { border-color: rgba(13, 148, 136, 0.25); }
+    html:not(.dark) .hover\:bg-teal-500\/30:hover { background-color: rgba(13, 148, 136, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+
+  <!-- NAVIGATION -->
+  <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-14">
+        <div class="flex items-center space-x-4">
+          <a href="../../index.html" class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300">
+            <span class="text-2xl">&#128640;</span>
+            <span class="font-bold text-lg hidden sm:inline">Do Zero ao Deploy</span>
+          </a>
+          <span class="text-neutral-600">|</span>
+          <a href="https://inema.club" target="_blank" class="text-sky-400 hover:text-sky-300 text-sm font-medium">INEMA.CLUB</a>
+        </div>
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <a href="../trilha1/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+            <span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal & Git</span>
+          </a>
+          <a href="../trilha2/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors">
+            <span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy Moderno</span>
+          </a>
+          <a href="../trilha3/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors">
+            <span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor Proprio</span>
+          </a>
+          <a href="../trilha4/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
+            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+          </a>
+          <a href="index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-teal-400 bg-teal-500/10">
+            <span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+          </a>
+          <button id="theme-toggle" class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2">
+            <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMB -->
+  <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex items-center space-x-2 text-sm text-neutral-400">
+      <a href="../../index.html" class="hover:text-teal-400">Inicio</a>
+      <span>/</span>
+      <a href="index.html" class="hover:text-teal-400">Trilha 5</a>
+      <span>/</span>
+      <span class="text-teal-400">Modulo 5.2</span>
+    </div>
+  </nav>
+
+  <!-- HEADER -->
+  <header class="bg-gradient-to-br from-teal-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="inline-block px-3 py-1 bg-teal-500/20 text-teal-400 text-xs font-semibold rounded-full mb-4">MODULO 5.2</span>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">&#129504; Intelecto: IA Autonoma</h1>
+      <p class="text-lg text-neutral-400 max-w-3xl">Ate aqui voce tinha um assistente que respondia quando chamado. Agora voce vai dar a ele um objetivo, um relogio e uma memoria. O Intelecto e um agente que acorda sozinho, decide o que fazer e age sem voce mandar. Este e o ultimo passo da jornada.</p>
+      <div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-teal-400">6</div>
+          <div class="text-xs text-neutral-400">Topicos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-teal-400">45</div>
+          <div class="text-xs text-neutral-400">Minutos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-teal-400">Basico</div>
+          <div class="text-xs text-neutral-400">Nivel</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-teal-400">Pratico</div>
+          <div class="text-xs text-neutral-400">Tipo</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEUDO -->
+  <main id="conteudo" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="5-2" data-inema-track="5">
+
+    <!-- ============================================ -->
+    <!-- TOPICO 1: Do assistente ao agente autonomo   -->
+    <!-- ============================================ -->
+    <section id="topico-1" data-inema-topic="modulo-5-2#topico-1" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">1</span>
+        <h2 class="text-2xl font-bold">Do Assistente ao Agente Autonomo</h2>
+      </div>
+
+      <p data-inema-block="m5-2-t1-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Um <strong class="text-teal-400">assistente</strong> espera voce mandar. Voce pergunta, ele responde, e fica parado ate a proxima ordem. Um <strong class="text-teal-400">agente autonomo</strong> e diferente: voce da a ele um objetivo (por exemplo "todo dia, resuma minhas mensagens novas") e ele mesmo decide quando agir, quais passos seguir e quando parou de fazer sentido. A diferenca nao e a inteligencia do modelo. E quem aperta o botao: voce ou ele.
+      </p>
+
+      <!-- SVG: Loop do agente -->
+      <div class="rounded-2xl border border-teal-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+        <svg viewBox="0 0 800 260" class="w-full h-auto" role="img" aria-label="Diagrama do ciclo de um agente autonomo: perceber, planejar, agir e lembrar, em loop continuo">
+          <defs>
+            <linearGradient id="m52-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#14b8a6"/>
+            </linearGradient>
+            <filter id="m52-glow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <pattern id="m52-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="1.3" cy="1.3" r="1.3" fill="#2dd4bf" opacity="0.12"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="800" height="260" fill="url(#m52-grid)"/>
+          <text x="400" y="28" text-anchor="middle" fill="#2dd4bf" font-family="Inter,sans-serif" font-weight="600" font-size="15">O CICLO DO AGENTE</text>
+
+          <!-- Caixa central: objetivo -->
+          <g filter="url(#m52-glow)">
+            <rect x="320" y="105" width="160" height="50" rx="12" fill="#0c1f1c" stroke="url(#m52-grad)" stroke-width="2"/>
+          </g>
+          <text x="400" y="128" text-anchor="middle" fill="#2dd4bf" font-family="Inter,sans-serif" font-weight="600" font-size="13">OBJETIVO</text>
+          <text x="400" y="144" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">o que ele quer alcancar</text>
+
+          <!-- 4 etapas em volta -->
+          <g class="wf-a">
+            <rect x="120" y="55" width="150" height="44" rx="10" fill="#0c1f1c" stroke="#2dd4bf" stroke-width="1.5"/>
+            <text x="195" y="82" text-anchor="middle" fill="#2dd4bf" font-family="Inter,sans-serif" font-weight="600" font-size="13">1. PERCEBER</text>
+          </g>
+          <g class="wf-a">
+            <rect x="530" y="55" width="150" height="44" rx="10" fill="#0c1f1c" stroke="#38bdf8" stroke-width="1.5"/>
+            <text x="605" y="82" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="13">2. PLANEJAR</text>
+          </g>
+          <g class="wf-a">
+            <rect x="530" y="165" width="150" height="44" rx="10" fill="#0c1f1c" stroke="#2dd4bf" stroke-width="1.5"/>
+            <text x="605" y="192" text-anchor="middle" fill="#2dd4bf" font-family="Inter,sans-serif" font-weight="600" font-size="13">3. AGIR</text>
+          </g>
+          <g class="wf-a">
+            <rect x="120" y="165" width="150" height="44" rx="10" fill="#0c1f1c" stroke="#38bdf8" stroke-width="1.5"/>
+            <text x="195" y="192" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="13">4. LEMBRAR</text>
+          </g>
+
+          <!-- Setas do loop -->
+          <path d="M270 70 L530 70" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#m52-arrow)"/>
+          <path d="M605 99 L605 165" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#m52-arrow)"/>
+          <path d="M530 195 L270 195" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#m52-arrow)"/>
+          <path d="M195 165 L195 99" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#m52-arrow)"/>
+          <defs>
+            <marker id="m52-arrow" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#2dd4bf"/>
+            </marker>
+          </defs>
+          <text x="400" y="240" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="12">o ciclo se repete sozinho ate o objetivo ser cumprido</text>
+        </svg>
+      </div>
+
+      <div class="bg-gradient-to-br from-teal-900/30 to-dark-800 rounded-xl border border-teal-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-teal-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: O Estagiario que Virou Funcionario
+        </h3>
+        <p data-inema-block="m5-2-t1-p2" class="text-neutral-300 mb-4">Um assistente e como um estagiario que so faz o que voce pede, na hora que voce pede. Um agente autonomo e o funcionario de confianca: voce diz "cuida da caixa de entrada" e some por uma semana. Ele organiza, responde o que da, junta as duvidas e te entrega um resumo quando voce volta. Voce nao precisou apertar nada.</p>
+        <ul class="space-y-2 text-neutral-300">
+          <li class="flex items-start space-x-2"><span class="text-teal-400 mt-1">&#8226;</span><span><strong>Assistente:</strong> reage a um comando ("resuma este texto")</span></li>
+          <li class="flex items-start space-x-2"><span class="text-teal-400 mt-1">&#8226;</span><span><strong>Agente:</strong> persegue um objetivo ("mantenha meu sistema saudavel")</span></li>
+          <li class="flex items-start space-x-2"><span class="text-teal-400 mt-1">&#8226;</span><span><strong>Assistente:</strong> sem voce, fica parado</span></li>
+          <li class="flex items-start space-x-2"><span class="text-teal-400 mt-1">&#8226;</span><span><strong>Agente:</strong> sem voce, continua trabalhando</span></li>
+        </ul>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Dica: Autonomia e uma Escada, nao um Interruptor
+        </h3>
+        <p data-inema-block="m5-2-t1-p3" class="text-neutral-300">Voce nao precisa pular direto para "agente faz tudo sozinho". Comece com pouca autonomia: o agente sugere e voce aprova. Depois ele faz e te avisa. So no fim ele faz e nem precisa avisar. Subir um degrau de cada vez evita sustos e te deixa confiar nele aos poucos.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/20 border border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 2: Agendamento de tarefas             -->
+    <!-- ============================================ -->
+    <section id="topico-2" data-inema-topic="modulo-5-2#topico-2" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">2</span>
+        <h2 class="text-2xl font-bold">Agendamento: Fazer o Agente Acordar Sozinho</h2>
+      </div>
+
+      <p data-inema-block="m5-2-t2-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Para o agente agir sem voce, ele precisa de um <strong class="text-teal-400">relogio</strong>. Em vez de ficar rodando o tempo todo (gastando memoria e energia), voce o coloca para acordar em horarios certos: toda manha as 7h, a cada hora, ou toda segunda. A ferramenta classica para isso e o <strong class="text-teal-400">cron</strong> no Linux, que voce ja conheceu na Trilha 4.
+      </p>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-teal-400 font-mono">crontab</code> - Agendar o agente</h3>
+        <p data-inema-block="m5-2-t2-p2" class="text-neutral-300 text-sm mb-4">Cada linha do cron tem 5 campos de tempo (minuto, hora, dia, mes, dia-da-semana) seguidos do comando.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Abrir o editor de agendamentos</p>
+          <p class="text-teal-400">$ crontab -e</p>
+          <p class="text-neutral-400 mt-3"># Rodar o agente todo dia as 7h da manha</p>
+          <p class="text-teal-400">0 7 * * * /usr/bin/python3 /home/voce/agente/run.py</p>
+          <p class="text-neutral-400 mt-3"># Rodar a cada 15 minutos</p>
+          <p class="text-teal-400">*/15 * * * * /usr/bin/python3 /home/voce/agente/run.py</p>
+          <p class="text-neutral-400 mt-3"># Ver os agendamentos atuais</p>
+          <p class="text-teal-400">$ crontab -l</p>
+          <p class="text-neutral-300">0 7 * * * /usr/bin/python3 /home/voce/agente/run.py</p>
+        </div>
+      </div>
+
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#128065;</span> O que voce vai ver na tela
+        </h3>
+        <div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Os 5 campos, da esquerda para a direita:</p>
+          <p class="text-teal-400">&#8226; &#8226; &#8226; &#8226; &#8226;</p>
+          <p class="text-neutral-300">| | | | |</p>
+          <p class="text-neutral-300">| | | | +-- dia da semana (0-6, domingo=0)</p>
+          <p class="text-neutral-300">| | | +---- mes (1-12)</p>
+          <p class="text-neutral-300">| | +------ dia do mes (1-31)</p>
+          <p class="text-neutral-300">| +-------- hora (0-23)</p>
+          <p class="text-neutral-300">+---------- minuto (0-59)</p>
+        </div>
+        <p data-inema-block="m5-2-t2-p3" class="text-neutral-300 text-sm mt-4">O asterisco <strong class="text-blue-400">*</strong> significa "qualquer valor". Por isso <code class="font-mono">0 7 * * *</code> le-se: minuto 0, hora 7, qualquer dia, qualquer mes, qualquer dia da semana.</p>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m5-2-t2-p4" class="text-neutral-300"><strong>Problema:</strong> "Funciona quando eu rodo na mao, mas o cron nao executa nada." <br><strong>Solucao:</strong> O cron roda com um ambiente minimo e nao conhece seus atalhos. Sempre use <strong>caminhos absolutos</strong> (ex: <code class="font-mono text-sm text-red-400">/usr/bin/python3</code> em vez de <code class="font-mono text-sm text-red-400">python3</code>) e teste o comando completo colando-o no terminal antes de agendar.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/20 border border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 3: Memoria persistente                -->
+    <!-- ============================================ -->
+    <section id="topico-3" data-inema-topic="modulo-5-2#topico-3" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">3</span>
+        <h2 class="text-2xl font-bold">Memoria Persistente: Lembrar Entre as Sessoes</h2>
+      </div>
+
+      <p data-inema-block="m5-2-t3-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Um modelo de IA, por padrao, <strong class="text-teal-400">esquece tudo</strong> quando a conversa termina. Toda vez que o cron acorda o agente, ele comeca do zero, como se fosse o primeiro dia de trabalho. Para evitar isso, voce guarda o que importa em algum lugar que sobrevive ao desligar: um <strong class="text-teal-400">arquivo</strong> ou um <strong class="text-teal-400">banco de dados</strong>. Isso e a memoria persistente.
+      </p>
+
+      <div class="bg-gradient-to-br from-teal-900/30 to-dark-800 rounded-xl border border-teal-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-teal-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: O Caderno na Gaveta
+        </h3>
+        <p data-inema-block="m5-2-t3-p2" class="text-neutral-300">Imagine um funcionario com amnesia total que esquece tudo ao fim do expediente. A solucao? Um caderno na gaveta. Antes de ir embora, ele anota o que fez e o que ficou pendente. No dia seguinte, a primeira coisa que faz e ler o caderno. Esse caderno e a memoria persistente do agente: um arquivo <code class="font-mono text-sm">memoria.json</code> ou uma tabela no banco.</p>
+      </div>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Memoria simples em arquivo JSON</h3>
+        <p data-inema-block="m5-2-t3-p3" class="text-neutral-300 text-sm mb-4">Para comecar, um arquivo basta. O agente le no inicio e grava no fim.</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># No comeco: ler o que ja sabe</p>
+          <p class="text-teal-400">import json, os</p>
+          <p class="text-teal-400">memoria = {}</p>
+          <p class="text-teal-400">if os.path.exists("memoria.json"):</p>
+          <p class="text-teal-400">    memoria = json.load(open("memoria.json"))</p>
+          <p class="text-neutral-400 mt-3"># ... o agente trabalha e descobre coisas ...</p>
+          <p class="text-teal-400">memoria["ultima_execucao"] = "2026-06-17 07:00"</p>
+          <p class="text-teal-400">memoria["pendencias"] = ["responder cliente X"]</p>
+          <p class="text-neutral-400 mt-3"># No fim: gravar para a proxima vez</p>
+          <p class="text-teal-400">json.dump(memoria, open("memoria.json", "w"), indent=2)</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Quando a memoria crescer (muitos itens, busca por texto), troque o arquivo por um banco como o <strong>Supabase</strong> que voce viu na Trilha 2.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-6">
+          <h4 class="font-bold text-teal-400 mb-4">&#10003; O que GUARDAR na memoria</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-teal-400">&#10003;</span><span>O que ja foi feito (para nao repetir)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-teal-400">&#10003;</span><span>Pendencias e o que ficou no meio</span></li>
+            <li class="flex items-start space-x-2"><span class="text-teal-400">&#10003;</span><span>Preferencias suas que ele aprendeu</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; O que NAO guardar</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Senhas e tokens em texto puro (use variaveis de ambiente)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Conversas inteiras sem limpar (o arquivo incha)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Dados sensiveis de terceiros sem necessidade</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/20 border border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 4: Integracao com servicos            -->
+    <!-- ============================================ -->
+    <section id="topico-4" data-inema-topic="modulo-5-2#topico-4" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">4</span>
+        <h2 class="text-2xl font-bold">Integracao com Servicos: Email, Calendario e APIs</h2>
+      </div>
+
+      <p data-inema-block="m5-2-t4-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Um agente que so pensa e inutil. Para ele <strong class="text-teal-400">agir no mundo</strong>, voce conecta ele a servicos: enviar um email, criar um evento no calendario, postar numa API. Cada servico vira uma "ferramenta" que o agente pode usar. Voce ja aprendeu a falar com APIs na Trilha 2; aqui e a mesma ideia, so que quem decide chamar a API e o agente.
+      </p>
+
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Chamar uma API a partir do agente</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Enviar uma mensagem via uma API qualquer (Python)</p>
+          <p class="text-teal-400">import requests, os</p>
+          <p class="text-teal-400">token = os.environ["API_TOKEN"]</p>
+          <p class="text-teal-400">resp = requests.post(</p>
+          <p class="text-teal-400">    "https://api.servico.com/mensagens",</p>
+          <p class="text-teal-400">    headers={"Authorization": f"Bearer {token}"},</p>
+          <p class="text-teal-400">    json={"para": "voce@email.com", "texto": "Resumo pronto"}</p>
+          <p class="text-teal-400">)</p>
+          <p class="text-teal-400">print(resp.status_code)</p>
+          <p class="text-neutral-300">200</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">O token vem de uma variavel de ambiente (Trilha 2, Modulo 2.4) e <strong>nunca</strong> e escrito direto no codigo.</p>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+          <div class="text-2xl mb-2">&#128231;</div>
+          <code class="text-teal-400 font-mono text-sm font-bold">Email</code>
+          <p class="text-xs text-neutral-400 mt-1">SMTP ou API (enviar avisos)</p>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+          <div class="text-2xl mb-2">&#128197;</div>
+          <code class="text-teal-400 font-mono text-sm font-bold">Calendario</code>
+          <p class="text-xs text-neutral-400 mt-1">Criar e ler eventos</p>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+          <div class="text-2xl mb-2">&#128279;</div>
+          <code class="text-teal-400 font-mono text-sm font-bold">APIs REST</code>
+          <p class="text-xs text-neutral-400 mt-1">Qualquer servico web</p>
+        </div>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m5-2-t4-p2" class="text-neutral-300"><strong>Problema:</strong> "O agente mandou 40 emails iguais em um minuto." <br><strong>Solucao:</strong> Sem limites, um agente em loop pode disparar acoes em cascata. Sempre coloque um <strong>teto</strong> (no maximo N acoes por execucao) e marque na memoria o que ja foi enviado, para nao repetir. Acao no mundo real precisa de freio.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/20 border border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 5: Monitoramento e logs               -->
+    <!-- ============================================ -->
+    <section id="topico-5" data-inema-topic="modulo-5-2#topico-5" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">5</span>
+        <h2 class="text-2xl font-bold">Monitoramento e Logs: Saber o que Ele Fez</h2>
+      </div>
+
+      <p data-inema-block="m5-2-t5-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Um agente trabalha enquanto voce dorme. Se voce nao registra o que ele faz, fica no escuro: nao sabe se rodou, se deu erro, ou se fez besteira. Por isso todo agente precisa de <strong class="text-teal-400">logs</strong> (um diario do que aconteceu) e <strong class="text-teal-400">alertas</strong> (um aviso quando algo quebra). Logar e barato; descobrir um problema tarde demais e caro.
+      </p>
+
+      <!-- Timeline: ciclo de monitoramento -->
+      <div class="space-y-6 mb-6">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center">
+            <span class="text-teal-400 font-bold text-lg">1</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Registrar cada passo</h4>
+            <p class="text-sm text-neutral-400 mb-3">O agente escreve no log o que percebeu, o que decidiu e o que fez.</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-teal-400">import logging</p>
+              <p class="text-teal-400">logging.basicConfig(filename="agente.log", level=logging.INFO)</p>
+              <p class="text-teal-400">logging.info("Acordei. 3 mensagens novas.")</p>
+              <p class="text-teal-400">logging.info("Respondi 2. 1 ficou pendente.")</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center">
+            <span class="text-teal-400 font-bold text-lg">2</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Ler o diario depois</h4>
+            <p class="text-sm text-neutral-400 mb-3">Voce abre o log para conferir o que aconteceu nas ultimas execucoes.</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-neutral-400"># Ver as ultimas linhas do log</p>
+              <p class="text-teal-400">$ tail -n 20 agente.log</p>
+              <p class="text-neutral-300">INFO:Acordei. 3 mensagens novas.</p>
+              <p class="text-neutral-300">INFO:Respondi 2. 1 ficou pendente.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center">
+            <span class="text-teal-400 font-bold text-lg">3</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Alertar quando quebra</h4>
+            <p class="text-sm text-neutral-400 mb-3">Se algo da erro, o agente avisa voce (email, mensagem) em vez de falhar em silencio.</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-teal-400">try:</p>
+              <p class="text-teal-400">    fazer_tarefa()</p>
+              <p class="text-teal-400">except Exception as e:</p>
+              <p class="text-teal-400">    logging.error(f"Falhou: {e}")</p>
+              <p class="text-teal-400">    enviar_alerta(f"Agente quebrou: {e}")</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Dica: Logue a Decisao, nao so a Acao
+        </h3>
+        <p data-inema-block="m5-2-t5-p2" class="text-neutral-300">Nao registre apenas "enviei email". Registre tambem <strong>por que</strong>: "enviei email porque a mensagem do cliente estava sem resposta ha 2 dias". Quando o agente fizer algo estranho, esse "porque" e o que vai te ajudar a entender e corrigir o comportamento.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/20 border border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 6: Evolucao continua                  -->
+    <!-- ============================================ -->
+    <section id="topico-6" data-inema-topic="modulo-5-2#topico-6" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">6</span>
+        <h2 class="text-2xl font-bold">Evolucao Continua: Medir, Ajustar, Melhorar</h2>
+      </div>
+
+      <p data-inema-block="m5-2-t6-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Um agente nao nasce pronto. A primeira versao vai errar, exagerar e ter ideias bobas. O segredo nao e acertar de primeira, e <strong class="text-teal-400">melhorar a cada semana</strong>: voce mede como ele esta indo, ajusta uma coisa, observa o resultado, e repete. Com o tempo, ele fica mais util e mais confiavel. Esse e o mesmo ciclo de melhoria que vale para qualquer sistema que voce colocou em producao nesta jornada.
+      </p>
+
+      <div class="bg-gradient-to-br from-teal-900/30 to-dark-800 rounded-xl border border-teal-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-teal-400 mb-4">&#127919; O ciclo de melhoria</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-300">MEDIR    -> quantas tarefas o agente cumpriu? quantos erros?</p>
+          <p class="text-neutral-300">  |</p>
+          <p class="text-neutral-300">ANALISAR -> o que mais deu errado? onde ele exagerou?</p>
+          <p class="text-neutral-300">  |</p>
+          <p class="text-neutral-300">AJUSTAR  -> mudar 1 coisa (uma instrucao, um limite, um horario)</p>
+          <p class="text-neutral-300">  |</p>
+          <p class="text-neutral-300">OBSERVAR -> rodou melhor? voltar para MEDIR</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-6">
+          <h4 class="font-bold text-teal-400 mb-4">&#10003; O que FAZER</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-teal-400">&#10003;</span><span>Mudar uma coisa de cada vez e observar</span></li>
+            <li class="flex items-start space-x-2"><span class="text-teal-400">&#10003;</span><span>Guardar metricas simples (tarefas feitas, erros)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-teal-400">&#10003;</span><span>Comecar com pouca autonomia e ampliar devagar</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; O que NAO fazer</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Mudar dez coisas juntas (nao saber o que funcionou)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Dar autonomia total sem testar antes</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Achar que "pronto e pronto" e nunca mais olhar</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#127942;</span> Voce fechou o ciclo completo
+        </h3>
+        <p data-inema-block="m5-2-t6-p2" class="text-neutral-300">Repare: medir, ajustar e melhorar e exatamente o que voce fez com Git (versionar), com deploy (publicar e corrigir) e com servidores (monitorar e manter). O agente autonomo nao e um truque novo. E tudo que voce aprendeu nas trilhas anteriores, agora dirigido por um objetivo em vez de pelo seu clique. Voce chegou ao topo da escada.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/20 border border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- RESUMO -->
+    <section class="mb-12">
+      <div class="bg-gradient-to-br from-teal-900/40 via-dark-800 to-dark-800 rounded-xl border border-teal-500/30 p-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+          <span class="mr-3">&#128218;</span> Resumo do Modulo
+        </h2>
+        <div class="space-y-4 mb-8">
+          <div class="flex items-start space-x-3">
+            <span class="text-teal-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Agente x assistente</strong><span class="text-neutral-400"> - o assistente reage a comando, o agente persegue um objetivo sozinho</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-teal-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Agendamento com cron</strong><span class="text-neutral-400"> - o relogio que faz o agente acordar nos horarios certos</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-teal-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Memoria persistente</strong><span class="text-neutral-400"> - arquivo ou banco para lembrar entre as sessoes</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-teal-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Integracao com servicos</strong><span class="text-neutral-400"> - email, calendario e APIs para agir no mundo real</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-teal-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Logs, alertas e evolucao</strong><span class="text-neutral-400"> - saber o que ele fez e melhorar a cada semana</span></div>
+          </div>
+        </div>
+
+        <div class="bg-dark-800/50 rounded-lg p-6 mb-8">
+          <h3 class="font-semibold text-teal-400 mb-3 flex items-center"><span class="mr-2">&#127881;</span> Parabens: voce concluiu o curso inteiro!</h3>
+          <p class="text-neutral-300 mb-3">Voce chegou ao fim das <strong class="text-white">5 trilhas</strong> de Do Zero ao Deploy. Olhe para tras um instante:</p>
+          <ul class="space-y-2 text-neutral-300 text-sm">
+            <li class="flex items-start space-x-2"><span class="text-teal-400 mt-0.5">&#8226;</span><span><strong>Trilha 1:</strong> terminal e Git - voce aprendeu a conversar com a maquina e a versionar seu trabalho</span></li>
+            <li class="flex items-start space-x-2"><span class="text-teal-400 mt-0.5">&#8226;</span><span><strong>Trilha 2:</strong> deploy moderno - colocou projetos no ar com Vercel, Supabase e APIs</span></li>
+            <li class="flex items-start space-x-2"><span class="text-teal-400 mt-0.5">&#8226;</span><span><strong>Trilha 3:</strong> servidor proprio - dominou VPS, SSH e seguranca</span></li>
+            <li class="flex items-start space-x-2"><span class="text-teal-400 mt-0.5">&#8226;</span><span><strong>Trilha 4:</strong> Docker e automacao - empacotou e automatizou tudo</span></li>
+            <li class="flex items-start space-x-2"><span class="text-teal-400 mt-0.5">&#8226;</span><span><strong>Trilha 5:</strong> assistentes de IA - do Jarvis ao Intelecto autonomo</span></li>
+          </ul>
+          <p class="text-neutral-300 mt-4">Voce saiu do zero e chegou ao deploy. Agora e construir, publicar e melhorar. O resto da jornada e sua.</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">
+            &#8592; Voltar para Trilha
+          </a>
+          <a href="../../index.html" class="flex-1 text-center px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-500 transition-colors">
+            Concluir o curso &#8594;
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-dark-600 py-8 mt-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+      <p>Do Zero ao Deploy - 2026</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+
+  <script src="../../assets/learn.js"></script>
+  <script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

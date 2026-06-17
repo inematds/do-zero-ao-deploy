@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="inema-course" content="dzd">
+  <title>Trilha 5: Assistentes IA | Do Zero ao Deploy</title>
+
+  <!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+  <script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'teal' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'teal');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.teal;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/learn.css">
+
+  <!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+  <script type="application/json" data-inema-manifest>
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha teal) */
+    html:not(.dark) .text-teal-400 { color: #0d9488; }
+    html:not(.dark) .bg-teal-500\/20 { background-color: rgba(13, 148, 136, 0.12); }
+    html:not(.dark) .bg-teal-500\/10 { background-color: rgba(13, 148, 136, 0.08); }
+    html:not(.dark) .border-teal-500\/30 { border-color: rgba(13, 148, 136, 0.25); }
+    html:not(.dark) .hover\:bg-teal-500\/30:hover { background-color: rgba(13, 148, 136, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+
+    /* Topicos expansiveis */
+    .topic-explanation { display: none; }
+    .topic-explanation.active { display: block; }
+  </style>
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+
+  <!-- NAVIGATION -->
+  <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-14">
+        <div class="flex items-center space-x-4">
+          <a href="../../index.html" class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300">
+            <span class="text-2xl">&#128640;</span>
+            <span class="font-bold text-lg hidden sm:inline">Do Zero ao Deploy</span>
+          </a>
+          <span class="text-neutral-600">|</span>
+          <a href="https://inema.club" target="_blank" class="text-sky-400 hover:text-sky-300 text-sm font-medium">INEMA.CLUB</a>
+        </div>
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <a href="../trilha1/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+            <span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal & Git</span>
+          </a>
+          <a href="../trilha2/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors">
+            <span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy Moderno</span>
+          </a>
+          <a href="../trilha3/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors">
+            <span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor Proprio</span>
+          </a>
+          <a href="../trilha4/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
+            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+          </a>
+          <a href="index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-teal-400 bg-teal-500/10">
+            <span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+          </a>
+          <button id="theme-toggle" class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2">
+            <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HEADER DE TRILHA -->
+  <header class="bg-gradient-to-br from-teal-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="inline-block px-3 py-1 bg-teal-500/20 text-teal-400 text-xs font-semibold rounded-full mb-4">TRILHA 5</span>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">&#129302; Assistentes IA</h1>
+      <p class="text-lg text-neutral-400 max-w-3xl">Construir e implantar seu proprio assistente de IA, do bot pessoal ao agente autonomo. Voce vai sair daqui com um Jarvis que responde no Telegram e um Intelecto que age sozinho, rodando 24 horas no seu proprio servidor.</p>
+      <div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-teal-400">2</div>
+          <div class="text-xs text-neutral-400">Modulos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-teal-400">12</div>
+          <div class="text-xs text-neutral-400">Topicos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-teal-400">~1.5h</div>
+          <div class="text-xs text-neutral-400">Duracao</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-teal-400">Avancado</div>
+          <div class="text-xs text-neutral-400">Nivel</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEUDO -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <!-- HERO SVG: fan-out (voce -> bot/LLM/tools/memoria -> agente autonomo) -->
+    <div class="rounded-2xl border border-teal-500/30 bg-dark-900/40 p-3 sm:p-4 mb-10 overflow-hidden">
+      <svg viewBox="0 0 800 280" class="w-full h-auto" role="img" aria-label="Diagrama de fluxo: voce conecta um bot, um modelo de linguagem, ferramentas e memoria, e os quatro convergem em um agente de IA autonomo rodando no ar">
+        <defs>
+          <linearGradient id="t5hero-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#14b8a6"/>
+          </linearGradient>
+          <filter id="t5hero-glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <pattern id="t5hero-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <circle cx="1.3" cy="1.3" r="1.3" fill="#2dd4bf" opacity="0.10"/>
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="800" height="280" fill="url(#t5hero-grid)"/>
+
+        <!-- Origem: VOCE -->
+        <g filter="url(#t5hero-glow)">
+          <rect x="30" y="110" width="120" height="60" rx="14" fill="#0c1f1c" stroke="url(#t5hero-grad)" stroke-width="2"/>
+        </g>
+        <text x="90" y="138" text-anchor="middle" fill="#2dd4bf" font-family="Inter,sans-serif" font-weight="600" font-size="15">VOCE</text>
+        <text x="90" y="158" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">com um VPS pronto</text>
+
+        <!-- Ramos (linhas) -->
+        <path class="wf-a" d="M150 140 C 250 140, 250 50, 350 50" fill="none" stroke="#2dd4bf" stroke-width="2.5"/>
+        <path class="wf-a" d="M150 140 C 250 140, 250 110, 350 110" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+        <path class="wf-a" d="M150 140 C 250 140, 250 170, 350 170" fill="none" stroke="#2dd4bf" stroke-width="2.5"/>
+        <path class="wf-a" d="M150 140 C 250 140, 250 230, 350 230" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+
+        <!-- Ramo 1: BOT -->
+        <rect x="350" y="26" width="160" height="48" rx="12" fill="#1a1a2e" stroke="#2dd4bf" stroke-width="1.8"/>
+        <text x="430" y="46" text-anchor="middle" fill="#2dd4bf" font-family="Inter,sans-serif" font-weight="600" font-size="13">BOT</text>
+        <text x="430" y="64" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">Telegram API</text>
+
+        <!-- Ramo 2: LLM -->
+        <rect x="350" y="86" width="160" height="48" rx="12" fill="#1a1a2e" stroke="#38bdf8" stroke-width="1.8"/>
+        <text x="430" y="106" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="13">LLM</text>
+        <text x="430" y="124" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">Claude / GPT</text>
+
+        <!-- Ramo 3: TOOLS -->
+        <rect x="350" y="146" width="160" height="48" rx="12" fill="#1a1a2e" stroke="#2dd4bf" stroke-width="1.8"/>
+        <text x="430" y="166" text-anchor="middle" fill="#2dd4bf" font-family="Inter,sans-serif" font-weight="600" font-size="13">TOOLS</text>
+        <text x="430" y="184" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">email + agenda</text>
+
+        <!-- Ramo 4: MEMORIA -->
+        <rect x="350" y="206" width="160" height="48" rx="12" fill="#1a1a2e" stroke="#38bdf8" stroke-width="1.8"/>
+        <text x="430" y="226" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-weight="600" font-size="13">MEMORIA</text>
+        <text x="430" y="244" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">contexto salvo</text>
+
+        <!-- Convergencia -->
+        <path d="M510 50 C 600 50, 600 140, 650 140" fill="none" stroke="#2dd4bf" stroke-width="2.5" opacity="0.8"/>
+        <path d="M510 110 C 600 110, 600 140, 650 140" fill="none" stroke="#38bdf8" stroke-width="2.5" opacity="0.8"/>
+        <path d="M510 170 C 600 170, 600 140, 650 140" fill="none" stroke="#2dd4bf" stroke-width="2.5" opacity="0.8"/>
+        <path d="M510 230 C 600 230, 600 140, 650 140" fill="none" stroke="#38bdf8" stroke-width="2.5" opacity="0.8"/>
+
+        <!-- Resultado: AGENTE -->
+        <g filter="url(#t5hero-glow)">
+          <rect x="650" y="108" width="120" height="64" rx="14" fill="#0c1f1c" stroke="url(#t5hero-grad)" stroke-width="2.4"/>
+        </g>
+        <text x="710" y="136" text-anchor="middle" fill="#2dd4bf" font-family="Inter,sans-serif" font-weight="600" font-size="14">&#129504; AGENTE</text>
+        <text x="710" y="156" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="11">age sozinho 24/7</text>
+      </svg>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MAPA DA TRILHA                               -->
+    <!-- ============================================ -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-6">Mapa da trilha</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <a href="#modulo-5-1" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-teal-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-teal-400 font-bold text-sm">5.1</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-teal-400 transition-colors">&#129302; Jarvis</h3>
+          <p class="text-xs text-neutral-400">Seu assistente pessoal</p>
+        </a>
+        <a href="#modulo-5-2" class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-teal-500/30 p-5 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-teal-400 font-bold text-sm">5.2</span>
+            <span class="text-xs text-neutral-500">~45 min</span>
+          </div>
+          <h3 class="font-semibold mb-1 group-hover:text-teal-400 transition-colors">&#129504; Intelecto</h3>
+          <p class="text-xs text-neutral-400">IA que age sozinha</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- CONTEUDO DETALHADO                           -->
+    <!-- ============================================ -->
+    <h2 class="text-2xl font-bold mb-6">Conteudo detalhado</h2>
+
+    <!-- ===== MODULO 5.1 ===== -->
+    <div id="modulo-5-1" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-teal-400 font-bold">5.1</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#129302; Jarvis</h3>
+        <p class="text-neutral-400 text-sm">Seu assistente pessoal: um bot que fala com voce no Telegram, pensa com um modelo de linguagem e executa tarefas, rodando no seu proprio VPS.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#128172;</span>
+            <div>
+              <span class="font-medium">O que e um assistente IA pessoal</span>
+              <span class="text-neutral-500 text-sm ml-2">- seu Jarvis particular</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-teal-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Um programa seu, que voce comanda por mensagens, conectado a um modelo de IA. Ele entende o que voce pede em linguagem natural e responde ou executa acoes em seu nome.</p></div>
+              <div><span class="text-teal-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Sai do "usar o ChatGPT no site" para "ter um assistente que e so seu", rodando onde voce quiser, com suas regras, seus dados e suas ferramentas conectadas.</p></div>
+              <div><span class="text-teal-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Assistente = interface (onde voce conversa) + cerebro (o modelo) + maos (as tools). Pessoal significa que voce e dono do codigo e de onde ele roda.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#127959;&#65039;</span>
+            <div>
+              <span class="font-medium">Arquitetura basica</span>
+              <span class="text-neutral-500 text-sm ml-2">- bot + LLM + tools</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-teal-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">As tres pecas que formam o assistente: o bot recebe a mensagem, o LLM decide o que fazer, e as tools executam acoes reais (buscar, salvar, enviar).</p></div>
+              <div><span class="text-teal-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Entender o desenho antes de codar evita confusao. Cada peca tem um papel claro, e voce monta uma de cada vez ate o conjunto funcionar.</p></div>
+              <div><span class="text-teal-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">O fluxo e sempre o mesmo: mensagem &#8594; bot &#8594; LLM &#8594; (talvez) tool &#8594; resposta. O bot e a porta de entrada; o LLM e o cerebro; as tools sao as maos.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#9993;&#65039;</span>
+            <div>
+              <span class="font-medium">Telegram Bot API</span>
+              <span class="text-neutral-500 text-sm ml-2">- a porta de entrada</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-teal-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">O Telegram oferece uma API gratuita para criar bots. Voce fala com o BotFather, recebe um token, e seu programa passa a enviar e receber mensagens.</p></div>
+              <div><span class="text-teal-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">O Telegram e o canal mais simples para conversar com seu assistente de qualquer lugar, pelo celular. Sem app proprio, sem interface para construir.</p></div>
+              <div><span class="text-teal-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">O BotFather cria o bot e da o token (trate como senha). Seu codigo le mensagens (polling ou webhook) e responde via API. Token nunca vai para o Git.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#129504;</span>
+            <div>
+              <span class="font-medium">Conectar com Claude/GPT</span>
+              <span class="text-neutral-500 text-sm ml-2">- o cerebro do assistente</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-teal-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Plugar a mensagem do usuario na API de um modelo (Claude ou GPT) e devolver a resposta. E aqui que o bot deixa de repetir scripts e passa a "pensar".</p></div>
+              <div><span class="text-teal-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o salto de qualidade: o assistente entende pedidos vagos, mantem contexto e responde de forma util, em vez de so reagir a comandos fixos.</p></div>
+              <div><span class="text-teal-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Voce envia um system prompt (a personalidade) + a mensagem do usuario para a API e recebe o texto. A chave da API vai em variavel de ambiente, nunca no codigo.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#128296;</span>
+            <div>
+              <span class="font-medium">Skills e comandos</span>
+              <span class="text-neutral-500 text-sm ml-2">- dar maos ao assistente</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-teal-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Funcoes que o assistente pode acionar: comandos diretos (como <code class="font-mono">/clima</code>) e tools que o proprio modelo decide chamar (buscar na web, fazer uma conta, salvar uma nota).</p></div>
+              <div><span class="text-teal-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Sem tools, o assistente so conversa. Com elas, ele faz coisas no mundo real. E o que separa um chatbot de um assistente de verdade.</p></div>
+              <div><span class="text-teal-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Comando = atalho explicito que voce digita; tool = funcao que o modelo chama sozinho quando precisa. Cada tool tem nome, descricao e parametros bem definidos.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#128640;</span>
+            <div>
+              <span class="font-medium">Deploy do assistente no VPS</span>
+              <span class="text-neutral-500 text-sm ml-2">- no ar 24 horas</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-teal-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Subir o assistente para o seu servidor (a VPS da Trilha 3) e deixa-lo rodando sempre, em vez de viver apenas enquanto o seu computador esta ligado.</p></div>
+              <div><span class="text-teal-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Um assistente so e util se estiver sempre disponivel. No VPS ele responde de madrugada, com voce viajando, sem depender da sua maquina.</p></div>
+              <div><span class="text-teal-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Reaproveite tudo do curso: Docker (Trilha 4) para empacotar, systemd para manter vivo, variaveis de ambiente para os segredos. O assistente vira um servico que reinicia sozinho.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-5-1')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-5-1.html" class="px-4 py-2 text-sm bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ===== MODULO 5.2 ===== -->
+    <div id="modulo-5-2" class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20">
+      <div class="p-6 border-b border-dark-600">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-teal-400 font-bold">5.2</span>
+          <span class="text-xs text-neutral-500">~45 min</span>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">&#129504; Intelecto</h3>
+        <p class="text-neutral-400 text-sm">IA que age sozinha: o salto do assistente que responde para o agente que decide, agenda, lembra e executa tarefas sem voce pedir.</p>
+      </div>
+
+      <div class="divide-y divide-dark-600">
+        <!-- Topico 1 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+            <span class="text-lg">&#9889;</span>
+            <div>
+              <span class="font-medium">Do assistente ao agente autonomo</span>
+              <span class="text-neutral-500 text-sm ml-2">- de responder a agir</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-teal-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">A diferenca entre um assistente, que so age quando voce manda mensagem, e um agente, que tem objetivos, age por conta propria e toma varios passos ate concluir.</p></div>
+              <div><span class="text-teal-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o futuro do uso de IA: nao mais "pergunta e resposta", mas "delegue uma tarefa e ela se resolve". Entender essa mudanca muda o que voce constroi.</p></div>
+              <div><span class="text-teal-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Agente = objetivo + loop (pensar &#8594; agir &#8594; observar &#8594; repetir) + autonomia. Ele pode iniciar acoes sem um pedido humano direto naquele momento.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 2 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+            <span class="text-lg">&#9201;&#65039;</span>
+            <div>
+              <span class="font-medium">Agendamento de tarefas</span>
+              <span class="text-neutral-500 text-sm ml-2">- schedule e cron</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-teal-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Fazer o agente rodar em horarios definidos: um resumo do dia as 8h, checar emails a cada hora, lembretes na hora certa, tudo sem voce acionar.</p></div>
+              <div><span class="text-teal-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o que torna o agente proativo. Em vez de esperar voce perguntar, ele aparece com o que importa no momento certo, como um assistente humano faria.</p></div>
+              <div><span class="text-teal-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Reaproveite o cron e o systemd timer da Trilha 4. O agente "acorda" no horario, executa sua rotina e volta a dormir. Cada tarefa agendada e uma rotina pequena.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 3 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+            <span class="text-lg">&#129504;</span>
+            <div>
+              <span class="font-medium">Memoria persistente</span>
+              <span class="text-neutral-500 text-sm ml-2">- lembrar entre conversas</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-teal-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Dar ao agente uma memoria que sobrevive ao fim da conversa: ele guarda fatos, preferencias e historico num banco de dados e os recupera quando precisa.</p></div>
+              <div><span class="text-teal-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Sem memoria, o agente esquece tudo a cada mensagem. Com ela, ele te conhece: sabe seus projetos, seus contatos e o que ficou pendente ontem.</p></div>
+              <div><span class="text-teal-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Use o Supabase (Trilha 2) para guardar a memoria. Antes de responder, o agente busca o contexto relevante; depois, salva o que aprendeu de novo.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 4 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+            <span class="text-lg">&#128279;</span>
+            <div>
+              <span class="font-medium">Integracao com servicos</span>
+              <span class="text-neutral-500 text-sm ml-2">- email, calendario</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-teal-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Conectar o agente a servicos reais via API: ler e enviar emails, criar eventos no calendario, consultar tarefas. Cada integracao vira uma nova tool.</p></div>
+              <div><span class="text-teal-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">E o que tira o agente da caixinha do chat e o coloca na sua vida real. Quanto mais servicos ele alcanca, mais coisas pode resolver por voce.</p></div>
+              <div><span class="text-teal-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Tudo passa por APIs (Trilha 2) e tokens (Trilha 3). Comece por uma integracao simples (enviar email) e va somando. Cada token guardado com cuidado.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 5 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+            <span class="text-lg">&#128202;</span>
+            <div>
+              <span class="font-medium">Monitoramento e logs</span>
+              <span class="text-neutral-500 text-sm ml-2">- saber o que ele fez</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-teal-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Registrar cada acao do agente em logs e acompanhar se ele esta saudavel: o que decidiu, quais tools chamou, onde deu erro, quanto gastou de API.</p></div>
+              <div><span class="text-teal-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Um agente autonomo age sem voce ver. Sem logs, voce nao sabe se ele acertou, travou ou fez besteira. Logs sao seus olhos quando voce nao esta olhando.</p></div>
+              <div><span class="text-teal-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Veja os logs com <code class="font-mono">journalctl</code> (systemd, Trilha 4). Registre cada decisao e cada chamada de tool. Configure um alerta para erros e gastos altos.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Topico 6 -->
+        <div class="topic-item">
+          <button onclick="toggleTopic(this)" class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left">
+            <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+            <span class="text-lg">&#127793;</span>
+            <div>
+              <span class="font-medium">Evolucao continua</span>
+              <span class="text-neutral-500 text-sm ml-2">- melhorar com o tempo</span>
+            </div>
+          </button>
+          <div class="topic-explanation px-6 pb-4">
+            <div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+              <div><span class="text-teal-400 font-semibold">O que e:</span><p class="text-neutral-300 text-sm">Tratar o agente como um projeto vivo: voce observa como ele se comporta, adiciona tools, ajusta o prompt e corrige falhas, num ciclo que nunca termina.</p></div>
+              <div><span class="text-teal-400 font-semibold">Por que aprender:</span><p class="text-neutral-300 text-sm">Um bom agente nao nasce pronto: ele amadurece com o uso. Cada erro vira uma melhoria, e com o tempo ele fica cada vez mais util e confiavel.</p></div>
+              <div><span class="text-teal-400 font-semibold">Conceitos-chave:</span><p class="text-neutral-300 text-sm">Use o Git (Trilha 1) para versionar cada melhoria e o deploy (Trilhas 2-4) para subir as novas versoes com seguranca. Pequenos commits, melhorias constantes.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+        <button onclick="openModal('modal-5-2')" class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors">Ver em Modal</button>
+        <a href="modulo-5-2.html" class="px-4 py-2 text-sm bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition-colors">Ver Completo</a>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- NAVEGACAO FINAL                              -->
+    <!-- ============================================ -->
+    <div class="flex flex-col sm:flex-row gap-4 mt-12">
+      <a href="../../index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">
+        &#8592; Voltar para o inicio
+      </a>
+      <a href="../../index.html" class="flex-1 text-center px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-500 transition-colors">
+        Concluir o curso &#8594;
+      </a>
+    </div>
+
+  </main>
+
+  <!-- ============================================ -->
+  <!-- MODAIS                                        -->
+  <!-- ============================================ -->
+  <div id="modal-5-1" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-teal-400 font-bold">5.1</span>
+          <span class="font-semibold">Jarvis</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-5-1.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <div id="modal-5-2" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" onclick="if(event.target === this) closeModal()">
+    <div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+      <div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-teal-400 font-bold">5.2</span>
+          <span class="font-semibold">Intelecto</span>
+        </div>
+        <button onclick="closeModal()" class="text-neutral-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <iframe src="modulo-5-2.html" class="flex-1 w-full rounded-b-xl"></iframe>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-dark-600 py-8 mt-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+      <p>Do Zero ao Deploy - 2026</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Toggle de Topicos
+    function toggleTopic(button) {
+      const topicItem = button.closest('.topic-item');
+      const explanation = topicItem.querySelector('.topic-explanation');
+      const moduleCard = button.closest('.bg-dark-800');
+
+      // Fecha outros topicos do mesmo modulo
+      moduleCard.querySelectorAll('.topic-explanation.active').forEach(exp => {
+        if (exp !== explanation) {
+          exp.classList.remove('active');
+        }
+      });
+
+      // Toggle do topico atual
+      explanation.classList.toggle('active');
+    }
+
+    // Modal com iframe
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeModal() {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.add('hidden');
+      });
+      document.body.style.overflow = 'auto';
+    }
+
+    // Fechar com ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+
+  <script src="../../assets/learn.js"></script>
+  <script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

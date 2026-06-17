@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="inema-course" content="dzd">
+  <title>Docker Compose: Multi-Servicos | Do Zero ao Deploy</title>
+
+  <!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+  <script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'amber' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'emerald');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/learn.css">
+
+  <!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+  <script type="application/json" data-inema-manifest>
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha amber) */
+    html:not(.dark) .text-amber-400 { color: #b45309; }
+    html:not(.dark) .bg-amber-500\/20 { background-color: rgba(180, 83, 9, 0.12); }
+    html:not(.dark) .bg-amber-500\/10 { background-color: rgba(180, 83, 9, 0.08); }
+    html:not(.dark) .border-amber-500\/30 { border-color: rgba(180, 83, 9, 0.25); }
+    html:not(.dark) .hover\:bg-amber-500\/30:hover { background-color: rgba(180, 83, 9, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+
+  <!-- NAVIGATION -->
+  <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-14">
+        <div class="flex items-center space-x-4">
+          <a href="../../index.html" class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300">
+            <span class="text-2xl">&#128640;</span>
+            <span class="font-bold text-lg hidden sm:inline">Do Zero ao Deploy</span>
+          </a>
+          <span class="text-neutral-600">|</span>
+          <a href="https://inema.club" target="_blank" class="text-sky-400 hover:text-sky-300 text-sm font-medium">INEMA.CLUB</a>
+        </div>
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <a href="../trilha1/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+            <span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal & Git</span>
+          </a>
+          <a href="../trilha2/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors">
+            <span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy Moderno</span>
+          </a>
+          <a href="../trilha3/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors">
+            <span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor Proprio</span>
+          </a>
+          <a href="index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-amber-400 bg-amber-500/10">
+            <span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+          </a>
+          <a href="../trilha5/index.html" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors">
+            <span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+          </a>
+          <button id="theme-toggle" class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2">
+            <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMB -->
+  <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex items-center space-x-2 text-sm text-neutral-400">
+      <a href="../../index.html" class="hover:text-amber-400">Inicio</a>
+      <span>/</span>
+      <a href="index.html" class="hover:text-amber-400">Trilha 4</a>
+      <span>/</span>
+      <span class="text-amber-400">Modulo 4.2</span>
+    </div>
+  </nav>
+
+  <!-- HEADER -->
+  <header class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full mb-4">MODULO 4.2</span>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">&#127932; Docker Compose: Multi-Servicos</h1>
+      <p class="text-lg text-neutral-400 max-w-3xl">Uma aplicacao de verdade quase nunca e um container so: tem o app, o banco de dados, talvez um cache. O Docker Compose e a ferramenta que rege todos esses containers de uma vez, com um unico arquivo e um unico comando.</p>
+      <div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-amber-400">6</div>
+          <div class="text-xs text-neutral-400">Topicos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-amber-400">45</div>
+          <div class="text-xs text-neutral-400">Minutos</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-amber-400">Basico</div>
+          <div class="text-xs text-neutral-400">Nivel</div>
+        </div>
+        <div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+          <div class="text-xl font-bold text-amber-400">Pratico</div>
+          <div class="text-xs text-neutral-400">Tipo</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEUDO -->
+  <main id="conteudo" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="4-2" data-inema-track="4">
+
+    <!-- ============================================ -->
+    <!-- TOPICO 1: O que e o Compose                  -->
+    <!-- ============================================ -->
+    <section id="topico-1" data-inema-topic="modulo-4-2#topico-1" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">1</span>
+        <h2 class="text-2xl font-bold">O Que e o Docker Compose</h2>
+      </div>
+
+      <p data-inema-block="m4-2-t1-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        No modulo anterior voce subiu <strong class="text-amber-400">um container de cada vez</strong>, na mao, com <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">docker run</code>. Funciona para um container. Mas e quando seu site precisa de tres ao mesmo tempo: o app, o banco de dados e um cache? Digitar tres comandos gigantes toda vez, lembrar de cada porta, cada volume, cada conexao? Esquece. O <strong class="text-amber-400">Docker Compose</strong> resolve isso: voce descreve tudo num arquivo e sobe a stack inteira com um comando so.
+      </p>
+
+      <!-- SVG: compose.yml -> varios containers numa rede + volume -->
+      <div class="rounded-2xl border border-amber-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+        <svg viewBox="0 0 820 260" class="w-full h-auto" role="img" aria-label="Diagrama mostrando um arquivo docker-compose.yml que orquestra tres containers (app, banco e cache) conectados por uma rede comum e com um volume de dados persistente">
+          <defs>
+            <linearGradient id="m42-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#f59e0b"/>
+            </linearGradient>
+            <filter id="m42-glow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <pattern id="m42-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="1.3" cy="1.3" r="1.3" fill="#fbbf24" opacity="0.12"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="820" height="260" fill="url(#m42-grid)"/>
+
+          <!-- Arquivo compose -->
+          <g filter="url(#m42-glow)">
+            <rect x="30" y="70" width="170" height="120" rx="14" fill="#1f1604" stroke="url(#m42-grad)" stroke-width="2"/>
+          </g>
+          <text x="115" y="62" text-anchor="middle" fill="#fbbf24" font-family="Inter,sans-serif" font-weight="600" font-size="13">docker-compose.yml</text>
+          <text x="48" y="98" fill="#fbbf24" font-family="monospace" font-size="11">services:</text>
+          <text x="58" y="118" fill="#9ca3af" font-family="monospace" font-size="11">app:</text>
+          <text x="58" y="136" fill="#9ca3af" font-family="monospace" font-size="11">banco:</text>
+          <text x="58" y="154" fill="#9ca3af" font-family="monospace" font-size="11">cache:</text>
+          <text x="48" y="176" fill="#38bdf8" font-family="monospace" font-size="11">up -d</text>
+
+          <!-- Seta -->
+          <path d="M205 130 L255 130" stroke="#fbbf24" stroke-width="2.5" marker-end="url(#m42-arrow)"/>
+          <defs>
+            <marker id="m42-arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L7,3 L0,6 Z" fill="#fbbf24"/>
+            </marker>
+          </defs>
+
+          <!-- Rede comum (caixa pontilhada que envolve os 3) -->
+          <rect x="280" y="30" width="510" height="160" rx="16" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="6 5" opacity="0.7"/>
+          <text x="535" y="24" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-size="12" font-weight="600">rede do compose (os containers se enxergam pelo nome)</text>
+
+          <!-- Container app -->
+          <rect class="wf-a" x="305" y="55" width="130" height="60" rx="10" fill="#0e2a12" stroke="url(#m42-grad)" stroke-width="2"/>
+          <text x="370" y="80" text-anchor="middle" fill="#fbbf24" font-family="Inter,sans-serif" font-weight="600" font-size="13">app</text>
+          <text x="370" y="100" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="10">node :3000</text>
+
+          <!-- Container banco -->
+          <rect class="wf-a" x="475" y="55" width="130" height="60" rx="10" fill="#1a1230" stroke="url(#m42-grad)" stroke-width="2"/>
+          <text x="540" y="80" text-anchor="middle" fill="#fbbf24" font-family="Inter,sans-serif" font-weight="600" font-size="13">banco</text>
+          <text x="540" y="100" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="10">postgres :5432</text>
+
+          <!-- Container cache -->
+          <rect class="wf-a" x="645" y="55" width="130" height="60" rx="10" fill="#0e1622" stroke="url(#m42-grad)" stroke-width="2"/>
+          <text x="710" y="80" text-anchor="middle" fill="#fbbf24" font-family="Inter,sans-serif" font-weight="600" font-size="13">cache</text>
+          <text x="710" y="100" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="10">redis :6379</text>
+
+          <!-- Linhas de conexao app->banco / app->cache -->
+          <path d="M435 90 L475 90" stroke="#38bdf8" stroke-width="2"/>
+          <path d="M435 105 Q540 150 645 105" stroke="#38bdf8" stroke-width="2" fill="none"/>
+
+          <!-- Volume de dados persistente -->
+          <rect x="475" y="140" width="130" height="38" rx="8" fill="#1f2937" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="540" y="164" text-anchor="middle" fill="#38bdf8" font-family="Inter,sans-serif" font-size="11" font-weight="600">&#128190; volume (dados)</text>
+          <path d="M540 115 L540 140" stroke="#38bdf8" stroke-width="2" stroke-dasharray="3 3"/>
+
+          <!-- Legenda comando -->
+          <text x="410" y="232" text-anchor="middle" fill="#9ca3af" font-family="Inter,sans-serif" font-size="13">Um arquivo descreve a stack inteira. Um comando sobe tudo: <tspan fill="#fbbf24" font-family="monospace">docker compose up -d</tspan></text>
+        </svg>
+      </div>
+
+      <div class="bg-gradient-to-br from-amber-900/30 to-dark-800 rounded-xl border border-amber-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-amber-400 mb-4 flex items-center">
+          <span class="mr-2">&#129504;</span> Analogia: O Maestro da Orquestra
+        </h3>
+        <p data-inema-block="m4-2-t1-p2" class="text-neutral-300 mb-4">Imagine uma orquestra. Cada musico (container) sabe tocar seu instrumento sozinho: o app toca, o banco toca, o cache toca. Mas se cada um comecar na hora que quiser, o resultado e barulho. O <strong class="text-amber-400">maestro</strong> (o Compose) le a partitura (o arquivo <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">docker-compose.yml</code>) e rege todos juntos: quem comeca primeiro, quem fala com quem, em que tom.</p>
+        <ul class="space-y-2 text-neutral-300">
+          <li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">&#8226;</span><span>A <strong>partitura</strong> = o arquivo <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">docker-compose.yml</code></span></li>
+          <li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">&#8226;</span><span>Os <strong>musicos</strong> = cada servico (app, banco, cache)</span></li>
+          <li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">&#8226;</span><span>O <strong>"comecar a tocar"</strong> = <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">docker compose up</code></span></li>
+        </ul>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Docker Compose ja vem junto
+        </h3>
+        <p data-inema-block="m4-2-t1-p3" class="text-neutral-300">Se voce instalou o Docker moderno (Docker Desktop ou o Docker Engine recente no Linux), o Compose <strong>ja esta instalado</strong> como um subcomando: voce chama <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">docker compose</code> (com espaco). Em maquinas antigas o comando era <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">docker-compose</code> (com hifen). Os dois fazem a mesma coisa; neste modulo usamos a forma nova com espaco.</p>
+      </div>
+
+      <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm mb-6">
+        <p class="text-neutral-400"># Conferir se o Compose esta disponivel</p>
+        <p class="text-amber-400">$ docker compose version</p>
+        <p class="text-neutral-300">Docker Compose version v2.27.0</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 2: docker-compose.yml basico          -->
+    <!-- ============================================ -->
+    <section id="topico-2" data-inema-topic="modulo-4-2#topico-2" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">2</span>
+        <h2 class="text-2xl font-bold">O Arquivo docker-compose.yml Basico</h2>
+      </div>
+
+      <p data-inema-block="m4-2-t2-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Toda a magia mora num unico arquivo de texto chamado <strong class="text-amber-400">docker-compose.yml</strong>. Ele e escrito em <strong class="text-amber-400">YAML</strong>, um formato simples baseado em <strong class="text-amber-400">indentacao</strong> (espacos no comeco da linha). A regra de ouro: a indentacao dita o que esta dentro do que. Vamos do mais simples ao completo.
+      </p>
+
+      <!-- Bloco YAML basico -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">O menor compose possivel: um servico</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-500"># docker-compose.yml</p>
+          <p class="text-amber-400">services<span class="text-neutral-300">:</span></p>
+          <p class="text-amber-400 ml-4">app<span class="text-neutral-300">:</span></p>
+          <p class="text-neutral-300 ml-8">image<span class="text-neutral-400">: nginx:alpine</span></p>
+          <p class="text-neutral-300 ml-8">ports<span class="text-neutral-400">:</span></p>
+          <p class="text-neutral-300 ml-12">- <span class="text-neutral-400">"8080:80"</span></p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Isso descreve um servico chamado <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">app</code>, que usa a imagem <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">nginx:alpine</code> e expoe a porta 80 do container na porta 8080 da sua maquina.</p>
+      </div>
+
+      <!-- Anatomia -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-dark-800 rounded-xl p-5 border border-dark-600">
+          <code class="text-amber-400 font-mono text-sm font-bold">services</code>
+          <p class="text-sm text-neutral-300 mt-2">A lista de todos os containers da stack. Cada chave aqui dentro e um servico.</p>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-5 border border-dark-600">
+          <code class="text-amber-400 font-mono text-sm font-bold">image</code>
+          <p class="text-sm text-neutral-300 mt-2">A imagem pronta a usar (do Docker Hub). Alternativa: <code class="font-mono text-xs">build:</code> para construir do seu Dockerfile.</p>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-5 border border-dark-600">
+          <code class="text-amber-400 font-mono text-sm font-bold">ports</code>
+          <p class="text-sm text-neutral-300 mt-2">Mapeia portas no formato <code class="font-mono text-xs">"host:container"</code>. A da esquerda e a do seu PC.</p>
+        </div>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Sobre o "version:" no topo
+        </h3>
+        <p data-inema-block="m4-2-t2-p2" class="text-neutral-300">Em tutoriais antigos voce vai ver uma linha <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">version: "3.8"</code> no comeco do arquivo. No Compose moderno (v2) essa linha e <strong>opcional e ignorada</strong>: pode comecar direto em <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">services:</code>. Se um arquivo de exemplo tiver o <code class="font-mono text-sm">version:</code>, nao se assuste, ainda funciona.</p>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m4-2-t2-p3" class="text-neutral-300"><strong>Problema:</strong> "yaml: line 4: mapping values are not allowed in this context" ou a stack nao sobe. <br><strong>Solucao:</strong> Quase sempre e <strong>indentacao errada</strong>. YAML <strong>nao aceita Tab</strong>, so espacos. Mantenha sempre 2 espacos por nivel e nunca misture Tab com espaco. No VS Code, ative "mostrar espacos em branco" para enxergar o problema.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-6">
+          <h4 class="font-bold text-amber-400 mb-4">&#10003; O que FAZER</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-amber-400">&#10003;</span><span>Usar sempre 2 espacos por nivel de indentacao</span></li>
+            <li class="flex items-start space-x-2"><span class="text-amber-400">&#10003;</span><span>Colocar versoes fixas nas imagens (<code class="font-mono text-sm">nginx:1.27</code>)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-amber-400">&#10003;</span><span>Dar nomes claros aos servicos (<code class="font-mono text-sm">app</code>, <code class="font-mono text-sm">banco</code>)</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; O que NAO fazer</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Usar Tab para indentar (quebra o YAML)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Usar so <code class="font-mono text-sm">:latest</code> em producao (vira surpresa)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Esquecer as aspas em <code class="font-mono text-sm">"8080:80"</code></span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 3: Servicos, redes e volumes          -->
+    <!-- ============================================ -->
+    <section id="topico-3" data-inema-topic="modulo-4-2#topico-3" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">3</span>
+        <h2 class="text-2xl font-bold">Servicos, Redes e Volumes</h2>
+      </div>
+
+      <p data-inema-block="m4-2-t3-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Tres conceitos resolvem 90% dos casos: <strong class="text-amber-400">servicos</strong> (os containers), <strong class="text-amber-400">redes</strong> (como eles conversam) e <strong class="text-amber-400">volumes</strong> (onde os dados ficam guardados). A grande sacada do Compose: ele cria uma rede automatica para a sua stack, e dentro dela <strong>um servico chama o outro pelo nome</strong>.
+      </p>
+
+      <div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <span class="mr-2">&#128065;</span> O que voce vai ver: comunicacao pelo nome
+        </h3>
+        <p data-inema-block="m4-2-t3-p2" class="text-neutral-300 mb-4">Voce nao usa IP. Se o servico do banco se chama <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm">banco</code>, o app se conecta nele pela URL usando o proprio nome do servico como endereco:</p>
+        <div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Dentro do container do app, a conexao com o banco e assim:</p>
+          <p class="text-amber-400">DATABASE_URL=postgres://user:senha@<span class="text-blue-400">banco</span>:5432/meubanco</p>
+          <p class="text-neutral-400 mt-2"># "banco" e o nome do servico, NAO um IP. O Compose resolve.</p>
+        </div>
+      </div>
+
+      <!-- Redes -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Rede: por padrao, ja vem pronta</h3>
+        <p data-inema-block="m4-2-t3-p3" class="text-neutral-300 text-sm mb-4">Ao subir a stack, o Compose cria uma rede so para ela. Todos os servicos entram nessa rede automaticamente e se enxergam pelo nome. Voce so declara redes manualmente quando quer isolar grupos (ex: separar frontend de backend).</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-amber-400">services<span class="text-neutral-300">:</span></p>
+          <p class="text-amber-400 ml-4">app<span class="text-neutral-300">:</span></p>
+          <p class="text-neutral-300 ml-8">image<span class="text-neutral-400">: meu-app</span></p>
+          <p class="text-neutral-300 ml-8">depends_on<span class="text-neutral-400">:</span></p>
+          <p class="text-neutral-300 ml-12">- <span class="text-neutral-400">banco   # garante que o banco suba antes</span></p>
+        </div>
+      </div>
+
+      <!-- Volumes -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Volume: para os dados nao sumirem</h3>
+        <p data-inema-block="m4-2-t3-p4" class="text-neutral-300 text-sm mb-4">Container e descartavel: se voce remove o container do banco, os dados vao junto. O <strong class="text-amber-400">volume</strong> guarda os dados <strong>fora</strong> do container, num lugar que sobrevive a recriacao. Declare na raiz e use dentro do servico:</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-amber-400">services<span class="text-neutral-300">:</span></p>
+          <p class="text-amber-400 ml-4">banco<span class="text-neutral-300">:</span></p>
+          <p class="text-neutral-300 ml-8">image<span class="text-neutral-400">: postgres:16</span></p>
+          <p class="text-neutral-300 ml-8">volumes<span class="text-neutral-400">:</span></p>
+          <p class="text-neutral-300 ml-12">- <span class="text-blue-400">dados-db</span><span class="text-neutral-400">:/var/lib/postgresql/data</span></p>
+          <p class="text-neutral-500 mt-2"># Declaracao do volume na raiz do arquivo:</p>
+          <p class="text-amber-400">volumes<span class="text-neutral-300">:</span></p>
+          <p class="text-neutral-300 ml-4"><span class="text-blue-400">dados-db</span><span class="text-neutral-400">:</span></p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Formato: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">nome-do-volume:/caminho/dentro/do/container</code>. Mesmo derrubando e recriando o container, os dados continuam la.</p>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m4-2-t3-p5" class="text-neutral-300"><strong>Problema:</strong> "Toda vez que eu rodo <code class="font-mono text-sm text-red-400">docker compose down</code> meu banco zera." <br><strong>Solucao:</strong> Faltou o <strong>volume</strong>. Sem volume, os dados moram dentro do container e somem na remocao. Declare um volume nomeado para o banco. Cuidado tambem com <code class="font-mono text-sm text-red-400">down -v</code>: o <code class="font-mono text-sm text-red-400">-v</code> apaga os volumes de proposito.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 4: Subir uma stack completa           -->
+    <!-- ============================================ -->
+    <section id="topico-4" data-inema-topic="modulo-4-2#topico-4" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">4</span>
+        <h2 class="text-2xl font-bold">Subir uma Stack Completa: App + Banco</h2>
+      </div>
+
+      <p data-inema-block="m4-2-t4-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Chegou a hora de juntar tudo. Vamos montar uma stack real: um <strong class="text-amber-400">app web</strong> que conversa com um <strong class="text-amber-400">banco PostgreSQL</strong>, com volume para os dados nao sumirem. Um arquivo, um comando, dois containers conversando.
+      </p>
+
+      <!-- Arquivo completo -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">O docker-compose.yml completo</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-500"># docker-compose.yml</p>
+          <p class="text-amber-400">services<span class="text-neutral-300">:</span></p>
+          <p class="text-amber-400 ml-4">app<span class="text-neutral-300">:</span></p>
+          <p class="text-neutral-300 ml-8">build<span class="text-neutral-400">: .            # constroi do Dockerfile local</span></p>
+          <p class="text-neutral-300 ml-8">ports<span class="text-neutral-400">:</span></p>
+          <p class="text-neutral-300 ml-12">- <span class="text-neutral-400">"3000:3000"</span></p>
+          <p class="text-neutral-300 ml-8">environment<span class="text-neutral-400">:</span></p>
+          <p class="text-neutral-300 ml-12">- <span class="text-neutral-400">DATABASE_URL=postgres://user:senha@</span><span class="text-blue-400">banco</span><span class="text-neutral-400">:5432/app</span></p>
+          <p class="text-neutral-300 ml-8">depends_on<span class="text-neutral-400">:</span></p>
+          <p class="text-neutral-300 ml-12">- <span class="text-neutral-400">banco</span></p>
+          <p class="text-amber-400 ml-4 mt-2">banco<span class="text-neutral-300">:</span></p>
+          <p class="text-neutral-300 ml-8">image<span class="text-neutral-400">: postgres:16</span></p>
+          <p class="text-neutral-300 ml-8">environment<span class="text-neutral-400">:</span></p>
+          <p class="text-neutral-300 ml-12">- <span class="text-neutral-400">POSTGRES_USER=user</span></p>
+          <p class="text-neutral-300 ml-12">- <span class="text-neutral-400">POSTGRES_PASSWORD=senha</span></p>
+          <p class="text-neutral-300 ml-12">- <span class="text-neutral-400">POSTGRES_DB=app</span></p>
+          <p class="text-neutral-300 ml-8">volumes<span class="text-neutral-400">:</span></p>
+          <p class="text-neutral-300 ml-12">- <span class="text-blue-400">dados-db</span><span class="text-neutral-400">:/var/lib/postgresql/data</span></p>
+          <p class="text-amber-400 mt-2">volumes<span class="text-neutral-300">:</span></p>
+          <p class="text-neutral-300 ml-4"><span class="text-blue-400">dados-db</span><span class="text-neutral-400">:</span></p>
+        </div>
+      </div>
+
+      <!-- Timeline: subir a stack -->
+      <div class="space-y-6 mb-6">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <span class="text-amber-400 font-bold text-lg">1</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Subir a stack inteira</h4>
+            <p class="text-sm text-neutral-400 mb-3">O <code class="font-mono">-d</code> ("detached") solta os containers rodando em segundo plano</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-amber-400">$ docker compose up -d</p>
+              <p class="text-neutral-300">[+] Running 3/3</p>
+              <p class="text-neutral-300"> &#10003; Network meuapp_default     Created</p>
+              <p class="text-neutral-300"> &#10003; Container meuapp-banco-1   Started</p>
+              <p class="text-neutral-300"> &#10003; Container meuapp-app-1     Started</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <span class="text-amber-400 font-bold text-lg">2</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Conferir que subiu</h4>
+            <p class="text-sm text-neutral-400 mb-3">Lista os containers da stack e o estado de cada um</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-amber-400">$ docker compose ps</p>
+              <p class="text-neutral-300">NAME              SERVICE   STATUS         PORTS</p>
+              <p class="text-neutral-300">meuapp-app-1      app       Up 12 seconds  0.0.0.0:3000-&gt;3000/tcp</p>
+              <p class="text-neutral-300">meuapp-banco-1    banco     Up 13 seconds  5432/tcp</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <span class="text-amber-400 font-bold text-lg">3</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Derrubar quando terminar</h4>
+            <p class="text-sm text-neutral-400 mb-3">Para e remove os containers e a rede (mas mantem o volume de dados)</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-amber-400">$ docker compose down</p>
+              <p class="text-neutral-300">[+] Running 3/3</p>
+              <p class="text-neutral-300"> &#10003; Container meuapp-app-1     Removed</p>
+              <p class="text-neutral-300"> &#10003; Container meuapp-banco-1   Removed</p>
+              <p class="text-neutral-300"> &#10003; Network meuapp_default     Removed</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#128161;</span> Dica: up sem o -d para ver tudo de uma vez
+        </h3>
+        <p data-inema-block="m4-2-t4-p2" class="text-neutral-300">Na primeira vez, rode <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">docker compose up</code> <strong>sem</strong> o <code class="font-mono text-sm">-d</code>. Os logs de todos os servicos aparecem misturados na tela, ao vivo. Otimo para ver se algo deu erro na subida. Quando estiver tudo certo, derrube com <code class="font-mono text-sm">Ctrl+C</code> e suba de novo com <code class="font-mono text-sm">-d</code>.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 5: Logs e debug                       -->
+    <!-- ============================================ -->
+    <section id="topico-5" data-inema-topic="modulo-4-2#topico-5" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">5</span>
+        <h2 class="text-2xl font-bold">Logs e Debug: Quando Algo Quebra</h2>
+      </div>
+
+      <p data-inema-block="m4-2-t5-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Subiu a stack e o site nao abre? Calma, isso e normal. O Compose te da tres ferramentas para investigar: ver os <strong class="text-amber-400">logs</strong> (o que cada servico esta dizendo), ver o <strong class="text-amber-400">estado</strong> dos containers, e <strong class="text-amber-400">entrar dentro</strong> de um container para olhar de perto.
+      </p>
+
+      <!-- logs -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-amber-400 font-mono">logs</code> - Ler o que os servicos dizem</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Logs de todos os servicos, acompanhando ao vivo (-f = follow)</p>
+          <p class="text-amber-400">$ docker compose logs -f</p>
+          <p class="text-neutral-300">banco-1  | database system is ready to accept connections</p>
+          <p class="text-neutral-300">app-1    | Server listening on port 3000</p>
+          <p class="text-neutral-400 mt-3"># Logs de UM servico so</p>
+          <p class="text-amber-400">$ docker compose logs app</p>
+          <p class="text-neutral-400 mt-3"># Apenas as ultimas 50 linhas</p>
+          <p class="text-amber-400">$ docker compose logs --tail 50 banco</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">O log e o primeiro lugar para olhar. 9 em cada 10 problemas aparecem aqui em texto claro.</p>
+      </div>
+
+      <!-- ps -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4"><code class="text-amber-400 font-mono">ps</code> - Ver o estado de cada container</h3>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-amber-400">$ docker compose ps</p>
+          <p class="text-neutral-300">NAME              SERVICE   STATUS                    PORTS</p>
+          <p class="text-neutral-300">meuapp-app-1      app       <span class="text-red-400">Exited (1)</span> 4 seconds ago</p>
+          <p class="text-neutral-300">meuapp-banco-1    banco     Up 20 seconds             5432/tcp</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Aqui o <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">app</code> esta como <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">Exited (1)</code>: ele caiu. O proximo passo e olhar o log dele com <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">docker compose logs app</code>.</p>
+      </div>
+
+      <!-- exec -->
+      <div class="bg-gradient-to-br from-amber-900/30 to-dark-800 rounded-xl border border-amber-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-amber-400 mb-4 flex items-center">
+          <span class="mr-2">&#128270;</span> <code class="font-mono">exec</code> - Entrar dentro de um container
+        </h3>
+        <p data-inema-block="m4-2-t5-p2" class="text-neutral-300 mb-4">As vezes voce precisa olhar por dentro: rodar um comando, abrir o cliente do banco, conferir um arquivo. O <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">exec</code> roda um comando dentro de um container que ja esta de pe:</p>
+        <div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># Abrir um terminal dentro do container do app</p>
+          <p class="text-amber-400">$ docker compose exec app sh</p>
+          <p class="text-neutral-300">/app # ls</p>
+          <p class="text-neutral-300">node_modules  package.json  server.js</p>
+          <p class="text-neutral-400 mt-3"># Abrir o cliente do PostgreSQL dentro do banco</p>
+          <p class="text-amber-400">$ docker compose exec banco psql -U user -d app</p>
+          <p class="text-neutral-300">app=# \dt</p>
+        </div>
+      </div>
+
+      <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+          <span class="mr-2">&#9888;&#65039;</span> Erro Comum
+        </h3>
+        <p data-inema-block="m4-2-t5-p3" class="text-neutral-300"><strong>Problema:</strong> "O app sobe mas nao conecta no banco: connection refused." <br><strong>Solucao:</strong> O <code class="font-mono text-sm text-red-400">depends_on</code> garante a <strong>ordem</strong> de subida, mas nao espera o banco ficar <strong>pronto</strong> para aceitar conexoes (ele leva alguns segundos). Solucao simples: faca o app tentar reconectar algumas vezes. Solucao robusta: use <code class="font-mono text-sm text-red-400">healthcheck</code> no banco + <code class="font-mono text-sm text-red-400">condition: service_healthy</code> no depends_on.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TOPICO 6: Atualizacao e rollback             -->
+    <!-- ============================================ -->
+    <section id="topico-6" data-inema-topic="modulo-4-2#topico-6" class="mb-16 scroll-mt-20">
+      <div class="flex items-center space-x-4 mb-6">
+        <span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">6</span>
+        <h2 class="text-2xl font-bold">Atualizacao e Rollback</h2>
+      </div>
+
+      <p data-inema-block="m4-2-t6-p1" class="text-neutral-300 mb-6 leading-relaxed">
+        Sua aplicacao esta no ar e voce quer publicar uma nova versao. Ou pior: voce publicou e deu ruim, precisa <strong class="text-amber-400">voltar</strong> rapido. Com o Compose, atualizar e voltar versao sao operacoes de poucos comandos. O segredo e fixar a <strong class="text-amber-400">tag da imagem</strong> para saber sempre qual versao esta rodando.
+      </p>
+
+      <!-- Atualizar -->
+      <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Atualizar para uma nova versao</h3>
+        <p data-inema-block="m4-2-t6-p2" class="text-neutral-300 text-sm mb-4">Suponha que sua imagem no arquivo era <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">meu-app:1.4</code> e a nova versao e a <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">1.5</code>. Voce troca a tag no arquivo e atualiza so o que mudou:</p>
+        <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+          <p class="text-neutral-400"># 1. Editar o compose: image: meu-app:1.4  ->  image: meu-app:1.5</p>
+          <p class="text-neutral-400 mt-3"># 2. Baixar a nova imagem do registry</p>
+          <p class="text-amber-400">$ docker compose pull</p>
+          <p class="text-neutral-300"> &#10003; app Pulled</p>
+          <p class="text-neutral-400 mt-3"># 3. Recriar so os containers que mudaram</p>
+          <p class="text-amber-400">$ docker compose up -d</p>
+          <p class="text-neutral-300">[+] Running 2/2</p>
+          <p class="text-neutral-300"> &#10003; Container meuapp-banco-1   Running</p>
+          <p class="text-neutral-300"> &#10003; Container meuapp-app-1     Recreated</p>
+        </div>
+        <p class="text-neutral-400 text-sm mt-3">Repare: o banco fica <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">Running</code> (nao mexeu) e so o app e <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">Recreated</code>. O Compose so toca no que mudou.</p>
+      </div>
+
+      <!-- Rollback timeline -->
+      <div class="space-y-6 mb-6">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <span class="text-amber-400 font-bold text-lg">&#8635;</span>
+          </div>
+          <div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+            <h4 class="font-semibold text-white mb-2">Rollback: voltar para a versao anterior</h4>
+            <p class="text-sm text-neutral-400 mb-3">Deu ruim na 1.5? Volte a tag para 1.4 e suba de novo. Como voce fixou a versao, sabe exatamente para onde voltar.</p>
+            <div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+              <p class="text-neutral-400"># Editar o compose de volta: image: meu-app:1.5  ->  image: meu-app:1.4</p>
+              <p class="text-amber-400 mt-2">$ docker compose up -d</p>
+              <p class="text-neutral-300"> &#10003; Container meuapp-app-1     Recreated</p>
+              <p class="text-neutral-400 mt-2"># Pronto: em segundos voce esta na versao 1.4 de novo</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-6">
+          <h4 class="font-bold text-amber-400 mb-4">&#10003; O que FAZER</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-amber-400">&#10003;</span><span>Fixar tags de versao (<code class="font-mono text-sm">app:1.4</code>) para poder voltar</span></li>
+            <li class="flex items-start space-x-2"><span class="text-amber-400">&#10003;</span><span>Rodar <code class="font-mono text-sm">pull</code> antes do <code class="font-mono text-sm">up -d</code></span></li>
+            <li class="flex items-start space-x-2"><span class="text-amber-400">&#10003;</span><span>Guardar o compose no Git (cada versao vira historico)</span></li>
+          </ul>
+        </div>
+        <div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+          <h4 class="font-bold text-red-400 mb-4">&#10007; O que NAO fazer</h4>
+          <ul class="space-y-3 text-neutral-300">
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Usar <code class="font-mono text-sm">:latest</code> (nao da para saber qual versao voltar)</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Rodar <code class="font-mono text-sm">down -v</code> achando que e so reiniciar</span></li>
+            <li class="flex items-start space-x-2"><span class="text-red-400">&#10007;</span><span>Atualizar direto em producao sem testar antes</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+          <span class="mr-2">&#127942;</span> Voce ja consegue rodar uma stack de verdade
+        </h3>
+        <p data-inema-block="m4-2-t6-p3" class="text-neutral-300">Com app + banco + volume num arquivo, subindo com um comando, lendo logs, entrando nos containers e voltando versao quando precisa, voce ja tem o essencial de orquestracao local. No proximo modulo voce vai aprender a fazer essa stack <strong class="text-amber-400">subir sozinha</strong> quando o servidor liga, com o <strong class="text-amber-400">systemd</strong>.</p>
+      </div>
+
+      <div class="flex justify-start mt-6">
+        <button type="button" data-inema-read-toggle aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors">
+          <span class="inema-read-icon" aria-hidden="true">&#9675;</span>
+          <span class="inema-read-label">Marcar como lido</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- RESUMO -->
+    <section class="mb-12">
+      <div class="bg-gradient-to-br from-amber-900/40 via-dark-800 to-dark-800 rounded-xl border border-amber-500/30 p-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+          <span class="mr-3">&#128218;</span> Resumo do Modulo
+        </h2>
+        <div class="space-y-4 mb-8">
+          <div class="flex items-start space-x-3">
+            <span class="text-amber-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Compose e o maestro</strong><span class="text-neutral-400"> - rege varios containers com um arquivo e um comando</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-amber-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">docker-compose.yml</strong><span class="text-neutral-400"> - YAML com indentacao por espacos; comeca em services:</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-amber-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">Servicos, redes e volumes</strong><span class="text-neutral-400"> - falam pelo nome; volume guarda os dados</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-amber-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">up -d / down / ps / logs / exec</strong><span class="text-neutral-400"> - subir, derrubar, ver estado, ler logs, entrar</span></div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-amber-400 mt-1">&#10003;</span>
+            <div><strong class="text-white">pull + up -d e voltar a tag</strong><span class="text-neutral-400"> - atualizar e fazer rollback fixando versoes</span></div>
+          </div>
+        </div>
+
+        <div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+          <h3 class="font-semibold text-amber-400 mb-2">Proximo Modulo:</h3>
+          <p class="text-neutral-300">4.3 - Systemd: deixar sua stack subir sozinha quando o servidor liga e reiniciar se cair</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="index.html" class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors">
+            &#8592; Voltar para Trilha
+          </a>
+          <a href="modulo-4-3.html" class="flex-1 text-center px-6 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-500 transition-colors">
+            Proximo Modulo &#8594;
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-dark-600 py-8 mt-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+      <p>Do Zero ao Deploy - 2026</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+
+  <script src="../../assets/learn.js"></script>
+  <script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>
