@@ -679,7 +679,7 @@
     el.setAttribute('aria-valuemin', '0');
     el.setAttribute('aria-valuemax', '100');
     el.setAttribute('aria-valuenow', String(pr.pct));
-    el.setAttribute('aria-valuetext', pr.done + ' de ' + pr.total + ' (' + pr.pct + '%)');
+    el.setAttribute('aria-valuetext', pr.done + ' of ' + pr.total + ' (' + pr.pct + '%)');
     // CSS multiplica por 1% (calc(var(--inema-pct) * 1%)) -> var unitless
     el.style.setProperty('--inema-pct', String(pr.pct));
     el.style.setProperty('--inema-pct-num', String(pr.pct));
@@ -690,7 +690,7 @@
     var pctSlot = el.querySelector('[data-inema-meter-pct]') || el.querySelector('.inema-meter-pct');
     if (pctSlot) pctSlot.textContent = pr.pct + '%';
     var fracSlot = el.querySelector('[data-inema-meter-frac]') || el.querySelector('.inema-meter-count') || el.querySelector('.inema-meter-frac');
-    if (fracSlot) fracSlot.textContent = pr.done + ' de ' + pr.total;
+    if (fracSlot) fracSlot.textContent = pr.done + ' of ' + pr.total;
 
     // Barra: filete interno opcional.
     var fill = el.querySelector('[data-inema-meter-fill]');
@@ -1545,12 +1545,12 @@
     bar.setAttribute('aria-valuemin', '0');
     bar.setAttribute('aria-valuemax', '100');
     bar.setAttribute('aria-valuenow', String(pr.pct));
-    bar.setAttribute('aria-valuetext', pr.done + ' de ' + pr.total + ' (' + pr.pct + '%)');
+    bar.setAttribute('aria-valuetext', pr.done + ' of ' + pr.total + ' (' + pr.pct + '%)');
     var fill = el('div', 'inema-bar__fill');
     fill.style.width = pr.pct + '%';
     bar.appendChild(fill);
     row.appendChild(bar);
-    row.appendChild(el('span', 'inema-journey-meter-frac', pr.done + ' de ' + pr.total + ' (' + pr.pct + '%)'));
+    row.appendChild(el('span', 'inema-journey-meter-frac', pr.done + ' of ' + pr.total + ' (' + pr.pct + '%)'));
     return row;
   }
 
@@ -2127,7 +2127,7 @@
         }
         if (counter) {
           var idx = topics.indexOf(en.target);
-          counter.textContent = 'Secao ' + (idx + 1) + ' de ' + topics.length;
+          counter.textContent = 'Secao ' + (idx + 1) + ' of ' + topics.length;
         }
       });
     }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
