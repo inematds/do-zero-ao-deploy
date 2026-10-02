@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>Proyecto: Tu primera página | De cero al despliegue</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'emerald');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha emerald) */
+    html:not(.dark) .text-emerald-400 { color: #059669; }
+    html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(5, 150, 105, 0.12); }
+    html:not(.dark) .bg-emerald-500\/10 { background-color: rgba(5, 150, 105, 0.08); }
+    html:not(.dark) .border-emerald-500\/30 { border-color: rgba(5, 150, 105, 0.25); }
+    html:not(.dark) .hover\:bg-emerald-500\/30:hover { background-color: rgba(5, 150, 105, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha1/modulo-1-4.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha1/modulo-1-4.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha1/modulo-1-4.html" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha1/modulo-1-4.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="../../../en/curso/trilha1/modulo-1-4.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">EN</a><a href="modulo-1-4.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">De cero al deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-emerald-400 bg-emerald-500/10" href="index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal y Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" href="../trilha2/index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy moderno</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors" href="../trilha3/index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor propio</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" href="../trilha4/index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors" href="../trilha5/index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- BREADCRUMB -->
+<nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex items-center space-x-2 text-sm text-neutral-400">
+<a class="hover:text-emerald-400" href="../../index.html">Inicio</a>
+<span>/</span>
+<a class="hover:text-emerald-400" href="index.html">Ruta 1</a>
+<span>/</span>
+<span class="text-emerald-400">Módulo 1.4</span>
+</div>
+</nav>
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full mb-4">MÓDULO 1.4</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">🚀 Proyecto: Tu primera página</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Llegó la hora de unirlo todo: terminal, Git y GitHub. En este proyecto final de la ruta, crearás una landing page desde cero, la versionarás con Git, la publicarás en GitHub Pages y verás tu sitio en línea con una URL pública de verdad. Desde cero hasta una dirección que puedes compartir con cualquier persona.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-emerald-400">6</div>
+<div class="text-xs text-neutral-400">Temas</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-emerald-400">45</div>
+<div class="text-xs text-neutral-400">Minutos</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-emerald-400">Básico</div>
+<div class="text-xs text-neutral-400">Nivel</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-emerald-400">Práctico</div>
+<div class="text-xs text-neutral-400">Tipo</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="1-4" data-inema-track="1" id="conteudo">
+<!-- SVG PIPELINE: codigo -> commit -> push -> Pages -> URL publica -->
+<div class="rounded-2xl border border-emerald-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="Pipeline del proyecto: del código en el editor al commit, push, activación de GitHub Pages y URL pública en línea" class="w-full h-auto" role="img" viewbox="0 0 880 200">
+<defs>
+<lineargradient id="m14-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#34d399"></stop><stop offset="1" stop-color="#10b981"></stop>
+</lineargradient>
+<filter height="180%" id="m14-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="m14-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#34d399" opacity="0.12" r="1.3"></circle>
+</pattern>
+<marker id="m14-arrow" markerheight="10" markerunits="userSpaceOnUse" markerwidth="10" orient="auto" refx="7" refy="3">
+<path d="M0,0 L7,3 L0,6 Z" fill="#38bdf8"></path>
+</marker>
+</defs>
+<rect fill="url(#m14-grid)" height="200" width="880" x="0" y="0"></rect>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="14" font-weight="600" text-anchor="middle" x="440" y="24">DEL CÓDIGO AL AIRE</text>
+<!-- 1. Codigo -->
+<rect fill="#0e2018" height="90" rx="12" stroke="#34d399" stroke-width="1.6" width="130" x="20" y="55"></rect>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="12" font-weight="600" text-anchor="middle" x="85" y="82">1. CÓDIGO</text>
+<text fill="#9ca3af" font-family="monospace" font-size="10" x="34" y="105">&lt;html&gt;</text>
+<text fill="#9ca3af" font-family="monospace" font-size="10" x="42" y="120">&lt;h1&gt;Hola&lt;/h1&gt;</text>
+<text fill="#9ca3af" font-family="monospace" font-size="10" x="34" y="135">&lt;/html&gt;</text>
+<!-- 2. Commit -->
+<rect fill="#0e2018" height="90" rx="12" stroke="#34d399" stroke-width="1.6" width="130" x="190" y="55"></rect>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="12" font-weight="600" text-anchor="middle" x="255" y="82">2. COMMIT</text>
+<circle cx="255" cy="112" fill="none" r="14" stroke="#34d399" stroke-width="2"></circle>
+<circle cx="255" cy="112" fill="#34d399" r="5"></circle>
+<text fill="#9ca3af" font-family="monospace" font-size="10" text-anchor="middle" x="255" y="138">git commit</text>
+<!-- 3. Push -->
+<rect fill="#0e2018" height="90" rx="12" stroke="#34d399" stroke-width="1.6" width="130" x="360" y="55"></rect>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="12" font-weight="600" text-anchor="middle" x="425" y="82">3. PUSH</text>
+<path d="M425 130 L425 100 M413 112 L425 100 L437 112" fill="none" stroke="#38bdf8" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"></path>
+<text fill="#9ca3af" font-family="monospace" font-size="10" text-anchor="middle" x="425" y="138">git push</text>
+<!-- 4. Pages -->
+<g filter="url(#m14-glow)">
+<rect fill="#0e2018" height="90" rx="12" stroke="url(#m14-grad)" stroke-width="2.2" width="130" x="530" y="55"></rect>
+</g>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="12" font-weight="600" text-anchor="middle" x="595" y="82">4. PAGES</text>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="26" text-anchor="middle" x="595" y="116">⚙</text>
+<text fill="#9ca3af" font-family="monospace" font-size="10" text-anchor="middle" x="595" y="138">build &amp; deploy</text>
+<!-- 5. URL publica -->
+<rect fill="#101a2e" height="90" rx="12" stroke="#38bdf8" stroke-width="1.8" width="160" x="700" y="55"></rect>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="12" font-weight="600" text-anchor="middle" x="780" y="82">5. EN LÍNEA</text>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="22" text-anchor="middle" x="780" y="112">🌐</text>
+<text fill="#9ca3af" font-family="monospace" font-size="9" text-anchor="middle" x="780" y="136">voce.github.io</text>
+<!-- setas -->
+<line class="wf-a" marker-end="url(#m14-arrow)" stroke="#38bdf8" stroke-width="2.4" x1="152" x2="186" y1="100" y2="100"></line>
+<line class="wf-a" marker-end="url(#m14-arrow)" stroke="#38bdf8" stroke-width="2.4" x1="322" x2="356" y1="100" y2="100"></line>
+<line class="wf-a" marker-end="url(#m14-arrow)" stroke="#38bdf8" stroke-width="2.4" x1="492" x2="526" y1="100" y2="100"></line>
+<line class="wf-a" marker-end="url(#m14-arrow)" stroke="#38bdf8" stroke-width="2.4" x1="662" x2="696" y1="100" y2="100"></line>
+</svg>
+</div>
+<!-- ============================================ -->
+<!-- TOPICO 1: Criar o repositorio                -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-1-4#topico-1" id="topico-1">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold">Crear el repositorio</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m1-4-t1-p1">
+        Todo proyecto comienza con un <strong class="text-emerald-400">repositorio</strong>: una carpeta versionada con Git y guardada en GitHub. Puedes crearla de dos maneras: desde el sitio de GitHub (haciendo clic) o desde la terminal (escribiendo). Ambas llegan al mismo lugar. Veamos las dos.
+      </p>
+<div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: el repositorio es un cajón con etiqueta
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-4-t1-p2">Imagina un cajón con el nombre de tu proyecto al frente. Todo lo que pertenece al sitio va ahí: los archivos, el historial de versiones, las etiquetas. GitHub es el mueble lleno de esos cajones, en la nube. Crear el repositorio es simplemente abrir un cajón nuevo y pegarle la etiqueta con el nombre.</p>
+</div>
+<!-- Caminho A: pelo site -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Opción A: desde el sitio de GitHub
+        </h3>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span>Entra en <strong class="text-blue-400">github.com</strong> con la sesión iniciada y haz clic en el botón verde <strong>New</strong> (o en el <strong>+</strong> en la parte superior derecha &gt; New repository).</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span>En <strong>Repository name</strong>, escribe <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">minha-landing</code> (sin espacios, sin tildes).</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span>Déjalo como <strong>Público</strong> (tiene que ser público para que Pages funcione en el plan gratuito).</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span>Marca <strong>Add a README file</strong> y haz clic en <strong>Create repository</strong>.</span></li>
+</ul>
+</div>
+<!-- Caminho B: pelo terminal -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Opción B: desde la terminal</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m1-4-t1-p3">Si tienes el <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">gh</code> (GitHub CLI) instalado, puedes crear todo de una vez. Si no, puedes hacerlo con Git puro y conectarlo después.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Opción 1: con GitHub CLI (crea el repositorio local y el remoto a la vez)</p>
+<p class="text-emerald-400">$ gh repo create mi-landing --public --clone</p>
+<p class="text-neutral-300">Created repository seu-usuario/minha-landing on GitHub</p>
+<p class="text-neutral-400 mt-3"># Opción 2: Git puro, crear una carpeta e iniciar el repositorio</p>
+<p class="text-emerald-400">$ mkdir minha-landing</p>
+<p class="text-emerald-400">$ cd minha-landing</p>
+<p class="text-emerald-400">$ git init</p>
+<p class="text-neutral-300">Initialized empty Git repository in .../minha-landing/.git/</p>
+<p class="text-neutral-400 mt-3"># después de crear el repo vacío en el sitio, conecta el remoto</p>
+<p class="text-emerald-400">$ git remote add origin https://github.com/seu-usuario/minha-landing.git</p>
+</div>
+</div>
+<!-- Estrutura de pastas -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Estructura de carpetas del proyecto</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m1-4-t1-p4">Para una landing page sencilla, solo necesitas tres cosas: la página, el estilo y una carpeta para imágenes. Limpio y directo.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-300">minha-landing/</p>
+<p class="text-neutral-300">  ├── index.html</p>
+<p class="text-neutral-300">  ├── style.css</p>
+<p class="text-neutral-300">  ├── README.md</p>
+<p class="text-neutral-300">  └── img/</p>
+<p class="text-neutral-300">      └── foto.jpg</p>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-4-t1-p5"><strong>Problema:</strong> creó el repositorio como <strong>Privado</strong> y GitHub Pages no publica. <br/><strong>Solución:</strong> en el plan gratuito, Pages solo funciona en repositorios públicos. Ve a <strong>Settings &gt; General &gt; Danger Zone &gt; Change visibility</strong> y cámbiala por <strong>Público</strong>. O crea un repositorio nuevo directamente como público.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 2: HTML basico                        -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-1-4#topico-2" id="topico-2">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold">HTML básico: lo mínimo para funcionar</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m1-4-t2-p1">
+        HTML es la <strong class="text-emerald-400">estructura</strong> de la página: títulos, párrafos, imágenes, enlaces. Cada parte queda dentro de una <strong class="text-emerald-400">etiqueta</strong>, que se abre con <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;tag&gt;</code> y cierra con <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;/tag&gt;</code>. No necesitas memorizarlo todo. Con media docena de etiquetas ya puedes crear una página que funcione.
+      </p>
+<div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: las etiquetas son cajas que encajan
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-4-t2-p2">Piensa en cajas dentro de cajas. La caja <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;html&gt;</code> guarda la página completa. Dentro de ella está el cuadro <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;head&gt;</code> (información que lee el navegador) y el cuadro <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;body&gt;</code> (lo que aparece en la pantalla). Cada cuadro que abres, tienes que cerrarlo.</p>
+</div>
+<!-- index.html simples -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Una <code class="text-emerald-400 font-mono">index.html</code> completa y sencilla</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-300">&lt;!DOCTYPE html&gt;</p>
+<p class="text-neutral-300">&lt;html lang="pt-BR"&gt;</p>
+<p class="text-neutral-300">  &lt;head&gt;</p>
+<p class="text-neutral-300">    &lt;meta charset="UTF-8"&gt;</p>
+<p class="text-neutral-300">    &lt;title&gt;Mi sitio&lt;/title&gt;</p>
+<p class="text-neutral-300">  &lt;/head&gt;</p>
+<p class="text-neutral-300">  &lt;body&gt;</p>
+<p class="text-neutral-300">    &lt;h1&gt;Hola, soy Joao&lt;/h1&gt;</p>
+<p class="text-neutral-300">    &lt;p&gt;Te damos la bienvenida a mi primera página.&lt;/p&gt;</p>
+<p class="text-neutral-300">    &lt;img src="img/foto.jpg" alt="Mi foto"&gt;</p>
+<p class="text-neutral-300">    &lt;a href="https://inema.club"&gt;Mi enlace&lt;/a&gt;</p>
+<p class="text-neutral-300">  &lt;/body&gt;</p>
+<p class="text-neutral-300">&lt;/html&gt;</p>
+</div>
+</div>
+<!-- Para que serve cada tag -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Para qué sirve cada etiqueta</h3>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span><code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;!DOCTYPE html&gt;</code> avisa que es una página HTML moderna.</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span><code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;head&gt;</code> guarda el título y las configuraciones (no aparece en pantalla).</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span><code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;title&gt;</code> y es el nombre que aparece en la pestaña del navegador.</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span><code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;body&gt;</code> y todo lo que aparece en pantalla.</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span><code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;h1&gt;</code> y es el título grande; <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;p&gt;</code> es un párrafo de texto.</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span><code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;img&gt;</code> muestra una imagen; <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">&lt;a&gt;</code> crea un enlace en el que se puede hacer clic.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: prueba abriendo el archivo
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-4-t2-p3">Antes de publicar, abre el <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">index.html</code> directamente en el navegador (haz doble clic en el archivo o ejecuta <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">open index.html</code> en Mac, <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">xdg-open index.html</code> en Linux). Si se ve bien en tu computadora, se verá bien en línea.</p>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-4-t2-p4"><strong>Problema:</strong> la imagen no aparece, solo un cuadrado roto. <br/><strong>Solución:</strong> la ruta en <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">src</code> tiene que coincidir con la ubicación real del archivo. Si la foto está en <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">img/foto.jpg</code>, escribe exactamente esto. Las mayúsculas importan: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">Foto.JPG</code> y diferente de <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">foto.jpg</code> en el servidor.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 3: CSS basico                         -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-1-4#topico-3" id="topico-3">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold">CSS básico: Dale un buen aspecto</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m1-4-t3-p1">
+        Si el HTML es la estructura, el <strong class="text-emerald-400">CSS</strong> y la apariencia: colores, fuentes, espaciado, alineación. Escribes el estilo en un archivo <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">style.css</code> y lo conecta al HTML con una línea. Listo: la misma página pasa de ser un "documento aburrido" a una landing presentable.
+      </p>
+<div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: CSS es la ropa de la página
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-4-t3-p2">HTML es el cuerpo: cabeza, torso, brazos. CSS es la ropa que llevas puesta: el color, el tamaño, el ajuste. El mismo HTML puede usar mil estilos distintos, igual que puedes cambiarte de ropa sin cambiar de cuerpo.</p>
+</div>
+<!-- Conectar o CSS -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Paso 1: conectar el <code class="text-emerald-400 font-mono">style.css</code> al HTML</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m1-4-t3-p3">Dentro del <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">&lt;head&gt;</code> de tu <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">index.html</code>, agrega esta línea:</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-300">&lt;link rel="stylesheet" href="style.css"&gt;</p>
+</div>
+</div>
+<!-- Exemplo de CSS -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Paso 2: un <code class="text-emerald-400 font-mono">style.css</code> de ejemplo</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400">/* color de fondo y fuente de toda la página */</p>
+<p class="text-neutral-300">body {</p>
+<p class="text-neutral-300">  background-color: #0f172a;</p>
+<p class="text-neutral-300">  color: #e2e8f0;</p>
+<p class="text-neutral-300">  font-family: Arial, sans-serif;</p>
+<p class="text-neutral-300">  text-align: center;</p>
+<p class="text-neutral-300">  max-width: 600px;</p>
+<p class="text-neutral-300">  margin: 40px auto;</p>
+<p class="text-neutral-300">}</p>
+<p class="text-neutral-400 mt-2">/* título grande verde */</p>
+<p class="text-neutral-300">h1 { color: #10b981; }</p>
+<p class="text-neutral-400 mt-2">/* foto redonda */</p>
+<p class="text-neutral-300">img { border-radius: 50%; width: 160px; }</p>
+</div>
+</div>
+<!-- Como o seletor funciona -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Cómo leer un selector
+        </h3>
+<p class="text-neutral-300 mb-3" data-inema-block="m1-4-t3-p4">Cada bloque de CSS tiene tres partes:</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span><strong>Selector</strong> (<code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">h1</code>): a quién aplicarlo.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span><strong>Propiedad</strong> (<code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">color</code>): qué cambiar.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span><strong>Valor</strong> (<code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">#10b981</code>): el nuevo valor. Termina con <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">;</code>.</span></li>
+</ul>
+<p class="text-neutral-300 text-sm mt-3">El truco <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">margin: 40px auto</code> con <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">max-width</code> y es la forma clásica de <strong class="text-blue-400">centrar</strong> el contenido en pantalla.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ Qué HACER</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Mantener el CSS en un archivo separado (<code class="font-mono text-sm">style.css</code>)</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Usar pocos colores y una sola fuente</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Cerrar cada bloque con <code class="font-mono text-sm">}</code></span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Olvidar el <code class="font-mono text-sm">;</code> al final de cada línea</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Equivocarse en el nombre del archivo en el <code class="font-mono text-sm">href</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Llenar la página de colores estridentes</span></li>
+</ul>
+</div>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 4: Publicar no GitHub Pages           -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-1-4#topico-4" id="topico-4">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold">Publicar en GitHub Pages</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m1-4-t4-p1">
+        Esta es la parte mágica: el <strong class="text-emerald-400">GitHub Pages</strong> toma los archivos de tu repositorio y los publica como un sitio web real, gratis, con una URL pública. Son tres pasos: enviar los archivos (commit + push), activar Pages y verlo en línea.
+      </p>
+<!-- Timeline de publicacao -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<span class="text-emerald-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Commit y push de los archivos</h4>
+<p class="text-sm text-neutral-400 mb-3">Envía el código de tu máquina a GitHub.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-emerald-400">$ git add .</p>
+<p class="text-emerald-400">$ git commit -m "primera versión de la landing"</p>
+<p class="text-neutral-300">[main 1a2b3c4] primera versión de la landing</p>
+<p class="text-emerald-400">$ git push -u origin main</p>
+<p class="text-neutral-300">To github.com:seu-usuario/minha-landing.git</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<span class="text-emerald-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Activar Pages</h4>
+<p class="text-sm text-neutral-400 mb-3">En el repositorio, ve a <strong>Settings &gt; Pages</strong>.</p>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span>En <strong>Source</strong>, elige <strong>Deploy from a branch</strong>.</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span>En <strong>Branch</strong>, selecciona <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">main</code> y es la carpeta <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">/ (root)</code>.</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span>Haz clic en <strong>Save</strong>.</span></li>
+</ul>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<span class="text-emerald-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Esperar y verlo en línea</h4>
+<p class="text-sm text-neutral-400 mb-3">En 1 a 2 minutos, GitHub publica el sitio y muestra la URL.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># la URL final queda en este formato:</p>
+<p class="text-emerald-400">https://seu-usuario.github.io/minha-landing/</p>
+</div>
+</div>
+</div>
+</div>
+<!-- O que voce vai ver -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver en la pantalla
+        </h3>
+<p class="text-neutral-300 mb-3" data-inema-block="m1-4-t4-p2">Después de guardar, la propia página de Pages muestra un recuadro verde:</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-emerald-400">✓ Your site is live at</p>
+<p class="text-blue-400">https://seu-usuario.github.io/minha-landing/</p>
+<p class="text-neutral-400 mt-2"># Visitar el sitio</p>
+</div>
+<p class="text-neutral-300 text-sm mt-4">Haz clic en <strong class="text-blue-400">Visit site</strong> y verás tu landing publicada. Esta dirección es pública: puedes compartirla con cualquier persona.</p>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-4-t4-p3"><strong>Problema:</strong> abrió la URL y apareció una página <strong>404</strong>. <br/><strong>Solución:</strong> normalmente es porque el archivo no se llama <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">index.html</code> (Pages busca este nombre), o todavía estás en los primeros segundos de la publicación. Confirma el nombre del archivo, espera 1-2 minutos y actualiza la página con Ctrl+F5.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 5: Dominio personalizado (opcional)   -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-1-4#topico-5" id="topico-5">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold">Dominio personalizado</h2>
+<span class="px-3 py-1 bg-primary/10 border border-primary/40 text-primary text-xs font-semibold rounded-full">OPCIONAL</span>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m1-4-t5-p1">
+        La URL <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">seu-usuario.github.io</code> ya funciona perfectamente. Pero si quieres una dirección propia, como <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">meunome.com.br</code>, puedes conectar un dominio personalizado. Esto es <strong class="text-primary">opcional</strong> y cuesta lo que cuesta el dominio (unos pocos reales al año). Omite este tema si todavía no quieres gastar.
+      </p>
+<div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: el dominio es la dirección bonita
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-4-t5-p2">GitHub te da una dirección que funciona, pero es larga. Un dominio es como cambiar «Calle 3, Manzana 12, Lote 4» por «Casa de Juan». El lugar es el mismo, solo que el nombre es fácil de recordar y compartir.</p>
+</div>
+<!-- Passos do dominio -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<span class="text-emerald-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Comprar el dominio</h4>
+<p class="text-sm text-neutral-400">En un registrador (Registro.br para .com.br, o Namecheap, Cloudflare, Google Domains para otros). Elige el nombre y paga la tarifa anual.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<span class="text-emerald-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Apuntar el DNS a GitHub</h4>
+<p class="text-sm text-neutral-400 mb-3">En el panel del registrador, crea un registro <strong>CNAME</strong> apuntando tu dominio a la dirección de GitHub.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Tipo  Nombre   Valor</p>
+<p class="text-emerald-400">CNAME  www    seu-usuario.github.io</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<span class="text-emerald-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Registrar el dominio en GitHub</h4>
+<p class="text-sm text-neutral-400">En <strong>Settings &gt; Pages &gt; Custom domain</strong>, escribe tu dominio (ej.: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">www.meunome.com.br</code>) y haz clic en <strong>Save</strong>. Marca <strong>Enforce HTTPS</strong> cuando esté disponible.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<span class="text-emerald-400 font-bold text-lg">4</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Esperar a que se propague el DNS</h4>
+<p class="text-sm text-neutral-400">El cambio de DNS tarda desde unos minutos hasta 24 horas en aplicarse en todo el mundo. Ten paciencia: no es un error, es solo el tiempo de propagación.</p>
+</div>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: empieza sin dominio
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-4-t5-p3">No necesitas comprar un dominio para completar este proyecto. La URL <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">github.io</code> ya cuenta como "sitio en línea". El dominio propio es una mejora que puedes hacer cuando quieras que la dirección tenga un aspecto más profesional.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 6: Exercicio final                    -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-1-4#topico-6" id="topico-6">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold">Ejercicio final: tu landing en línea</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m1-4-t6-p1">
+        Ahora haces todo junto, desde cero hasta la URL pública. Sigue la lista de verificación en orden. Al terminar, tendrás un sitio real en Internet, hecho por ti, con una dirección propia para compartir.
+      </p>
+<div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-emerald-400 mb-4">🎯 Lo que vas a construir</h3>
+<p class="text-neutral-300">Una landing page personal: título con tu nombre, un párrafo de presentación, una foto y un enlace. Versionada con Git y publicada en GitHub Pages.</p>
+</div>
+<!-- Checklist passo a passo -->
+<div class="space-y-4 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 1: crear la carpeta y los archivos</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-emerald-400">$ mkdir minha-landing</p>
+<p class="text-emerald-400">$ cd minha-landing</p>
+<p class="text-emerald-400">$ touch index.html style.css</p>
+<p class="text-emerald-400">$ mkdir img</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 2: escribir el HTML y el CSS</h4>
+<p class="text-neutral-400 text-sm mb-3">Ábrelo en el editor y pega el contenido de los temas 2 y 3.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-emerald-400">$ code .</p>
+<p class="text-neutral-400 mt-2"># escribe el index.html y el style.css, guarda</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 3: iniciar Git y el primer commit</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-emerald-400">$ git init</p>
+<p class="text-emerald-400">$ git add .</p>
+<p class="text-emerald-400">$ git commit -m "mi landing personal"</p>
+<p class="text-neutral-300">[main (root-commit) 1a2b3c4] mi landing personal</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 4: conectarse a GitHub y subir</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># crea el repo en el sitio (Public) y copia la URL, después:</p>
+<p class="text-emerald-400">$ git remote add origin https://github.com/seu-usuario/minha-landing.git</p>
+<p class="text-emerald-400">$ git push -u origin main</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 5: activar GitHub Pages</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span>Settings &gt; Pages &gt; Source: <strong>Deploy from a branch</strong>.</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span>Branch <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">main</code>, carpeta <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">/ (root)</code>, <strong>Save</strong>.</span></li>
+</ul>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 6: abrir la URL pública</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># espera 1-2 min y abre:</p>
+<p class="text-emerald-400">https://seu-usuario.github.io/minha-landing/</p>
+</div>
+<p class="text-neutral-300 text-sm mt-3">Si tu landing aparece en esta dirección, <strong class="text-emerald-400">está en línea</strong>. Misión cumplida.</p>
+</div>
+</div>
+<!-- Checklist de conferencia -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ Comprueba que tienes</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Repositorio público en GitHub</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span><code class="font-mono text-sm">index.html</code> e <code class="font-mono text-sm">style.css</code> confirmados</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Pages activado en la branch <code class="font-mono text-sm">main</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>URL pública que abre tu página</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Si no funciona, revisa</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>El repo está Private (debe ser Public)</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>El archivo no se llama <code class="font-mono text-sm">index.html</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Olvidó el <code class="font-mono text-sm">git push</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>No esperó a que terminara la publicación</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">🏆</span> ¡Felicitaciones, completaste la Ruta 1!
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-4-t6-p2">Saliste de cero y pusiste un sitio en línea usando terminal, Git, GitHub y GitHub Pages. Este es exactamente el camino que los profesionales recorren todos los días. En la <strong class="text-primary">Ruta 2</strong>, subirás de nivel con un deploy moderno: Vercel, base de datos en la nube, APIs y variables de entorno.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- RESUMO -->
+<section class="mb-12">
+<div class="bg-gradient-to-br from-emerald-900/40 via-dark-800 to-dark-800 rounded-xl border border-emerald-500/30 p-8">
+<h2 class="text-2xl font-bold mb-6 flex items-center">
+<span class="mr-3">📚</span> Resumen del módulo
+        </h2>
+<div class="space-y-4 mb-8">
+<div class="flex items-start space-x-3">
+<span class="text-emerald-400 mt-1">✓</span>
+<div><strong class="text-white">Crear el repositorio</strong><span class="text-neutral-400"> - desde el sitio (New) o la terminal (gh repo create / git init)</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-emerald-400 mt-1">✓</span>
+<div><strong class="text-white">HTML básico</strong><span class="text-neutral-400"> - doctype, head, title, body, h1, p, img, a</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-emerald-400 mt-1">✓</span>
+<div><strong class="text-white">CSS básico</strong><span class="text-neutral-400"> - enlace a style.css, selectores, colores, centrar</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-emerald-400 mt-1">✓</span>
+<div><strong class="text-white">Publicar en GitHub Pages</strong><span class="text-neutral-400"> - commit, push, activar Pages, ver en línea</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-emerald-400 mt-1">✓</span>
+<div><strong class="text-white">Dominio personalizado (opcional)</strong><span class="text-neutral-400"> - comprar, CNAME, Custom domain, esperar DNS</span></div>
+</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+<h3 class="font-semibold text-emerald-400 mb-2">Siguiente ruta:</h3>
+<p class="text-neutral-300">Ruta 2 - Deploy moderno (Vercel, Supabase, APIs y variables de entorno). Terminas la Ruta 1 con un sitio publicado y pasas al deploy de aplicaciones reales.</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">
+            ← Volver a la ruta
+          </a>
+<a class="flex-1 text-center px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-500 transition-colors" href="../trilha2/index.html">
+            Siguiente ruta →
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>De cero al deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

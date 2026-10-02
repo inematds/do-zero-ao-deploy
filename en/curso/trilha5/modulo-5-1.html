@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>Jarvis: Your Personal Assistant | From Zero to Deploy</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'teal' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'teal');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha teal) */
+    html:not(.dark) .text-teal-400 { color: #0d9488; }
+    html:not(.dark) .bg-teal-500\/20 { background-color: rgba(13, 148, 136, 0.12); }
+    html:not(.dark) .bg-teal-500\/10 { background-color: rgba(13, 148, 136, 0.08); }
+    html:not(.dark) .border-teal-500\/30 { border-color: rgba(13, 148, 136, 0.25); }
+    html:not(.dark) .hover\:bg-teal-500\/30:hover { background-color: rgba(13, 148, 136, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha5/modulo-5-1.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha5/modulo-5-1.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha5/modulo-5-1.html" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha5/modulo-5-1.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="modulo-5-1.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">EN</a><a href="../../../es/curso/trilha5/modulo-5-1.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">From Zero to Deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" href="../trilha1/index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal &amp; Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" href="../trilha2/index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Modern Deployment</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors" href="../trilha3/index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Your Own Server</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" href="../trilha4/index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-teal-400 bg-teal-500/10" href="index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">AI</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- BREADCRUMB -->
+<nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex items-center space-x-2 text-sm text-neutral-400">
+<a class="hover:text-teal-400" href="../../index.html">Start</a>
+<span>/</span>
+<a class="hover:text-teal-400" href="index.html">Track 5</a>
+<span>/</span>
+<span class="text-teal-400">Module 5.1</span>
+</div>
+</nav>
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-teal-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-teal-500/20 text-teal-400 text-xs font-semibold rounded-full mb-4">MODULE 5.1</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">🤖 Jarvis: Your Personal Assistant</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Imagine having an intern who lives inside your chat: you send a message, they understand, perform a task, and reply. In this module, you’ll build your own AI assistant in Telegram, connected to a model like Claude or GPT, running 24 hours a day on your server.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-teal-400">6</div>
+<div class="text-xs text-neutral-400">Topics</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-teal-400">45</div>
+<div class="text-xs text-neutral-400">Minutes</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-teal-400">Basic</div>
+<div class="text-xs text-neutral-400">Level</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-teal-400">Hands-on</div>
+<div class="text-xs text-neutral-400">Type</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="5-1" data-inema-track="5" id="conteudo">
+<!-- ============================================ -->
+<!-- TOPICO 1: O que e um assistente IA pessoal   -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-5-1#topico-1" id="topico-1">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold">What Is a Personal AI Assistant</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m5-1-t1-p1">
+        A personal AI assistant is a program that <strong class="text-teal-400">receives your messages, thinks using a language model, and performs tasks</strong>. You already know ChatGPT in the browser. The difference here is that the assistant lives in YOUR chat (Telegram), replies 24 hours a day, and can do real things: check the weather forecast, save a note, create a reminder. It doesn't just chat: it takes action.
+      </p>
+<div class="bg-gradient-to-br from-teal-900/30 to-dark-800 rounded-xl border border-teal-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-teal-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogy: The Intern Who Lives in the Chat
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m5-1-t1-p2">Think of a super dedicated intern. You send a message in the chat: "find out how much time is left before the meeting." They read it, understand, check the calendar, and get back to you. You don't need to explain how to search the calendar: they know. That's exactly what your AI assistant is, but digital and available anytime.</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-teal-400 mt-1">•</span><span><strong>You send:</strong> a natural language message ("summarize this text for me")</span></li>
+<li class="flex items-start space-x-2"><span class="text-teal-400 mt-1">•</span><span><strong>It thinks:</strong> the AI model interprets what you want</span></li>
+<li class="flex items-start space-x-2"><span class="text-teal-400 mt-1">•</span><span><strong>It acts:</strong> use a tool if needed</span></li>
+<li class="flex items-start space-x-2"><span class="text-teal-400 mt-1">•</span><span><strong>It replies:</strong> sends the response back in the chat</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Why “Jarvis”?
+        </h3>
+<p class="text-neutral-300" data-inema-block="m5-1-t1-p3">Jarvis is Iron Man's assistant in the movies: you speak, he understands, and he gets things done. Your Jarvis won't pilot an armored suit, but he'll help you in your day-to-day life. The concept is the same: a <strong>an assistant that listens to natural language and executes</strong>. You'll discover that putting one together is simpler than it seems: just combine three pieces (a chat, a brain, and a few tools).</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/20 border border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 2: Arquitetura basica                 -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-5-1#topico-2" id="topico-2">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold">The Basic Architecture</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m5-1-t2-p1">
+        Every assistant follows the same four-step flow: <strong class="text-teal-400">the bot receives the message, the AI model thinks, the tools run, and the response comes back</strong>. Understanding this path makes everything easier, because each piece you build in the next topics fits into this diagram.
+      </p>
+<!-- SVG: Fluxo do assistente -->
+<div class="rounded-2xl border border-teal-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="Assistant flow: the user sends a message on Telegram, the bot receives it, the language model thinks, the tools run, and the response goes back to the user" class="w-full h-auto" role="img" viewbox="0 0 820 230">
+<defs>
+<lineargradient id="m51-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#2dd4bf"></stop><stop offset="1" stop-color="#14b8a6"></stop>
+</lineargradient>
+<filter height="180%" id="m51-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="m51-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#2dd4bf" opacity="0.12" r="1.3"></circle>
+</pattern>
+<marker id="m51-arr" markerheight="7" markerwidth="7" orient="auto-start-reverse" refx="8" refy="5" viewbox="0 0 10 10">
+<path d="M0 0 L10 5 L0 10 z" fill="#38bdf8"></path>
+</marker>
+</defs>
+<rect fill="url(#m51-grid)" height="230" width="820" x="0" y="0"></rect>
+<!-- Usuario -->
+<circle cx="70" cy="100" fill="#1a1a2e" r="30" stroke="#2dd4bf" stroke-width="2"></circle>
+<text fill="#2dd4bf" font-family="Inter,sans-serif" font-size="24" text-anchor="middle" x="70" y="108">👤</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="12" text-anchor="middle" x="70" y="156">You</text>
+<!-- Telegram -->
+<rect fill="#0c1f1c" height="60" rx="12" stroke="#38bdf8" stroke-width="2" width="110" x="150" y="70"></rect>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="14" font-weight="600" text-anchor="middle" x="205" y="98">Telegram</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="205" y="116">the chat</text>
+<!-- Bot -->
+<rect fill="#0c1f1c" height="60" rx="12" stroke="url(#m51-grad)" stroke-width="2" width="110" x="295" y="70"></rect>
+<text fill="#2dd4bf" font-family="Inter,sans-serif" font-size="14" font-weight="600" text-anchor="middle" x="350" y="98">Bot</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="350" y="116">your code</text>
+<!-- LLM (foco com glow) -->
+<g filter="url(#m51-glow)">
+<rect fill="#0c1f1c" height="80" rx="14" stroke="url(#m51-grad)" stroke-width="2.5" width="130" x="440" y="40"></rect>
+</g>
+<text fill="#2dd4bf" font-family="Inter,sans-serif" font-size="14" font-weight="600" text-anchor="middle" x="505" y="72">LLM</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="505" y="92">Claude / GPT</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="505" y="108">thinks</text>
+<!-- Tools -->
+<rect class="wf-a" fill="#0c1f1c" height="34" rx="8" stroke="#2dd4bf" stroke-width="1.5" width="120" x="610" y="50"></rect>
+<text fill="#2dd4bf" font-family="Inter,sans-serif" font-size="12" text-anchor="middle" x="670" y="72">tool: time</text>
+<rect class="wf-a" fill="#0c1f1c" height="34" rx="8" stroke="#2dd4bf" stroke-width="1.5" width="120" x="610" y="96"></rect>
+<text fill="#2dd4bf" font-family="Inter,sans-serif" font-size="12" text-anchor="middle" x="670" y="118">tool: note</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="670" y="146">tools</text>
+<!-- Setas (ida) -->
+<line marker-end="url(#m51-arr)" stroke="#38bdf8" stroke-width="2" x1="102" x2="146" y1="100" y2="100"></line>
+<line marker-end="url(#m51-arr)" stroke="#38bdf8" stroke-width="2" x1="262" x2="291" y1="100" y2="100"></line>
+<line marker-end="url(#m51-arr)" stroke="#38bdf8" stroke-width="2" x1="407" x2="436" y1="92" y2="84"></line>
+<line marker-end="url(#m51-arr)" stroke="#38bdf8" stroke-width="2" x1="572" x2="606" y1="78" y2="70"></line>
+<!-- Volta da resposta -->
+<path d="M505 122 Q505 200 350 200 Q205 200 205 134" fill="none" marker-end="url(#m51-arr)" stroke="#2dd4bf" stroke-dasharray="5 5" stroke-width="2"></path>
+<text fill="#2dd4bf" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="350" y="218">the response comes back along the same path</text>
+</svg>
+</div>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> The four steps, in order
+        </h3>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-blue-400 font-bold">1.</span><span><strong>Receives:</strong> you send "what time is it in Tokyo?" on Telegram. The bot (your code) receives this text.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 font-bold">2.</span><span><strong>Think:</strong> the bot sends your message to the AI model. The model understands the intent.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 font-bold">3.</span><span><strong>Run:</strong> if it needs external data, the model asks to use a tool (e.g., check the time).</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 font-bold">4.</span><span><strong>Responds:</strong> the final response goes back through the bot to your Telegram chat.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Tip: just three pieces
+        </h3>
+<p class="text-neutral-300" data-inema-block="m5-1-t2-p2">At its core, the whole assistant fits into three pieces: <strong class="text-primary">the chat</strong> (Telegram, where the conversation happens), <strong class="text-primary">the brain</strong> (the LLM, which thinks) and <strong class="text-primary">the tools</strong> (functions that perform actions). If you always know which piece you’re working on, you’ll never get lost in the code.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/20 border border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 3: Telegram Bot API                   -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-5-1#topico-3" id="topico-3">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold">Creating the Telegram Bot</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m5-1-t3-p1">
+        Telegram has an official, free way to create bots: the <strong class="text-teal-400">BotFather</strong>. It’s a bot that creates bots. You talk to it, give your assistant a name, and get a <strong class="text-teal-400">token</strong> (a unique password that gives your code control of the bot). Without a token, your code can't send or receive messages.
+      </p>
+<!-- Timeline: criar o bot -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center">
+<span class="text-teal-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Open BotFather</h4>
+<p class="text-sm text-neutral-400">On Telegram, search for <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono text-teal-400">@BotFather</code> (the official one has a blue verified badge). Click "Start".</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center">
+<span class="text-teal-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Create the bot</h4>
+<p class="text-sm text-neutral-400 mb-3">Enter the command and follow the prompts: display name and username (must end in "bot").</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-teal-400">/newbot</p>
+<p class="text-neutral-400 mt-2"># BotFather asks for the name:</p>
+<p class="text-neutral-300">My Jarvis</p>
+<p class="text-neutral-400 mt-2"># And the username (must end in "bot"):</p>
+<p class="text-neutral-300">meu_jarvis_bot</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center">
+<span class="text-teal-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Store the token</h4>
+<p class="text-sm text-neutral-400 mb-3">BotFather replies with the token. It looks like this (copy it and store it carefully):</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-300">Use this token to access the HTTP API:</p>
+<p class="text-teal-400">7891234567:AAH4k_exemplo-de-token-NAO-use-o-real</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Polling vs Webhook -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-6">
+<h4 class="font-bold text-teal-400 mb-4">Polling (simplest)</h4>
+<p class="text-sm text-neutral-300 mb-3">Your code keeps asking Telegram "any new messages?" from time to time. You don't need a domain or HTTPS. Ideal for getting started and running on a VPS.</p>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start space-x-2"><span class="text-teal-400">✓</span><span>Runs anywhere</span></li>
+<li class="flex items-start space-x-2"><span class="text-teal-400">✓</span><span>Zero network configuration</span></li>
+</ul>
+</div>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6">
+<h4 class="font-bold text-blue-400 mb-4">Webhook (more advanced)</h4>
+<p class="text-sm text-neutral-300 mb-3">Telegram notifies your server whenever a message arrives. It’s more efficient, but requires a public HTTPS address. Save this for later.</p>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start space-x-2"><span class="text-blue-400">✓</span><span>Instant response</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400">✓</span><span>Lower network usage</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Common Error
+        </h3>
+<p class="text-neutral-300" data-inema-block="m5-1-t3-p2"><strong>Problem:</strong> "I pasted the token into a file and pushed it to GitHub. Now it’s leaked." <br/><strong>Solution:</strong> The token is a password. Anyone who has it controls your bot. Never put the token directly in your code or in a public repository. Use a file <code class="font-mono text-sm text-red-400">.env</code> (you'll see this in topic 6) and add <code class="font-mono text-sm text-red-400">.env</code> no <code class="font-mono text-sm text-red-400">.gitignore</code>. If it leaked, contact BotFather and use <code class="font-mono text-sm text-red-400">/revoke</code> to generate a new token.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/20 border border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 4: Conectar com Claude/GPT            -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-5-1#topico-4" id="topico-4">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold">Connecting the Brain: Claude or GPT</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m5-1-t4-p1">
+        Now your bot needs a brain. Instead of programming rules like “if the message is X, reply with Y,” you send the user’s message to an <strong class="text-teal-400">AI model</strong> (Claude from Anthropic or GPT from OpenAI), and it returns the answer. Technically, this is a <strong class="text-teal-400">API call</strong>: your code sends a request over the internet and gets the response back.
+      </p>
+<!-- Codigo: chamada simples ao bot -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">The bot that only responds (no AI yet)</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m5-1-t4-p2">Start simple: receive a message and repeat it. Here's how in Python with the library <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">python-telegram-bot</code>.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># install the library</p>
+<p class="text-teal-400">$ pip install python-telegram-bot anthropic</p>
+<p class="text-neutral-300 mt-3">import os</p>
+<p class="text-neutral-300">from telegram.ext import Application, MessageHandler, filters</p>
+<p class="text-neutral-300 mt-2">async def responder(update, ctx):</p>
+<p class="text-neutral-300">    texto = update.message.text</p>
+<p class="text-neutral-300">    await update.message.reply_text("You said: " + texto)</p>
+</div>
+</div>
+<!-- Codigo: chamada ao Claude -->
+<div class="bg-gradient-to-br from-teal-900/30 to-dark-800 rounded-xl border border-teal-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-teal-400 mb-4 flex items-center">
+<span class="mr-2">🤖</span> Now with an AI brain
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m5-1-t4-p3">Instead of repeating the text, you send the message to the model and return its response. The "API key" is the password that gives you access to the model (get one from console.anthropic.com or platform.openai.com).</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-300">from anthropic import Anthropic</p>
+<p class="text-neutral-300">cliente = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])</p>
+<p class="text-neutral-300 mt-2">async def responder(update, ctx):</p>
+<p class="text-neutral-300">    resp = cliente.messages.create(</p>
+<p class="text-neutral-300">        model="claude-3-5-haiku-latest",</p>
+<p class="text-neutral-300">        max_tokens=500,</p>
+<p class="text-neutral-300">        messages=[{"role": "user",</p>
+<p class="text-neutral-300">            "content": update.message.text}])</p>
+<p class="text-neutral-300">    texto = resp.content[0].text</p>
+<p class="text-neutral-300">    await update.message.reply_text(texto)</p>
+</div>
+<p class="text-neutral-400 text-sm mt-3">O <strong class="text-teal-400">prompt</strong> is the content you send; the <strong class="text-teal-400">response</strong> comes in <code class="font-mono">resp.content[0].text</code>.</p>
+</div>
+<!-- O que voce vai ver -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> What you’ll see in the chat
+        </h3>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># You on Telegram:</p>
+<p class="text-teal-400">You: explica o que e Git em uma frase</p>
+<p class="text-neutral-400 mt-3"># The bot (AI brain) responds:</p>
+<p class="text-neutral-300">Jarvis: Git is a system that saves the</p>
+<p class="text-neutral-300">history of your code, allowing you to</p>
+<p class="text-neutral-300">go back in time and work as a team.</p>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Tip: start with the cheaper model
+        </h3>
+<p class="text-neutral-300" data-inema-block="m5-1-t4-p4">Each API call costs money (a few cents, but it adds up). While you're testing and making mistakes, use a small, inexpensive model (like Haiku or GPT-mini). Once the assistant is polished, you can change one line (the model name) to use a more powerful one. That way, you won't waste money while learning.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/20 border border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 5: Skills e comandos                  -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-5-1#topico-5" id="topico-5">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold">Skills and Commands</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m5-1-t5-p1">
+        So far, your Jarvis only chats. For it to <strong class="text-teal-400">perform actions</strong>, you create commands. In Telegram, commands start with a slash: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-teal-400">/start</code>, <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-teal-400">/ajuda</code>, <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-teal-400">/nota</code>. Each command points to a function in your code. It's the simplest way to give your assistant "skills".
+      </p>
+<!-- Codigo: mapear comandos -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Mapping /command to an action</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m5-1-t5-p2">You register a <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">CommandHandler</code> for each command. When the user types <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">/nota comprar pao</code>, the function receives the text and acts.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-300">from telegram.ext import CommandHandler</p>
+<p class="text-neutral-300 mt-2">async def cmd_start(update, ctx):</p>
+<p class="text-neutral-300">    await update.message.reply_text("Hello! I'm Jarvis.")</p>
+<p class="text-neutral-300 mt-2">async def cmd_nota(update, ctx):</p>
+<p class="text-neutral-300">    texto = " ".join(ctx.args)</p>
+<p class="text-neutral-300">    salvar_nota(texto)  <span class="text-neutral-400"># your function</span></p>
+<p class="text-neutral-300">    await update.message.reply_text("Note saved: " + texto)</p>
+<p class="text-neutral-300 mt-2">app.add_handler(CommandHandler("start", cmd_start))</p>
+<p class="text-neutral-300">app.add_handler(CommandHandler("nota", cmd_nota))</p>
+</div>
+</div>
+<!-- O que voce vai ver -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> What you’ll see in the chat
+        </h3>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-teal-400">You: /nota comprar pao e leite</p>
+<p class="text-neutral-300">Jarvis: Note saved: buy bread and milk</p>
+<p class="text-teal-400 mt-2">You: /ajuda</p>
+<p class="text-neutral-300">Jarvis: Commands: /nota, /tempo, /lembrete</p>
+</div>
+</div>
+<!-- Grid Fazer / Evitar -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-6">
+<h4 class="font-bold text-teal-400 mb-4">✓ What TO DO</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-teal-400">✓</span><span>Always create one <code class="font-mono text-sm">/ajuda</code> that lists the commands</span></li>
+<li class="flex items-start space-x-2"><span class="text-teal-400">✓</span><span>Give short, clear names (<code class="font-mono text-sm">/tempo</code>, <code class="font-mono text-sm">/nota</code>)</span></li>
+<li class="flex items-start space-x-2"><span class="text-teal-400">✓</span><span>Confirm the action with a response ("Note saved")</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ What NOT to do</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Creating 20 commands before the bot works</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Confusing names (<code class="font-mono text-sm">/xpt2</code>)</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Leave the user without feedback (silence makes it seem broken)</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Tip: commands in the Telegram menu
+        </h3>
+<p class="text-neutral-300" data-inema-block="m5-1-t5-p3">Go back to BotFather and use <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">/setcommands</code> to register the list of commands. That way, when you type "/" in the chat, a nice menu appears with the available commands. It's a small detail that makes your Jarvis look professional.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/20 border border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 6: Deploy no VPS                       -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-5-1#topico-6" id="topico-6">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold">Deploy: Running 24/7 on the VPS</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m5-1-t6-p1">
+        Your Jarvis only responds while the code is running. On your computer, it stops when you close the terminal or turn off the machine. To respond at any time, it needs to live on a <strong class="text-teal-400">VPS</strong> (the Trilha 3 server) and run as a <strong class="text-teal-400">systemd service</strong>, which starts automatically and restarts if it crashes.
+      </p>
+<!-- Passo a passo do deploy -->
+<div class="space-y-4 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Step 1: Upload the code and create the .env</h4>
+<p class="text-sm text-neutral-400 mb-3">On the VPS, the file <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">.env</code> stores the tokens outside the code.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-teal-400">$ nano .env</p>
+<p class="text-neutral-400 mt-2"># inside the file:</p>
+<p class="text-neutral-300">TELEGRAM_TOKEN=7891234567:AAH...</p>
+<p class="text-neutral-300">ANTHROPIC_API_KEY=sk-ant-...</p>
+<p class="text-neutral-400 mt-2"># and protect it so no one can read it</p>
+<p class="text-teal-400">$ chmod 600 .env</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Step 2: Create the systemd service</h4>
+<p class="text-sm text-neutral-400 mb-3">Create the file <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">/etc/systemd/system/jarvis.service</code>.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400">[Unit]</p>
+<p class="text-neutral-300">Description=Jarvis Bot</p>
+<p class="text-neutral-300">After=network.target</p>
+<p class="text-neutral-400 mt-2">[Service]</p>
+<p class="text-neutral-300">WorkingDirectory=/home/deploy/jarvis</p>
+<p class="text-neutral-300">EnvironmentFile=/home/deploy/jarvis/.env</p>
+<p class="text-neutral-300">ExecStart=/usr/bin/python3 bot.py</p>
+<p class="text-neutral-300">Restart=always</p>
+<p class="text-neutral-400 mt-2">[Install]</p>
+<p class="text-neutral-300">WantedBy=multi-user.target</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Step 3: Start it and watch it run</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># reloads the list of services</p>
+<p class="text-teal-400">$ sudo systemctl daemon-reload</p>
+<p class="text-neutral-400 mt-2"># starts now and also on boot</p>
+<p class="text-teal-400">$ sudo systemctl enable --now jarvis</p>
+<p class="text-neutral-400 mt-2"># check the status</p>
+<p class="text-teal-400">$ sudo systemctl status jarvis</p>
+<p class="text-neutral-300 mt-1">● jarvis.service - Jarvis Bot</p>
+<p class="text-neutral-300">   Active: active (running)</p>
+</div>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Common Error
+        </h3>
+<p class="text-neutral-300" data-inema-block="m5-1-t6-p2"><strong>Problem:</strong> "The service won’t start, and the status says <code class="font-mono text-sm text-red-400">failed</code>." <br/><strong>Solution:</strong> Almost always, it’s a wrong path or a missing variable. Check the logs with <code class="font-mono text-sm text-red-400">journalctl -u jarvis -n 50</code>. Check whether the <code class="font-mono text-sm text-red-400">WorkingDirectory</code> exists, if the <code class="font-mono text-sm text-red-400">.env</code> has both tokens and whether the Python path is correct (test with <code class="font-mono text-sm text-red-400">which python3</code>).</p>
+</div>
+<!-- Grid Fazer / Evitar -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-6">
+<h4 class="font-bold text-teal-400 mb-4">✓ What TO DO</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-teal-400">✓</span><span>Store tokens in the <code class="font-mono text-sm">.env</code>, never in the code</span></li>
+<li class="flex items-start space-x-2"><span class="text-teal-400">✓</span><span>Use <code class="font-mono text-sm">Restart=always</code> to bring it back up if it goes down</span></li>
+<li class="flex items-start space-x-2"><span class="text-teal-400">✓</span><span>Look <code class="font-mono text-sm">journalctl</code> when something goes wrong</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ What NOT to do</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Run with <code class="font-mono text-sm">python bot.py</code> in the terminal and close the session</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Commit the <code class="font-mono text-sm">.env</code> in Git</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Forget the <code class="font-mono text-sm">enable</code> (doesn’t come back up after a reboot)</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-gradient-to-br from-teal-900/30 to-dark-800 rounded-xl border border-teal-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-teal-400 mb-3 flex items-center">
+<span class="mr-2">🏆</span> Congratulations!
+        </h3>
+<p class="text-neutral-300" data-inema-block="m5-1-t6-p3">If you've made it this far, you have an AI assistant that lives in your Telegram, thinks with Claude or GPT, runs commands, and operates 24 hours a day on your server. This is the skeleton of any assistant. In the next module, you'll dive deeper into your Jarvis's brain and give it richer memory and reasoning.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/20 border border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- RESUMO -->
+<section class="mb-12">
+<div class="bg-gradient-to-br from-teal-900/40 via-dark-800 to-dark-800 rounded-xl border border-teal-500/30 p-8">
+<h2 class="text-2xl font-bold mb-6 flex items-center">
+<span class="mr-3">📚</span> Module Summary
+        </h2>
+<div class="space-y-4 mb-8">
+<div class="flex items-start space-x-3">
+<span class="text-teal-400 mt-1">✓</span>
+<div><strong class="text-white">An AI assistant is an intern in the chat</strong><span class="text-neutral-400"> - receives, thinks, executes, and responds</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-teal-400 mt-1">✓</span>
+<div><strong class="text-white">Three-part architecture</strong><span class="text-neutral-400"> - chat (Telegram), brain (LLM), and tools</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-teal-400 mt-1">✓</span>
+<div><strong class="text-white">BotFather and token</strong><span class="text-neutral-400"> - create the bot on Telegram and use polling to get started</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-teal-400 mt-1">✓</span>
+<div><strong class="text-white">API call to Claude/GPT</strong><span class="text-neutral-400"> - sends the prompt, receives the response, returns it in the chat</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-teal-400 mt-1">✓</span>
+<div><strong class="text-white">Commands and 24/7 deploys</strong><span class="text-neutral-400"> - /command for actions and systemd on the VPS with tokens in .env</span></div>
+</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+<h3 class="font-semibold text-teal-400 mb-2">Next Module:</h3>
+<p class="text-neutral-300">5.2 - Intelligence: giving your AI assistant memory and deeper reasoning</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">
+            ← Back to Track
+          </a>
+<a class="flex-1 text-center px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-500 transition-colors" href="modulo-5-2.html">
+            Next Module →
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>From Zero to Deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

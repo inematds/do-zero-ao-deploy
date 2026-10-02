@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>SSH: Acceso seguro | De cero al deploy</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'purple' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'purple');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha purple) */
+    html:not(.dark) .text-purple-400 { color: #9333ea; }
+    html:not(.dark) .bg-purple-500\/20 { background-color: rgba(147, 51, 234, 0.12); }
+    html:not(.dark) .bg-purple-500\/10 { background-color: rgba(147, 51, 234, 0.08); }
+    html:not(.dark) .border-purple-500\/30 { border-color: rgba(147, 51, 234, 0.25); }
+    html:not(.dark) .hover\:bg-purple-500\/30:hover { background-color: rgba(147, 51, 234, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha3/modulo-3-2.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha3/modulo-3-2.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha3/modulo-3-2.html" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha3/modulo-3-2.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="../../../en/curso/trilha3/modulo-3-2.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">EN</a><a href="modulo-3-2.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">De cero al deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" href="../trilha1/index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal y Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" href="../trilha2/index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy moderno</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-purple-400 bg-purple-500/10" href="index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor propio</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" href="../trilha4/index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors" href="../trilha5/index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- BREADCRUMB -->
+<nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex items-center space-x-2 text-sm text-neutral-400">
+<a class="hover:text-purple-400" href="../../index.html">Inicio</a>
+<span>/</span>
+<a class="hover:text-purple-400" href="index.html">Ruta 3</a>
+<span>/</span>
+<span class="text-purple-400">Módulo 3.2</span>
+</div>
+</nav>
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MÓDULO 3.2</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">🔐 SSH: Acceso seguro</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Ya tienes tu VPS. Ahora necesitas acceder a él de forma segura, sin que nadie espíe tu conexión. SSH es el túnel blindado que conecta tu máquina con el servidor. Aquí crearás claves, configurarás el acceso y cerrarás la puerta a los intrusos.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">6</div>
+<div class="text-xs text-neutral-400">Temas</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">45</div>
+<div class="text-xs text-neutral-400">Minutos</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">Básico</div>
+<div class="text-xs text-neutral-400">Nivel</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">Práctico</div>
+<div class="text-xs text-neutral-400">Tipo</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="3-2" data-inema-track="3" id="conteudo">
+<!-- ============================================ -->
+<!-- TOPICO 1: O que e SSH                         -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-2#topico-1" id="topico-1">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold">Qué es SSH</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-2-t1-p1">
+<strong class="text-purple-400">SSH</strong> significa Secure Shell (terminal seguro). Es la forma estándar de abrir una terminal dentro de una computadora que está lejos de ti. En lugar de escribir comandos en tu máquina, escribes comandos que se ejecutan directamente en el servidor, como si estuvieras sentado frente a él. Y todo lo que pasa entre los dos extremos va cifrado, es decir, codificado, para que nadie en el camino pueda leerlo.
+      </p>
+<!-- SVG: Maquina local --chave--> servidor mediante túnel --&gt;
+      <div class="rounded-2xl border border-purple-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="Diagrama del túnel SSH: la máquina local envía comandos por un túnel cifrado, autenticado con una clave, hasta el servidor remoto" class="w-full h-auto" role="img" viewbox="0 0 800 240">
+<defs>
+<lineargradient id="m32-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#c084fc"></stop><stop offset="1" stop-color="#a855f7"></stop>
+</lineargradient>
+<filter height="180%" id="m32-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="m32-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#c084fc" opacity="0.12" r="1.3"></circle>
+</pattern>
+</defs>
+<rect fill="url(#m32-grid)" height="240" width="800" x="0" y="0"></rect>
+<!-- Maquina local -->
+<rect fill="#1a1230" height="100" rx="14" stroke="url(#m32-grad)" stroke-width="2" width="180" x="30" y="80"></rect>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="120" y="74">TU MÁQUINA</text>
+<circle cx="50" cy="100" fill="#f87171" r="4"></circle><circle cx="64" cy="100" fill="#fbbf24" r="4"></circle><circle cx="78" cy="100" fill="#c084fc" r="4"></circle>
+<text fill="#c084fc" font-family="monospace" font-size="12" x="48" y="135">$ ssh user@ip</text>
+<text fill="#9ca3af" font-family="monospace" font-size="11" x="48" y="158">terminal local</text>
+<!-- Tunel blindado -->
+<g filter="url(#m32-glow)">
+<rect fill="#1a1230" height="50" rx="25" stroke="#38bdf8" stroke-width="2" width="320" x="240" y="105"></rect>
+</g>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="12" font-weight="600" text-anchor="middle" x="400" y="98">TÚNEL CIFRADO</text>
+<circle class="wf-a" cx="300" cy="130" fill="#38bdf8" r="5"></circle>
+<circle class="wf-a" cx="370" cy="130" fill="#c084fc" r="5"></circle>
+<circle class="wf-a" cx="440" cy="130" fill="#38bdf8" r="5"></circle>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="400" y="135">datos mezclados</text>
+<path d="M520 130 L548 130" marker-end="url(#m32-arrow)" stroke="url(#m32-grad)" stroke-width="2.5"></path>
+<defs>
+<marker id="m32-arrow" markerheight="8" markerwidth="8" orient="auto" refx="6" refy="3">
+<path d="M0 0 L6 3 L0 6 Z" fill="#a855f7"></path>
+</marker>
+</defs>
+<!-- Chave (autenticacao) -->
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="22" text-anchor="middle" x="400" y="185">🔑</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="400" y="210">autenticación con clave</text>
+<!-- Servidor -->
+<g filter="url(#m32-glow)">
+<rect fill="#1a1230" height="100" rx="14" stroke="url(#m32-grad)" stroke-width="2" width="180" x="590" y="80"></rect>
+</g>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="680" y="74">SERVIDOR (VPS)</text>
+<rect fill="#374151" height="14" rx="3" width="140" x="610" y="100"></rect>
+<rect fill="#374151" height="14" rx="3" width="140" x="610" y="122"></rect>
+<rect fill="#374151" height="14" rx="3" width="140" x="610" y="144"></rect>
+<circle cx="620" cy="107" fill="#c084fc" r="3"></circle><circle cx="620" cy="129" fill="#38bdf8" r="3"></circle><circle cx="620" cy="151" fill="#c084fc" r="3"></circle>
+</svg>
+</div>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: un túnel secreto y blindado
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m3-2-t1-p2">Imagina que tu servidor está en una fortaleza distante. Para comunicarte con él, podrías gritar por la calle, pero cualquiera te oiría. SSH construye un <strong>túnel secreto y blindado</strong> que va directamente desde tu escritorio hasta el interior de la fortaleza. Todo lo que envías por este túnel:</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>Nadie de afuera puede leerlo</strong> (se cifra)</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>Nadie se hace pasar por ti</strong> (se requiere tu clave para acceder)</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>Tú mandas desde dentro</strong> (escribes aquí, se ejecuta allá)</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: ya usas SSH sin darte cuenta
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-2-t1-p3">Cuando haces <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-purple-400">git push</code> para GitHub usando una URL que empieza con <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">git@github.com</code>, por debajo de todo, es SSH quien realiza la conexión segura. El mismo protocolo que usarás para entrar a tu VPS ya mueve tu código todos los días.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 2: Gerar par de chaves                -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-2#topico-2" id="topico-2">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold">Generando tu par de claves</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-2-t2-p1">
+        SSH usa dos claves que se generan juntas: una <strong class="text-purple-400">publica</strong> es una <strong class="text-purple-400">privada</strong>. La pública la distribuyes entre los servidores a los que quieres acceder. La privada queda guardada en tu máquina y <strong class="text-purple-400">nunca, jamás, sal de ella</strong>. Tú tienes tu clave privada. Todo el mundo tiene tu clave pública, y eso está bien.
+      </p>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: candado y llave
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-2-t2-p2">La clave <strong>publica</strong> y es como un <strong>candado abierto</strong>: tú distribuyes copias a todo el mundo. Cualquiera puede cerrar una puerta con su candado. Pero solo la llave <strong>privada</strong> abre ese candado, y esa clave solo existe en tu bolsillo. Por eso, compartir la pública es seguro, y perder la privada es peligroso.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-purple-400 font-mono">ssh-keygen</code> - Crear el par de claves</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-2-t2-p3">Ejecuta este comando en la <strong>tu máquina</strong> (no en el servidor). El <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">-t ed25519</code> elige un tipo de clave moderno y seguro.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ ssh-keygen -t ed25519 -C "seu-email@exemplo.com"</p>
+<p class="text-neutral-300 mt-2">Generating public/private ed25519 key pair.</p>
+<p class="text-neutral-400"># ¿Dónde guardar? Presiona Enter para usar el valor predeterminado</p>
+<p class="text-neutral-300">Enter file in which to save the key (/home/voce/.ssh/id_ed25519):</p>
+<p class="text-neutral-400 mt-2"># Contraseña de la clave (opcional, pero recomendada). Puedes dejarla vacía</p>
+<p class="text-neutral-300">Enter passphrase (empty for no passphrase):</p>
+<p class="text-neutral-300">Enter same passphrase again:</p>
+<p class="text-neutral-300 mt-2">Your identification has been saved in /home/voce/.ssh/id_ed25519</p>
+<p class="text-neutral-300">Your public key has been saved in /home/voce/.ssh/id_ed25519.pub</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Mira los dos archivos creados</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ ls -l ~/.ssh</p>
+<p class="text-neutral-400"># -rw------- = solo tú lees y escribes (la privada)</p>
+<p class="text-neutral-300">-rw-------  1 voce voce  411 jun 17 10:00 id_ed25519</p>
+<p class="text-neutral-400"># .pub = la pública (se puede mostrar)</p>
+<p class="text-neutral-300">-rw-r--r--  1 voce voce  102 jun 17 10:00 id_ed25519.pub</p>
+<p class="text-neutral-400 mt-3"># Ver el contenido de la PUBLICA (esta puedes copiarla)</p>
+<p class="text-purple-400">$ cat ~/.ssh/id_ed25519.pub</p>
+<p class="text-neutral-300">ssh-ed25519 AAAAC3NzaC1lZDI1NTE5... seu-email@exemplo.com</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-6">
+<h4 class="font-bold text-purple-400 mb-4">✓ Qué HACER</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400">✓</span><span>Compartir solo el archivo <code class="font-mono text-sm">.pub</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">✓</span><span>Poner una passphrase en la clave privada</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">✓</span><span>Hacer una copia de seguridad de la clave privada en un lugar seguro</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Enviar la clave privada (<code class="font-mono text-sm">id_ed25519</code>) para nadie</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Subir la clave privada a GitHub o a una nube pública</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Pegar la clave privada en chats o correos electrónicos</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-2-t2-p4"><strong>Problema:</strong> Copiaste el archivo equivocado y el servidor rechaza la conexión. <br/><strong>Solución:</strong> Debes copiar el contenido del archivo que termina en <code class="font-mono text-sm text-red-400">.pub</code> (la clave pública). Si copiaste el archivo sin el <code class="font-mono text-sm">.pub</code>, guarda la clave privada, que nunca debe salir de tu máquina. Revisa siempre el <code class="font-mono text-sm">.pub</code> al final del nombre.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 3: Copiar a chave publica             -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-2#topico-3" id="topico-3">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold">Copiar la clave pública al servidor</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-2-t3-p1">
+        Tu clave pública debe estar en el servidor para que te reconozca. El servidor guarda las claves autorizadas en un archivo llamado <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-purple-400">~/.ssh/authorized_keys</code>. Cada vez que intentas entrar, comprueba si tu clave está en esta lista. Hay dos formas de agregarla: la fácil (<code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">ssh-copy-id</code>) y la manual.
+      </p>
+<!-- Timeline: processo de copia da chave -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Forma fácil: ssh-copy-id</h4>
+<p class="text-sm text-neutral-400 mb-3">Un solo comando copia tu clave pública y la coloca en el lugar correcto.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ ssh-copy-id usuario@192.168.0.10</p>
+<p class="text-neutral-400 mt-2"># Te pide la CONTRASEÑA del servidor (solo esta vez)</p>
+<p class="text-neutral-300">usuario@192.168.0.10's password:</p>
+<p class="text-neutral-300 mt-2">Number of key(s) added: 1</p>
+<p class="text-neutral-300">Now try logging into the machine with: "ssh usuario@192.168.0.10"</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Forma manual: authorized_keys</h4>
+<p class="text-sm text-neutral-400 mb-3">Si el <code class="font-mono text-xs">ssh-copy-id</code> no existe (algo común en Windows), hazlo manualmente. Primero copia tu clave pública y luego pégala en el servidor.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># En TU máquina, mira la clave pública</p>
+<p class="text-purple-400">$ cat ~/.ssh/id_ed25519.pub</p>
+<p class="text-neutral-300">ssh-ed25519 AAAAC3Nza... voce@exemplo.com</p>
+<p class="text-neutral-400 mt-3"># Entra al servidor y pégala en la lista de autorizadas</p>
+<p class="text-purple-400">$ ssh usuario@192.168.0.10</p>
+<p class="text-purple-400">$ mkdir -p ~/.ssh &amp;&amp; chmod 700 ~/.ssh</p>
+<p class="text-purple-400">$ echo "ssh-ed25519 AAAAC3Nza... tú@ejemplo.com" &gt;&gt; ~/.ssh/authorized_keys</p>
+<p class="text-purple-400">$ chmod 600 ~/.ssh/authorized_keys</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Prueba el acceso con clave</h4>
+<p class="text-sm text-neutral-400 mb-3">Ahora intenta entrar de nuevo. Si la clave funcionó, <strong>no</strong> ya no pide la contraseña.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ ssh usuario@192.168.0.10</p>
+<p class="text-neutral-400"># ¡Si no pide contraseña, la clave funciona!</p>
+<p class="text-neutral-300">Welcome to Ubuntu 22.04 LTS</p>
+<p class="text-purple-400">usuario@servidor:~$</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-2-t3-p2"><strong>Problema:</strong> Aunque la clave esté copiada, el servidor sigue pidiendo la contraseña. <br/><strong>Solución:</strong> Casi siempre son permisos incorrectos. SSH ignora la carpeta <code class="font-mono text-sm text-red-400">.ssh</code> si está "demasiado abierta". Ejecútalo en el servidor: <code class="font-mono text-sm text-red-400">chmod 700 ~/.ssh</code> e <code class="font-mono text-sm text-red-400">chmod 600 ~/.ssh/authorized_keys</code>. Esto cierra el archivo para que solo tú puedas verlo.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 4: Conectar via ssh                   -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-2#topico-4" id="topico-4">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold">Conectar: ssh usuario@ip</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-2-t4-p1">
+        El comando para entrar es sencillo: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-purple-400">ssh usuario@ip</code>. O <strong class="text-purple-400">usuario</strong> y es la cuenta dentro del servidor (generalmente <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">root</code> o un nombre que creaste) y el <strong class="text-purple-400">IP</strong> y es la dirección del VPS que anotaste en el módulo anterior. En el primer acceso, SSH te mostrará la "huella digital" (fingerprint) del servidor y te preguntará si confías en él.
+      </p>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Anatomía del comando</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ ssh root@203.0.113.45</p>
+<p class="text-neutral-400 mt-2">  ↑   ↑     ↑</p>
+<p class="text-neutral-400">  cmd usuario  ip del servidor</p>
+<p class="text-neutral-400 mt-3"># Para usar un puerto distinto del predeterminado (22)</p>
+<p class="text-purple-400">$ ssh -p 2222 root@203.0.113.45</p>
+</div>
+</div>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver en el primer acceso
+        </h3>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ ssh root@203.0.113.45</p>
+<p class="text-neutral-300">The authenticity of host '203.0.113.45' can't be established.</p>
+<p class="text-neutral-300">ED25519 key fingerprint is SHA256:a1b2c3d4...</p>
+<p class="text-neutral-300">Are you sure you want to continue connecting (yes/no)?</p>
+<p class="text-purple-400 mt-2">yes</p>
+<p class="text-neutral-300 mt-2">Warning: Permanently added '203.0.113.45' to known hosts.</p>
+<p class="text-neutral-300 mt-2">Welcome to Ubuntu 22.04 LTS</p>
+<p class="text-purple-400">root@servidor:~$</p>
+</div>
+<p class="text-neutral-300 text-sm mt-4" data-inema-block="m3-2-t4-p2">Esta <strong class="text-blue-400">fingerprint</strong> y es la identidad del servidor. Escribes <strong class="text-blue-400">yes</strong> una sola vez. SSH guarda esa identidad en el archivo <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">~/.ssh/known_hosts</code> y, las próximas veces, ya no pregunta.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: para salir, escribe exit
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-2-t4-p3">Mientras estés conectado, cada comando se ejecuta en el servidor, no en tu máquina. Para cerrar la sesión y volver a tu terminal local, solo tienes que escribir <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">exit</code> y presiona Enter. El prompt vuelve a mostrar el nombre de tu máquina.</p>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-2-t4-p4"><strong>Problema:</strong> <code class="font-mono text-sm text-red-400">Connection refused</code> o <code class="font-mono text-sm text-red-400">Connection timed out</code>. <br/><strong>Solución:</strong> Verifica tres cosas. (1) ¿La IP es correcta? Compárala con el panel del proveedor. (2) ¿El servidor está encendido? (3) ¿El puerto 22 está habilitado en el firewall del VPS? "Refused" suele indicar que el servicio está detenido; "timed out" suele indicar que el firewall está bloqueando. Ajustarás el firewall en el próximo módulo.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 5: Alias e config ~/.ssh/config       -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-2#topico-5" id="topico-5">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold">Atajos con ~/.ssh/config</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-2-t5-p1">
+        Escribir <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-purple-400">ssh root@203.0.113.45 -p 2222</code> hacerlo cada vez cansa y es fácil equivocarse. El archivo <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-purple-400">~/.ssh/config</code> te permite dar un <strong class="text-purple-400">apodo</strong> para cada servidor. Después, ingresas un nombre corto, como <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">ssh meuvps</code>, y SSH completa el resto automáticamente.
+      </p>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: los contactos del celular
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-2-t5-p2">No memorizas el número de teléfono de cada amigo: lo guardas en tus contactos con un nombre y llamas por el nombre. El <code class="font-mono text-sm">~/.ssh/config</code> y es tu agenda de servidores. En vez de memorizar la IP, el usuario y el puerto, guardas todo con un apodo y te "conectas" usando ese apodo.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Crear el archivo de config</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-2-t5-p3">Abre (o crea) el archivo en tu máquina con nano y escribe un bloque por servidor:</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ nano ~/.ssh/config</p>
+<p class="text-neutral-400 mt-2"># Escribe esto dentro de nano:</p>
+<p class="text-purple-400 mt-1">Host meuvps</p>
+<p class="text-neutral-300">  HostName 203.0.113.45</p>
+<p class="text-neutral-300">  User root</p>
+<p class="text-neutral-300">  Port 2222</p>
+<p class="text-neutral-300">  IdentityFile ~/.ssh/id_ed25519</p>
+</div>
+<p class="text-neutral-400 text-sm mt-3">Guarda con <strong>Ctrl+O</strong>, Enter, y sal con <strong>Ctrl+X</strong>.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Qué significa cada línea</h3>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><code class="font-mono text-sm text-purple-400">Host</code> - el alias que vas a escribir (por ejemplo: <code class="font-mono text-sm">meuvps</code>)</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><code class="font-mono text-sm text-purple-400">HostName</code> - la IP o el dominio real del servidor</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><code class="font-mono text-sm text-purple-400">User</code> - el usuario con el que inicias sesión</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><code class="font-mono text-sm text-purple-400">Port</code> - el puerto de SSH (solo si es diferente de 22)</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><code class="font-mono text-sm text-purple-400">IdentityFile</code> - qué clave privada usar en esta conexión</span></li>
+</ul>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Antes y después</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Antes: comando largo y fácil de equivocarse</p>
+<p class="text-neutral-300">$ ssh -p 2222 -i ~/.ssh/id_ed25519 root@203.0.113.45</p>
+<p class="text-neutral-400 mt-3"># Después: solo el apodo</p>
+<p class="text-purple-400">$ ssh meuvps</p>
+<p class="text-purple-400">root@servidor:~$</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-6">
+<h4 class="font-bold text-purple-400 mb-4">✓ Qué HACER</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400">✓</span><span>Usar alias claros (<code class="font-mono text-sm">prod</code>, <code class="font-mono text-sm">teste</code>)</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">✓</span><span>Indenta las líneas dentro de cada <code class="font-mono text-sm">Host</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">✓</span><span>Apuntar la <code class="font-mono text-sm">IdentityFile</code> correcta por servidor</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Escribir el puerto en la línea del <code class="font-mono text-sm">Host</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Apuntar la <code class="font-mono text-sm">IdentityFile</code> para la clave <code class="font-mono text-sm">.pub</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Dejar el archivo legible para otros usuarios</span></li>
+</ul>
+</div>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 6: Desabilitar acesso por senha       -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-2#topico-6" id="topico-6">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold">Deshabilitando el acceso con contraseña</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-2-t6-p1">
+        Mientras el servidor acepte contraseñas, los bots de internet intentarán adivinar la tuya miles de veces al día. Como ahora ya accedes con una clave, puedes <strong class="text-purple-400">cerrar definitivamente la puerta de la contraseña</strong>. Sin aceptar contraseñas, estos ataques dejan de funcionar. Solo puede entrar quien tenga la clave privada correcta, es decir, tú.
+      </p>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Cuidado: prueba la clave ANTES
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-2-t6-p2">Esta es la parte más peligrosa del módulo. Si desactivas la contraseña <strong>sin</strong> asegurarte de que la clave funcione; podrías quedarte fuera de tu propio servidor. <strong>Regla de oro:</strong> abre una segunda ventana de la terminal, confirma que <code class="font-mono text-sm text-red-400">ssh meuvps</code> entra sin pedir contraseña y solo después modifica la configuración. Mantén abierta la sesión actual como medida de seguridad.</p>
+</div>
+<!-- Timeline: passo a passo seguro -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Abre el archivo de configuración de SSH</h4>
+<p class="text-sm text-neutral-400 mb-3">En el servidor, edita el archivo principal con permisos de administrador (sudo).</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ sudo nano /etc/ssh/sshd_config</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Cambia la línea PasswordAuthentication</h4>
+<p class="text-sm text-neutral-400 mb-3">Busca esta línea (puede estar con <code class="font-mono text-xs">#</code> al frente, que es un comentario) y déjalo así:</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Antes (aceptaba contraseña)</p>
+<p class="text-neutral-300">#PasswordAuthentication yes</p>
+<p class="text-neutral-400 mt-3"># Después (sin el # y con "no")</p>
+<p class="text-purple-400">PasswordAuthentication no</p>
+</div>
+<p class="text-neutral-400 text-sm mt-3">Guarda con Ctrl+O, Enter y sal con Ctrl+X.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Reinicia el servicio SSH</h4>
+<p class="text-sm text-neutral-400 mb-3">El cambio solo se aplica después de reiniciar el <code class="font-mono text-xs">sshd</code>. Tu sesión actual sigue abierta.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ sudo systemctl restart ssh</p>
+<p class="text-neutral-400 mt-2"># En algunos sistemas el servicio se llama sshd</p>
+<p class="text-purple-400">$ sudo systemctl restart sshd</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">4</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Confirma en una ventana nueva</h4>
+<p class="text-sm text-neutral-400 mb-3">Sin cerrar la sesión anterior, abre otra e inicia sesión de nuevo. Debe funcionar con la clave.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ ssh meuvps</p>
+<p class="text-neutral-400"># ¡Pudiste entrar sin que te pidiera contraseña = todo bien!</p>
+<p class="text-purple-400">root@servidor:~$</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué cambia para un atacante
+        </h3>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Intento de alguien que no tiene tu clave:</p>
+<p class="text-neutral-300">$ ssh root@203.0.113.45</p>
+<p class="text-neutral-300">root@203.0.113.45: Permission denied (publickey).</p>
+</div>
+<p class="text-neutral-300 text-sm mt-4" data-inema-block="m3-2-t6-p3">Observa el <strong class="text-blue-400">publickey</strong>: el servidor indica que solo acepta claves. Sin contraseña que adivinar, el ataque automático no tiene por dónde intentarlo.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: guarda un plan B
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-2-t6-p4">Casi todos los proveedores de VPS ofrecen un <strong>consola web</strong> (a veces llamado «VNC» o «consola serial») en el panel de control. Si algún día pierdes el acceso por SSH, esa consola te permite entrar al servidor desde el navegador, sin depender de SSH. Averigua dónde está ese botón antes de necesitarlo.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- RESUMO -->
+<section class="mb-12">
+<div class="bg-gradient-to-br from-purple-900/40 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-8">
+<h2 class="text-2xl font-bold mb-6 flex items-center">
+<span class="mr-3">📚</span> Resumen del módulo
+        </h2>
+<div class="space-y-4 mb-8">
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">SSH es un túnel blindado</strong><span class="text-neutral-400"> - conecta tu máquina al servidor con todo cifrado</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">ssh-keygen crea el par de claves</strong><span class="text-neutral-400"> - al publicar, cualquiera puede verlo; lo privado nunca sale de tu máquina</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">ssh-copy-id o authorized_keys</strong><span class="text-neutral-400"> - coloca tu clave pública en el servidor</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">ssh usuario@ip e ~/.ssh/config</strong><span class="text-neutral-400"> - conecta y crea alias cortos para cada servidor</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">PasswordAuthentication no</strong><span class="text-neutral-400"> - cierra la puerta de la contraseña y bloquea ataques (¡prueba la clave antes!)</span></div>
+</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+<h3 class="font-semibold text-purple-400 mb-2">Siguiente módulo:</h3>
+<p class="text-neutral-300">3.3 - Firewall: controlar qué puertos quedan abiertos y cerrar el servidor al mundo</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">
+            ← Volver a la ruta
+          </a>
+<a class="flex-1 text-center px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-500 transition-colors" href="modulo-3-3.html">
+            Siguiente módulo →
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>De cero al deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

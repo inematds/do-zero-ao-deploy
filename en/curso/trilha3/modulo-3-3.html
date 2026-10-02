@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>Firewall and Protection | From Zero to Deploy</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'purple' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'purple');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha purple) */
+    html:not(.dark) .text-purple-400 { color: #9333ea; }
+    html:not(.dark) .bg-purple-500\/20 { background-color: rgba(147, 51, 234, 0.12); }
+    html:not(.dark) .bg-purple-500\/10 { background-color: rgba(147, 51, 234, 0.08); }
+    html:not(.dark) .border-purple-500\/30 { border-color: rgba(147, 51, 234, 0.25); }
+    html:not(.dark) .hover\:bg-purple-500\/30:hover { background-color: rgba(147, 51, 234, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha3/modulo-3-3.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha3/modulo-3-3.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha3/modulo-3-3.html" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha3/modulo-3-3.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="modulo-3-3.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">EN</a><a href="../../../es/curso/trilha3/modulo-3-3.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">From Zero to Deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" href="../trilha1/index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal &amp; Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" href="../trilha2/index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Modern Deployment</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-purple-400 bg-purple-500/10" href="index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Your Own Server</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" href="../trilha4/index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors" href="../trilha5/index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">AI</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- BREADCRUMB -->
+<nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex items-center space-x-2 text-sm text-neutral-400">
+<a class="hover:text-purple-400" href="../../index.html">Start</a>
+<span>/</span>
+<a class="hover:text-purple-400" href="index.html">Track 3</a>
+<span>/</span>
+<span class="text-purple-400">Module 3.3</span>
+</div>
+</nav>
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MODULE 3.3</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">🛡️ Firewall and Protection</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Your server is on the internet, exposed to thousands of hacking attempts every day. Here you'll learn to put a doorman in front of it: open only the right ports, ban anyone who keeps entering the wrong password, and turn on the green HTTPS padlock.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">6</div>
+<div class="text-xs text-neutral-400">Topics</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">45</div>
+<div class="text-xs text-neutral-400">Minutes</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">Basic</div>
+<div class="text-xs text-neutral-400">Level</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">Hands-on</div>
+<div class="text-xs text-neutral-400">Type</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="3-3" data-inema-track="3" id="conteudo">
+<!-- ============================================ -->
+<!-- TOPICO 1: O que e firewall                   -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-3#topico-1" id="topico-1">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold">What Is a Firewall</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-3-t1-p1">
+        A firewall is a <strong class="text-purple-400">input and output filter</strong> of your server. Every connection trying to reach it passes through this filter first. The firewall checks where the connection wants to go (which port) and decides whether to let it through or block it. Without a firewall, every open port on your server is accessible to the whole world.
+      </p>
+<!-- SVG: Trafego -> Firewall -> Servidor -->
+<div class="rounded-2xl border border-purple-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="Diagram of internet traffic passing through a firewall that opens ports 22, 80, and 443 and blocks the others before reaching the server" class="w-full h-auto" role="img" viewbox="0 0 800 230">
+<defs>
+<lineargradient id="m33-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#c084fc"></stop><stop offset="1" stop-color="#a855f7"></stop>
+</lineargradient>
+<filter height="180%" id="m33-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="m33-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#c084fc" opacity="0.12" r="1.3"></circle>
+</pattern>
+</defs>
+<rect fill="url(#m33-grid)" height="230" width="800" x="0" y="0"></rect>
+<!-- Internet / trafego -->
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="95" y="26">INTERNET</text>
+<rect fill="#1a1a2e" height="150" rx="12" stroke="#9ca3af" stroke-width="1.5" width="130" x="30" y="40"></rect>
+<text class="wf-a" fill="#38bdf8" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="95" y="72">visitor :443</text>
+<text class="wf-a" fill="#38bdf8" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="95" y="98">admin :22</text>
+<text class="wf-a" fill="#f87171" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="95" y="124">intruder :3306</text>
+<text fill="#f87171" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="95" y="150">bot :23</text>
+<text fill="#f87171" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="95" y="176">scanner :8080</text>
+<!-- Setas para o firewall -->
+<path d="M165 115 L235 115" marker-end="url(#m33-arrow)" stroke="#9ca3af" stroke-width="1.5"></path>
+<defs>
+<marker id="m33-arrow" markerheight="8" markerwidth="8" orient="auto" refx="6" refy="3">
+<path d="M0 0 L6 3 L0 6 Z" fill="#9ca3af"></path>
+</marker>
+</defs>
+<!-- Firewall -->
+<g filter="url(#m33-glow)">
+<rect fill="#1a1230" height="170" rx="14" stroke="url(#m33-grad)" stroke-width="2" width="200" x="300" y="30"></rect>
+</g>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="400" y="26">FIREWALL</text>
+<!-- Portas abertas -->
+<rect fill="#1a1230" height="26" rx="6" stroke="#c084fc" stroke-width="1.5" width="150" x="325" y="48"></rect>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="12" x="338" y="65">22</text>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="12" text-anchor="end" x="465" y="65">open ✓</text>
+<rect fill="#1a1230" height="26" rx="6" stroke="#c084fc" stroke-width="1.5" width="150" x="325" y="80"></rect>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="12" x="338" y="97">80</text>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="12" text-anchor="end" x="465" y="97">open ✓</text>
+<rect fill="#1a1230" height="26" rx="6" stroke="#c084fc" stroke-width="1.5" width="150" x="325" y="112"></rect>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="12" x="338" y="129">443</text>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="12" text-anchor="end" x="465" y="129">open ✓</text>
+<!-- Portas fechadas -->
+<rect fill="#2a1414" height="26" rx="6" stroke="#f87171" stroke-width="1.5" width="150" x="325" y="144"></rect>
+<text fill="#f87171" font-family="Inter,sans-serif" font-size="12" x="338" y="161">rest</text>
+<text fill="#f87171" font-family="Inter,sans-serif" font-size="12" text-anchor="end" x="465" y="161">closed ✗</text>
+<!-- Setas filtradas -->
+<path d="M500 100 L590 100" marker-end="url(#m33-arrow-ok)" stroke="#34d399" stroke-width="2"></path>
+<defs>
+<marker id="m33-arrow-ok" markerheight="8" markerwidth="8" orient="auto" refx="6" refy="3">
+<path d="M0 0 L6 3 L0 6 Z" fill="#34d399"></path>
+</marker>
+</defs>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="545" y="92">only what’s allowed</text>
+<!-- Servidor -->
+<rect fill="#0e2018" height="120" rx="14" stroke="url(#m33-grad)" stroke-width="2" width="170" x="600" y="55"></rect>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="685" y="48">YOUR SERVER</text>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="26" text-anchor="middle" x="685" y="110">🛡️</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="685" y="142">protected</text>
+</svg>
+</div>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogy: The Building’s Doorman
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m3-3-t1-p2">Imagine a building with a doorman at the entrance. Everyone who wants to come in stops at the front desk. The doorman has a list: anyone on the list gets in; anyone who isn’t stays outside, no matter how much they insist. The firewall is your server’s doorman.</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>Visitor on the list (port 443):</strong> goes in to view the site</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>You, the owner (port 22):</strong> goes in to manage</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>Strange without permission:</strong> blocked at the gate</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> By default, the attack has already started
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-3-t1-p3">As soon as you put a server online, automated bots start scanning its ports within minutes, looking for an open one to break into. This is normal and happens to every server. The firewall is the first and most important line of defense against this constant noise.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 2: UFW permitir/negar portas          -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-3#topico-2" id="topico-2">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold">UFW: Allow and Deny Ports</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-3-t2-p1">
+        On Linux, the simplest way to set up a firewall is <strong class="text-purple-400">UFW</strong> (Uncomplicated Firewall, or "easy-to-use firewall"). It’s a user-friendly layer on top of the system firewall. With short commands in clear English, you tell it which ports to open and which to close.
+      </p>
+<!-- Comandos basicos -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-purple-400 font-mono">ufw allow</code> e <code class="text-purple-400 font-mono">ufw deny</code></h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-3-t2-p2">The commands are almost like sentences: "ufw allow 22" = "firewall, allow port 22".</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Allow a port (let traffic through)</p>
+<p class="text-purple-400">$ sudo ufw allow 22</p>
+<p class="text-neutral-300">Rules updated</p>
+<p class="text-neutral-300">Rules updated (v6)</p>
+<p class="text-neutral-400 mt-3"># Allow by service name</p>
+<p class="text-purple-400">$ sudo ufw allow OpenSSH</p>
+<p class="text-neutral-400 mt-3"># Deny a port (block it)</p>
+<p class="text-purple-400">$ sudo ufw deny 3306</p>
+<p class="text-neutral-300">Rules updated</p>
+</div>
+</div>
+<!-- Ligar e checar status -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-purple-400 font-mono">ufw enable</code> e <code class="text-purple-400 font-mono">ufw status</code></h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-3-t2-p3">Defining the rules isn’t enough: you need to turn on the firewall. And always check the status to see what’s in effect.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Enable the firewall</p>
+<p class="text-purple-400">$ sudo ufw enable</p>
+<p class="text-neutral-300">Firewall is active and enabled on system startup</p>
+<p class="text-neutral-400 mt-3"># View the active rules</p>
+<p class="text-purple-400">$ sudo ufw status</p>
+<p class="text-neutral-300">Status: active</p>
+<p class="text-neutral-300"> </p>
+<p class="text-neutral-300">To         Action      From</p>
+<p class="text-neutral-300">--         ------      ----</p>
+<p class="text-neutral-300">22         ALLOW       Anywhere</p>
+<p class="text-neutral-300">80         ALLOW       Anywhere</p>
+<p class="text-neutral-300">443        ALLOW       Anywhere</p>
+<p class="text-neutral-400 mt-3"># Turn it off (if needed)</p>
+<p class="text-purple-400">$ sudo ufw disable</p>
+</div>
+</div>
+<!-- Erro Comum: trancar a si mesmo -->
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Common Error
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-3-t2-p4"><strong>Problem:</strong> I ran <code class="font-mono text-sm text-red-400">sudo ufw enable</code> and I was disconnected from the server forever. <br/><strong>Solution:</strong> This happens when you enable the firewall WITHOUT allowing port 22 (SSH) first. Since the firewall blocks everything that hasn't been allowed, it cuts off your own connection. <strong>Always run <code class="font-mono text-sm text-red-400">sudo ufw allow 22</code> BEFORE <code class="font-mono text-sm text-red-400">enable</code>.</strong> If you’ve locked yourself out, use your provider’s web console (VPS) to log in and open the port.</p>
+</div>
+<!-- Grid Fazer/Evitar #1 -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ What TO DO</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Open Port 22 (SSH) BEFORE running <code class="font-mono text-sm">enable</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Check with <code class="font-mono text-sm">ufw status</code> after each change</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Open only the ports you actually use</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ What NOT to do</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Run <code class="font-mono text-sm">enable</code> without enabling SSH first</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Open the database port (3306) to the internet</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Leave everything open “to deal with later”</span></li>
+</ul>
+</div>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 3: Portas essenciais 22, 80, 443      -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-3#topico-3" id="topico-3">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold">Essential Ports: 22, 80, and 443</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-3-t3-p1">
+        A port is like a <strong class="text-purple-400">a building's numbered entrance</strong>: each service lives behind a specific door. For a simple web server, you only need three open ports. Knowing what each one does keeps you from opening too many ports (dangerous) or too few (website down).
+      </p>
+<!-- Tabela visual das 3 portas -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+<div class="bg-dark-800 rounded-xl p-5 border border-dark-600 text-center">
+<div class="text-3xl font-bold text-purple-400 mb-1">22</div>
+<div class="text-sm font-semibold text-white mb-2">SSH</div>
+<p class="text-xs text-neutral-400">Your administration door. This is how you access the server through the terminal.</p>
+</div>
+<div class="bg-dark-800 rounded-xl p-5 border border-dark-600 text-center">
+<div class="text-3xl font-bold text-purple-400 mb-1">80</div>
+<div class="text-sm font-semibold text-white mb-2">HTTP</div>
+<p class="text-xs text-neutral-400">The gateway to sites without a lock. It usually just redirects visitors to HTTPS.</p>
+</div>
+<div class="bg-dark-800 rounded-xl p-5 border border-dark-600 text-center">
+<div class="text-3xl font-bold text-purple-400 mb-1">443</div>
+<div class="text-sm font-semibold text-white mb-2">HTTPS</div>
+<p class="text-xs text-neutral-400">The gateway to sites with a green lock. This is where your truly secure site will respond.</p>
+</div>
+</div>
+<!-- Receita de liberacao -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Opening All Three at Once</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># SSH first (so you don't lock yourself out)</p>
+<p class="text-purple-400">$ sudo ufw allow 22</p>
+<p class="text-neutral-400 mt-3"># Site without a lock (redirects to the secure one)</p>
+<p class="text-purple-400">$ sudo ufw allow 80</p>
+<p class="text-neutral-400 mt-3"># Secure site (HTTPS)</p>
+<p class="text-purple-400">$ sudo ufw allow 443</p>
+<p class="text-neutral-400 mt-3"># Now turn on the firewall</p>
+<p class="text-purple-400">$ sudo ufw enable</p>
+<p class="text-neutral-300">Firewall is active and enabled on system startup</p>
+</div>
+</div>
+<!-- O que voce vai ver na tela (blue) -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> What you’ll see on the screen
+        </h3>
+<p class="text-neutral-300 text-sm mb-3" data-inema-block="m3-3-t3-p2">After allowing it and turning it on, the <code class="font-mono">ufw status numbered</code> shows the numbered list of your rules. Each line is an open port:</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ sudo ufw status numbered</p>
+<p class="text-neutral-300">Status: active</p>
+<p class="text-neutral-300"> </p>
+<p class="text-neutral-300">     To             Action      From</p>
+<p class="text-neutral-300">     --             ------      ----</p>
+<p class="text-neutral-300">[ 1] 22             ALLOW IN    Anywhere</p>
+<p class="text-neutral-300">[ 2] 80             ALLOW IN    Anywhere</p>
+<p class="text-neutral-300">[ 3] 443            ALLOW IN    Anywhere</p>
+</div>
+<p class="text-neutral-300 text-sm mt-4" data-inema-block="m3-3-t3-p3">The numbers in brackets let you remove a rule later: <code class="font-mono">sudo ufw delete 2</code> delete rule number 2.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Tip: don't open ports "just in case"
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-3-t3-p4">Every open port is one more port an attacker can probe. If you don't know what a port is for, DO NOT open it. Databases (3306, 5432), for example, should stay closed to the internet and be accessed only from within the server itself.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 4: Fail2ban                           -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-3#topico-4" id="topico-4">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold">Fail2ban: Blocking Intrusion Attempts</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-3-t4-p1">
+        The firewall opens port 22 so you can administer the server, but it’s also visible to attackers who try to guess your password thousands of times. The <strong class="text-purple-400">Fail2ban</strong> solves this: it watches failed attempts and, after a few in a row, <strong class="text-purple-400">ban the attacker's IP</strong> for a while.
+      </p>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogy: The Guard Who Memorizes Faces
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-3-t4-p2">Imagine a bouncer at a club’s door. If the same person tries to get in with a fake ID five times in a row, he writes down their face and bans them from coming near for an hour. Fail2ban does this with IPs: get the password wrong too many times, and you’re temporarily banned.</p>
+</div>
+<!-- Instalacao e timeline -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Installing and Enabling</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Install</p>
+<p class="text-purple-400">$ sudo apt install fail2ban -y</p>
+<p class="text-neutral-400 mt-3"># Enable it to start with the server</p>
+<p class="text-purple-400">$ sudo systemctl enable fail2ban</p>
+<p class="text-purple-400">$ sudo systemctl start fail2ban</p>
+<p class="text-neutral-400 mt-3"># View the currently banned IPs</p>
+<p class="text-purple-400">$ sudo fail2ban-client status sshd</p>
+<p class="text-neutral-300">Status for the jail: sshd</p>
+<p class="text-neutral-300">|- Currently failed: 2</p>
+<p class="text-neutral-300">|- Total failed:     148</p>
+<p class="text-neutral-300">`- Banned IP list:   203.0.113.45  198.51.100.7</p>
+</div>
+</div>
+<!-- Timeline: como o ban acontece -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Attacker tries to break in</h4>
+<p class="text-sm text-neutral-400">A bot tries to log in to SSH using random passwords: admin, 123456, root...</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Fail2ban counts the failed attempts</h4>
+<p class="text-sm text-neutral-400">Every incorrect password is recorded in the log. Fail2ban monitors that log.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Exceed the limit and get banned</h4>
+<p class="text-sm text-neutral-400">After 5 failures (default), the IP is blocked by the firewall for 10 minutes. Try again? The ban lasts longer.</p>
+</div>
+</div>
+</div>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Where to adjust the limits
+        </h3>
+<p class="text-neutral-300 text-sm mb-3" data-inema-block="m3-3-t4-p3">The configuration is in the file <code class="font-mono">/etc/fail2ban/jail.local</code>. The three most common settings:</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># how long the IP stays banned (10 min)</p>
+<p class="text-purple-400">bantime = 10m</p>
+<p class="text-neutral-400 mt-2"># window in which failures are counted</p>
+<p class="text-purple-400">findtime = 10m</p>
+<p class="text-neutral-400 mt-2"># how many failures before the ban</p>
+<p class="text-purple-400">maxretry = 5</p>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Common Error
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-3-t4-p4"><strong>Problem:</strong> "I entered my own password incorrectly a few times, and now I’m banned from my server!" <br/><strong>Solution:</strong> Fail2ban can't tell you apart from an intruder. If that happens, log in through your provider's web console (VPS) and run <code class="font-mono text-sm text-red-400">sudo fail2ban-client unban SEU_IP</code>. To avoid this, use SSH keys (module 3.2) instead of a password: that way, you never get it wrong.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 5: SSL com Let's Encrypt              -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-3#topico-5" id="topico-5">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold">SSL Certificate with Let's Encrypt</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-3-t5-p1">
+        The green lock in the browser (HTTPS) means the connection between the visitor and your site is <strong class="text-purple-400">encrypted</strong>: no one in between can read the data. To get this lock, you need an SSL certificate. The <strong class="text-purple-400">Let's Encrypt</strong> issues these certificates for free, and <strong class="text-purple-400">certbot</strong> does all the work for you.
+      </p>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogy: The Sealed Envelope
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-3-t5-p2">HTTP is a postcard: any mail carrier along the way can read what's written. HTTPS is a letter inside a sealed envelope: only the recipient can open it. The SSL certificate is what ensures the seal, and the green padlock is proof that the seal is intact.</p>
+</div>
+<!-- certbot passos -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Installing certbot and Issuing the Certificate</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Install certbot (example with Nginx)</p>
+<p class="text-purple-400">$ sudo apt install certbot python3-certbot-nginx -y</p>
+<p class="text-neutral-400 mt-3"># Issue the certificate for your domain</p>
+<p class="text-purple-400">$ sudo certbot --nginx -d meusite.com -d www.meusite.com</p>
+<p class="text-neutral-300 mt-2">Requesting a certificate for meusite.com</p>
+<p class="text-neutral-300">Successfully received certificate.</p>
+<p class="text-neutral-300">Deploying certificate</p>
+<p class="text-neutral-300">Congratulations! You have successfully enabled HTTPS</p>
+</div>
+<p class="text-neutral-400 text-sm mt-3">Certbot edits the Nginx configuration automatically and enables the redirect from HTTP to HTTPS.</p>
+</div>
+<!-- Renovacao automatica -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> The certificate expires in 90 days (and renews itself automatically)
+        </h3>
+<p class="text-neutral-300 text-sm mb-3" data-inema-block="m3-3-t5-p3">Let's Encrypt certificates are valid for 90 days. But certbot already schedules automatic renewal. You can test whether renewal works without waiting:</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ sudo certbot renew --dry-run</p>
+<p class="text-neutral-300">Processing /etc/letsencrypt/renewal/meusite.com.conf</p>
+<p class="text-neutral-300">Congratulations, all simulated renewals succeeded</p>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Common Error
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-3-t5-p4"><strong>Problem:</strong> Certbot fails with "Could not bind to port 80" or "connection refused". <br/><strong>Solution:</strong> Let's Encrypt needs to access your server through ports 80 and 443 to verify that the domain is yours. Confirm that <code class="font-mono text-sm text-red-400">sudo ufw allow 80</code> e <code class="font-mono text-sm text-red-400">sudo ufw allow 443</code> have already been run, and that the domain points (DNS) to the server's IP address.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 6: Checklist de seguranca             -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-3#topico-6" id="topico-6">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold">Server Security Checklist</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-3-t6-p1">
+        Putting it all together: a well-protected server follows a few basic steps that cover 90% of automated attacks. Use this checklist <strong class="text-purple-400">every time you bring up a new server</strong>. There are only a few commands, and they make a huge difference.
+      </p>
+<!-- Timeline / checklist de passos -->
+<div class="space-y-4 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3"><span class="text-purple-400 font-mono mr-2">1.</span>Update the system</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ sudo apt update &amp;&amp; sudo apt upgrade -y</p>
+</div>
+<p class="text-neutral-400 text-sm mt-2">Outdated packages are the most common way in.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3"><span class="text-purple-400 font-mono mr-2">2.</span>Use an SSH key and disable password login</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># in /etc/ssh/sshd_config</p>
+<p class="text-purple-400">PasswordAuthentication no</p>
+<p class="text-purple-400">PermitRootLogin no</p>
+</div>
+<p class="text-neutral-400 text-sm mt-2">With no password to guess, the brute-force attack dies.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3"><span class="text-purple-400 font-mono mr-2">3.</span>Enable the Firewall with Only the Essentials</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ sudo ufw allow 22</p>
+<p class="text-purple-400">$ sudo ufw allow 80</p>
+<p class="text-purple-400">$ sudo ufw allow 443</p>
+<p class="text-purple-400">$ sudo ufw enable</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3"><span class="text-purple-400 font-mono mr-2">4.</span>Install Fail2ban</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ sudo apt install fail2ban -y</p>
+<p class="text-purple-400">$ sudo systemctl enable fail2ban</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3"><span class="text-purple-400 font-mono mr-2">5.</span>Enable HTTPS</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ sudo certbot --nginx -d meusite.com</p>
+</div>
+</div>
+</div>
+<!-- Grid Fazer/Evitar #2 -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ Safe Habits</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Update the system regularly</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Log in only with an SSH key, never a password</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Check <code class="font-mono text-sm">ufw status</code> and check the logs from time to time</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Create a regular user and don't use root day to day</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Risks to avoid</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Log in as root directly over the internet</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Use short or repeated passwords</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Leave ports open “for testing and forget about them”</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Serve the site over HTTP only, without the padlock</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">🏆</span> Your server now has a doorman
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-3-t6-p2">With a firewall, Fail2ban, and HTTPS, you're already ahead of most servers on the internet. Security isn't a single button: it's a set of layers. In the next module, you'll learn how to manage <strong class="text-purple-400">tokens and access</strong> securely, so your keys and secrets never leak.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- RESUMO -->
+<section class="mb-12">
+<div class="bg-gradient-to-br from-purple-900/40 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-8">
+<h2 class="text-2xl font-bold mb-6 flex items-center">
+<span class="mr-3">📚</span> Module Summary
+        </h2>
+<div class="space-y-4 mb-8">
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">A firewall is the server’s doorman</strong><span class="text-neutral-400"> - only lets authorized users through</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">UFW: allow, deny, enable, status</strong><span class="text-neutral-400"> - configure the firewall with simple commands</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">Ports 22, 80, and 443</strong><span class="text-neutral-400"> - SSH, HTTP, and HTTPS, the essential trio of a website</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">Fail2ban bans IPs</strong><span class="text-neutral-400"> - after several failed password attempts</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">Free SSL with Let's Encrypt</strong><span class="text-neutral-400"> - certbot enables the green HTTPS lock</span></div>
+</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+<h3 class="font-semibold text-purple-400 mb-2">Next Module:</h3>
+<p class="text-neutral-300">3.4 - Tokens and Access (managing keys and secrets without ever letting them leak)</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">
+            ← Back to Track
+          </a>
+<a class="flex-1 text-center px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-500 transition-colors" href="modulo-3-4.html">
+            Next Module →
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>From Zero to Deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

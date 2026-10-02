@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>Supabase: Your Database | From Zero to Deploy</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'blue' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'blue');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha blue) */
+    html:not(.dark) .text-blue-400 { color: #2563eb; }
+    html:not(.dark) .bg-blue-500\/20 { background-color: rgba(37, 99, 235, 0.12); }
+    html:not(.dark) .bg-blue-500\/10 { background-color: rgba(37, 99, 235, 0.08); }
+    html:not(.dark) .border-blue-500\/30 { border-color: rgba(37, 99, 235, 0.25); }
+    html:not(.dark) .hover\:bg-blue-500\/30:hover { background-color: rgba(37, 99, 235, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha2/modulo-2-2.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha2/modulo-2-2.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha2/modulo-2-2.html" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha2/modulo-2-2.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="modulo-2-2.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">EN</a><a href="../../../es/curso/trilha2/modulo-2-2.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">From Zero to Deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" href="../trilha1/index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal &amp; Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-blue-400 bg-blue-500/10" href="index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Modern Deployment</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors" href="../trilha3/index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Your Own Server</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" href="../trilha4/index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors" href="../trilha5/index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">AI</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- BREADCRUMB -->
+<nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex items-center space-x-2 text-sm text-neutral-400">
+<a class="hover:text-blue-400" href="../../index.html">Start</a>
+<span>/</span>
+<a class="hover:text-blue-400" href="index.html">Track 2</a>
+<span>/</span>
+<span class="text-blue-400">Module 2.2</span>
+</div>
+</nav>
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full mb-4">MODULE 2.2</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">🗃️ Supabase: Your Database</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Your site is live, but where does it store information? Sign-ups, messages, products, scores. All of this needs a safe place to live: a database. Here you'll learn to create and use a real database with Supabase, for free.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-blue-400">6</div>
+<div class="text-xs text-neutral-400">Topics</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-blue-400">45</div>
+<div class="text-xs text-neutral-400">Minutes</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-blue-400">Basic</div>
+<div class="text-xs text-neutral-400">Level</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-blue-400">Hands-on</div>
+<div class="text-xs text-neutral-400">Type</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="2-2" data-inema-track="2" id="conteudo">
+<!-- ============================================ -->
+<!-- TOPICO 1: O que e um banco de dados          -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-2#topico-1" id="topico-1">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold">What Is a Database</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-2-t1-p1">
+        One <strong class="text-blue-400">database</strong> is an organized place to store information your application needs to remember. When someone signs up on your site, that signup needs to be saved somewhere so it still exists tomorrow. That place is the database. It stores everything in <strong class="text-blue-400">tables</strong>, similar to spreadsheets, and responds quickly when you ask for information.
+      </p>
+<!-- SVG: app -> Supabase (tabelas) -> resposta -->
+<div class="rounded-2xl border border-blue-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="Flow diagram: the application sends a question to Supabase, which stores tables, and Supabase returns the answer with the data" class="w-full h-auto" role="img" viewbox="0 0 800 240">
+<defs>
+<lineargradient id="m22-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#60a5fa"></stop><stop offset="1" stop-color="#3b82f6"></stop>
+</lineargradient>
+<filter height="180%" id="m22-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="m22-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#60a5fa" opacity="0.12" r="1.3"></circle>
+</pattern>
+</defs>
+<rect fill="url(#m22-grid)" height="240" width="800" x="0" y="0"></rect>
+<!-- App -->
+<rect fill="#0e1622" height="90" rx="14" stroke="#60a5fa" stroke-width="2" width="170" x="30" y="80"></rect>
+<text fill="#60a5fa" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="115" y="74">YOUR APP</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="24" text-anchor="middle" x="115" y="125">💻</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="115" y="152">website / app</text>
+<!-- Seta pergunta -->
+<line class="wf-a" stroke="#38bdf8" stroke-width="2.5" x1="205" x2="295" y1="110" y2="110"></line>
+<polygon class="wf-a" fill="#38bdf8" points="295,110 285,105 285,115"></polygon>
+<text fill="#38bdf8" font-family="monospace" font-size="11" text-anchor="middle" x="250" y="100">select...</text>
+<!-- Supabase (tabelas) -->
+<g filter="url(#m22-glow)">
+<rect fill="#0e1622" height="170" rx="14" stroke="url(#m22-grad)" stroke-width="2" width="200" x="300" y="40"></rect>
+</g>
+<text fill="#60a5fa" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="400" y="34">SUPABASE</text>
+<!-- tabela mock -->
+<rect fill="#1f2937" height="22" rx="4" stroke="#3b82f6" stroke-width="1" width="160" x="320" y="60"></rect>
+<text fill="#60a5fa" font-family="monospace" font-size="11" x="330" y="75">id  name  email</text>
+<rect fill="#111827" height="20" rx="4" width="160" x="320" y="86"></rect>
+<text fill="#9ca3af" font-family="monospace" font-size="11" x="330" y="100">1   Ana   ana@..</text>
+<rect fill="#111827" height="20" rx="4" width="160" x="320" y="108"></rect>
+<text fill="#9ca3af" font-family="monospace" font-size="11" x="330" y="122">2   Beto  beto@.</text>
+<rect fill="#111827" height="20" rx="4" width="160" x="320" y="130"></rect>
+<text fill="#9ca3af" font-family="monospace" font-size="11" x="330" y="144">3   Caio  caio@.</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="400" y="178">table: users</text>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="400" y="197">cloud database</text>
+<!-- Seta resposta -->
+<line class="wf-a" stroke="#38bdf8" stroke-width="2.5" x1="505" x2="595" y1="130" y2="130"></line>
+<polygon class="wf-a" fill="#38bdf8" points="595,130 585,125 585,135"></polygon>
+<text fill="#38bdf8" font-family="monospace" font-size="11" text-anchor="middle" x="550" y="120">data</text>
+<!-- Resposta -->
+<rect fill="#0e1622" height="90" rx="14" stroke="#60a5fa" stroke-width="2" width="170" x="600" y="80"></rect>
+<text fill="#60a5fa" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="685" y="74">RESPONSE</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="24" text-anchor="middle" x="685" y="118">✅</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="685" y="145">3 users</text>
+</svg>
+</div>
+<div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogy: A Supercharged Spreadsheet
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m2-2-t1-p2">Imagine an Excel spreadsheet: rows, columns, each cell with some information. A database is that spreadsheet, except <strong>enhanced</strong>. The differences:</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span>It lives in the <strong>cloud</strong>, not on your computer. It's always online.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span><strong>Multiple applications</strong> consult the same spreadsheet at the same time without getting in each other’s way.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span>It can handle <strong>millions of lines</strong> and it still responds in milliseconds.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span>You ask for what you want with a “question” (a query), and it returns only what matters.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> What Supabase is
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-2-t1-p3">O <strong>Supabase</strong> is a free service that provides a database ready to use, without you needing to install anything. Under the hood, it uses <strong>PostgreSQL</strong>, one of the most respected databases in the world. But you don’t need to know that to get started: Supabase puts a nice visual interface on top, similar to a spreadsheet, and also automatically creates an API for your site to communicate with the database. It’s the fastest way for a beginner to get a real database up and running.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 2: Criar projeto no Supabase          -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-2#topico-2" id="topico-2">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold">Creating Your Supabase Project</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-2-t2-p1">
+        Before creating tables, you need a <strong class="text-blue-400">project</strong> in Supabase. Think of the project as the "box" that will hold everything: the database, the files, the authentication. Everything in an app lives inside a project. Let's create yours step by step.
+      </p>
+<!-- Timeline: passo a passo -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+<span class="text-blue-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Create your account</h4>
+<p class="text-sm text-neutral-400">Access <strong class="text-blue-400">supabase.com</strong> and click "Start your project." The simplest option is to sign in with your <strong>GitHub</strong> (the same one you already created in Track 1). One click and you’re in.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+<span class="text-blue-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Create an organization</h4>
+<p class="text-sm text-neutral-400">The first time, Supabase asks for the name of a <strong>organization</strong>. It’s just a grouping of projects (e.g., "my-studies"). Choose the plan <strong class="text-blue-400">Free</strong>: it's free and enough to learn with, and even to run small projects.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+<span class="text-blue-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Configure the project</h4>
+<p class="text-sm text-neutral-400 mb-3">Now for the project data. Three fields matter:</p>
+<ul class="space-y-2 text-sm text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">•</span><span><strong>Name:</strong> the project name, e.g.: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">meu-primeiro-app</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">•</span><span><strong>Database Password:</strong> a strong password for the bank. <strong class="text-blue-400">Save this password</strong>, you’ll need it later.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">•</span><span><strong>Region:</strong> choose the region closest to you (e.g., <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">South America (Sao Paulo)</code>) so the database responds faster.</span></li>
+</ul>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+<span class="text-blue-400 font-bold text-lg">4</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Wait for the database to “wake up”</h4>
+<p class="text-sm text-neutral-400">Click "Create new project." Supabase takes about <strong>1 to 2 minutes</strong> setting up your database in the cloud. When it's done, you'll land on the project dashboard. That's it: you now have a real database up and running.</p>
+</div>
+</div>
+</div>
+<!-- O que voce vai ver -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> What you’ll see on the screen
+        </h3>
+<p class="text-neutral-300 text-sm mb-3" data-inema-block="m2-2-t2-p2">When you open the project dashboard, notice the <strong class="text-blue-400">left sidebar</strong>. This is where you’ll work on the entire course:</p>
+<ul class="space-y-2 text-sm text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">📊</span><span><strong>Table Editor:</strong> your “spreadsheet” for creating and viewing tables.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">💻</span><span><strong>SQL Editor:</strong> where you write commands for the database.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">🔑</span><span><strong>Authentication:</strong> user registration and login.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">⚙️</span><span><strong>Settings &gt; API:</strong> the keys for your site to connect.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Common Error
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-2-t2-p3"><strong>Problem:</strong> "I lost the database password (Database Password), and now I don’t know how to connect." <br/><strong>Solution:</strong> For most things in the course, you'll use API keys, not this password. But if you need it and have lost it, go to <strong>Settings &gt; Database</strong> and click "Reset database password" to generate a new one. Next time, save the password in a password manager as soon as you create the project.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 3: Tabelas, colunas e tipos           -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-2#topico-3" id="topico-3">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold">Tables, Columns, and Types</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-2-t3-p1">
+        Inside the database, the data lives in <strong class="text-blue-400">tables</strong>. Each table holds a type of thing: a table <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-blue-400">usuarios</code>, another <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-blue-400">tarefas</code>, another <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-blue-400">mensagens</code>. The <strong class="text-blue-400">columns</strong> are the details for each item, and each column has a <strong class="text-blue-400">type</strong> that specifies what content it accepts.
+      </p>
+<div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogy: Table = Sheet, Row = Record, Column = Field
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-2-t3-p2">Think of a filing cabinet. The <strong>table</strong> is a drawer (“Users”). Each <strong>line</strong> is a person’s record. Each <strong>column</strong> is a field in the record: "Name," "Email," "Registration date." The <strong>type</strong> and the field rule: "Age" only accepts numbers, "Registered?" only accepts yes or no.</p>
+</div>
+<!-- Tipos de dados -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">The types you'll use most often</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div class="bg-dark-700 rounded-lg p-4">
+<code class="text-blue-400 font-mono text-sm font-bold">text</code>
+<p class="text-sm text-neutral-300 mt-1">Text: names, emails, messages, any word or phrase.</p>
+</div>
+<div class="bg-dark-700 rounded-lg p-4">
+<code class="text-blue-400 font-mono text-sm font-bold">int</code> <span class="text-neutral-500 text-xs">(int8)</span>
+<p class="text-sm text-neutral-300 mt-1">Integer: age, quantity, score.</p>
+</div>
+<div class="bg-dark-700 rounded-lg p-4">
+<code class="text-blue-400 font-mono text-sm font-bold">bool</code>
+<p class="text-sm text-neutral-300 mt-1">True or false: "active?", "completed?". Only accepts true/false.</p>
+</div>
+<div class="bg-dark-700 rounded-lg p-4">
+<code class="text-blue-400 font-mono text-sm font-bold">timestamp</code>
+<p class="text-sm text-neutral-300 mt-1">Date and time: when something was created or updated.</p>
+</div>
+</div>
+</div>
+<!-- Chave primaria -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-3 flex items-center">
+<span class="mr-2">🔑</span> The primary key (Primary Key)
+        </h3>
+<p class="text-neutral-300 text-sm" data-inema-block="m2-2-t3-p3">Every table has a special column, usually called <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono text-blue-400">id</code>, which is the <strong>primary key</strong>. It’s the identity number for each row: it never repeats and is never empty. That’s how the database knows that the row "Ana with id 1" is different from another "Ana with id 7". In Supabase, when you create a table, the column <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">id</code> already comes ready as a primary key that fills itself in automatically.</p>
+</div>
+<!-- Exemplo de tabela -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Example: the table <code class="text-blue-400 font-mono">tarefas</code></h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+<p class="text-neutral-400"># Columns and types</p>
+<p class="text-blue-400">id          int8       (primary key)</p>
+<p class="text-blue-400">titulo      text       "Comprar pao"</p>
+<p class="text-blue-400">completed   bool       false</p>
+<p class="text-blue-400">criada_em   timestamp  2026-06-17 10:00</p>
+</div>
+<p class="text-neutral-400 text-sm mt-3">In Table Editor, you put this together by clicking "New table" and naming it <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">tarefas</code> and adding each column with its type.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ What TO DO</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Plural, lowercase table names: <code class="font-mono text-sm">usuarios</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Choosing the right type (number in <code class="font-mono text-sm">int</code>, text in <code class="font-mono text-sm">text</code>)</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Leave the column <code class="font-mono text-sm">id</code> as an automatic primary key</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ What NOT to do</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Store a number in a column <code class="font-mono text-sm">text</code> if you're going to do calculations</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Use accents or spaces in column names</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Create one giant table for everything (separate it by topic)</span></li>
+</ul>
+</div>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 4: Inserir e consultar dados          -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-2#topico-4" id="topico-4">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold">Insert and Query Data</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-2-t4-p1">
+        Table created, now comes the fun part: <strong class="text-blue-400">put data inside</strong> e <strong class="text-blue-400">ask for that information back</strong>. You can do this in Supabase in two ways: by clicking through the interface (the Table Editor) or by writing SQL commands. Let's look at both, starting with the easiest.
+      </p>
+<!-- Pela interface -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Through the interface: Table Editor
+        </h3>
+<p class="text-neutral-300 text-sm mb-3" data-inema-block="m2-2-t4-p2">In Table Editor, it’s just like editing a spreadsheet:</p>
+<ul class="space-y-2 text-sm text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">•</span><span>Click your table <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">tarefas</code> in the list on the left.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">•</span><span>Click <strong>"Insert" &gt; "Insert row"</strong> to add a new line.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">•</span><span>Fill in the fields (leave the <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">id</code> blank, it fills itself in) and save.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">•</span><span>The row appears in the table right away. That's it, you inserted a record.</span></li>
+</ul>
+</div>
+<!-- SQL: insert -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Using SQL: <code class="text-blue-400 font-mono">insert</code> (insert data)</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m2-2-t4-p3">Node <strong>SQL Editor</strong>, you write a command to insert. It reads almost like English: "insert into the tarefas table, in the titulo and concluida columns, the values...".</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-blue-400">insert into tarefas (titulo, concluida)</p>
+<p class="text-blue-400">values ('Buy bread', false);</p>
+<p class="text-neutral-400 mt-3"># What the database responds:</p>
+<p class="text-neutral-300">Success. 1 row inserted</p>
+</div>
+</div>
+<!-- SQL: select -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Using SQL: <code class="text-blue-400 font-mono">select</code> (query data)</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m2-2-t4-p4">O <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">select</code> and like asking, "show me the data." The <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">*</code> means “all columns.”</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Get everything from the table</p>
+<p class="text-blue-400">select * from tarefas;</p>
+<p class="text-neutral-400 mt-3"># What the database returns:</p>
+<p class="text-neutral-300">id | title        | completed</p>
+<p class="text-neutral-300">1  | Buy bread   | false</p>
+<p class="text-neutral-400 mt-4"># Only tasks that are not yet complete</p>
+<p class="text-blue-400">select titulo from tarefas where concluida = false;</p>
+<p class="text-neutral-300 mt-1">title</p>
+<p class="text-neutral-300">Buy bread</p>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Tip: The <code class="font-mono">where</code> is your filter
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-2-t4-p5">Most of the time, you don’t want ALL the data, just some of it. The word <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-primary">where</code> is the filter: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">where concluida = false</code> brings back only the incomplete ones. Without <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">where</code>, you get everything. Always start by testing with <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">select</code> before making changes to the data for real.</p>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Common Error
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-2-t4-p6"><strong>Problem:</strong> "I wrote the text without quotation marks and got a syntax error." <br/><strong>Solution:</strong> In SQL, every text value (<code class="font-mono text-sm">text</code>) goes between <strong>single quotes</strong>: <code class="font-mono text-sm text-red-400">'Comprar pao'</code>, don't <code class="font-mono text-sm">Comprar pao</code>. Numbers (<code class="font-mono text-sm">int</code>) and booleans (<code class="font-mono text-sm">true</code>/<code class="font-mono text-sm">false</code>) go without quotation marks. And don't forget the <code class="font-mono text-sm">;</code> at the end of the command.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 5: A API automatica do Supabase       -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-2#topico-5" id="topico-5">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold">The Supabase Automatic API</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-2-t5-p1">
+        Here’s where the magic happens. As soon as you create a table, Supabase <strong class="text-blue-400">creates an API on its own</strong> for your site to talk to the database. You don't need to program any server. Your site on Vercel calls this API and gets the data back. It's as if the database got a "phone" for your app to call.
+      </p>
+<div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogy: The Bank Got a Waiter
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-2-t5-p2">Imagine the database as a restaurant kitchen. Your website doesn’t go into the kitchen (that would be dangerous). Instead, it talks to a <strong>waiter</strong>: the API. The website makes the request ("bring me the tasks"), the waiter goes to the kitchen, picks them up, and comes back with the dish. The API is that waiter: organized, secure, and always available.</p>
+</div>
+<!-- onde achar as chaves -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">🔑</span> Where the URL and key (anon key) are
+        </h3>
+<p class="text-neutral-300 text-sm mb-3" data-inema-block="m2-2-t5-p3">For your site to connect, it needs two things, which are in <strong>Settings &gt; API</strong>:</p>
+<ul class="space-y-2 text-sm text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">•</span><span><strong>Project URL:</strong> your database address, something like <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">https://abc123.supabase.co</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-0.5">•</span><span><strong>anon key:</strong> the public key, which the site uses in the browser. It may appear in your front-end code.</span></li>
+</ul>
+<p class="text-neutral-400 text-sm mt-3">A <strong>anon key</strong> is safe to expose because, on its own, it can only do what you allow (that’s the subject of the next topic). The other key, <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">service_role</code>, and it's secret: never put it in the front end.</p>
+</div>
+<!-- Codigo JS client -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Using the Supabase JS client</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m2-2-t5-p4">The most common way to do this on a website is to use the library <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">supabase-js</code>. You connect once with the URL and anon key, then request the data in one line:</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+<p class="text-neutral-400">// 1. connect to your database</p>
+<p class="text-blue-400">const supabase = createClient(</p>
+<p class="text-blue-400">  'https://abc123.supabase.co',</p>
+<p class="text-blue-400">  'sua-anon-key-aqui'</p>
+<p class="text-blue-400">)</p>
+<p class="text-neutral-400 mt-3">// 2. request the data (like: select * from tasks)</p>
+<p class="text-blue-400">const { data, error } = await supabase</p>
+<p class="text-blue-400">  .from('tasks')</p>
+<p class="text-blue-400">  .select('*')</p>
+<p class="text-neutral-400 mt-3">// 3. what comes back in "data":</p>
+<p class="text-neutral-300">[ { id: 1, titulo: 'Comprar pao', concluida: false } ]</p>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> You can also use it via plain REST
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-2-t5-p5">If you don’t use the library, the same API responds with <strong>REST</strong> (HTTP). A call <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">GET</code> to <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">/rest/v1/tarefas</code> with the anon key in the header returns the same JSON. You’ll explore this further in module 2.3, about APIs. For now, it’s enough to know: table created = API ready, for free.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 6: Autenticacao basica                -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-2#topico-6" id="topico-6">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold">Basic Authentication and RLS</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-2-t6-p1">
+        Almost every app needs <strong class="text-blue-400">login</strong>: a user creates an account, signs in with an email and password, and sees only their own data. Supabase already provides this in the <strong class="text-blue-400">Authentication</strong>. You don't need to store passwords (Supabase handles that securely) or build signup screens from scratch on the server.
+      </p>
+<!-- sign up / sign in -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Sign up and sign in</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m2-2-t6-p2">With the JS client, creating an account and logging in are two simple calls:</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+<p class="text-neutral-400">// create a new account (sign up)</p>
+<p class="text-blue-400">await supabase.auth.signUp({</p>
+<p class="text-blue-400">  email: 'ana@email.com',</p>
+<p class="text-blue-400">  password: 'senha-secreta'</p>
+<p class="text-blue-400">})</p>
+<p class="text-neutral-400 mt-3">// sign in with an existing account (sign in)</p>
+<p class="text-blue-400">await supabase.auth.signInWithPassword({</p>
+<p class="text-blue-400">  email: 'ana@email.com',</p>
+<p class="text-blue-400">  password: 'senha-secreta'</p>
+<p class="text-blue-400">})</p>
+<p class="text-neutral-400 mt-3">// sign-in response: a logged-in user</p>
+<p class="text-neutral-300">{ user: { id: 'uuid...', email: 'ana@email.com' } }</p>
+</div>
+<p class="text-neutral-400 text-sm mt-3">The registered user appears in the list in <strong>Authentication &gt; Users</strong> in the dashboard.</p>
+</div>
+<!-- RLS resumido -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-3 flex items-center">
+<span class="mr-2">🔒</span> RLS in one sentence
+        </h3>
+<p class="text-neutral-300 text-sm" data-inema-block="m2-2-t6-p3"><strong>RLS</strong> (Row Level Security, "row-level security") is the rule that decides <strong>who can view and edit each row</strong> of the table. Without RLS, either everything is locked down, or anyone with the anon key can read it all. With RLS enabled, you write a rule like "each user can only see their own tasks." It’s the lock that makes the anon key safe in the browser.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ What TO DO</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Enable RLS on Every Table with User Data</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Use the <code class="font-mono text-sm">anon key</code> in the front end (the public one)</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Let Supabase store your passwords for you</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ What NOT to do</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Expose the key <code class="font-mono text-sm">service_role</code> on the site</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Leave a table with sensitive data without RLS</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Store a password as plain text in one of your columns</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Common Error
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-2-t6-p4"><strong>Problem:</strong> "I enabled RLS, and now my query comes back empty even though there’s data." <br/><strong>Solution:</strong> When you enable RLS, by default everything becomes <strong>blocked</strong> until you create a policy (rule) that allows it. Go to <strong>Authentication &gt; Policies</strong> and create a read policy. To test while you're learning, you can create a simple policy to "allow read access for logged-in users."</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- RESUMO -->
+<section class="mb-12">
+<div class="bg-gradient-to-br from-blue-900/40 via-dark-800 to-dark-800 rounded-xl border border-blue-500/30 p-8">
+<h2 class="text-2xl font-bold mb-6 flex items-center">
+<span class="mr-3">📚</span> Module Summary
+        </h2>
+<div class="space-y-4 mb-8">
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">A database is a souped-up spreadsheet</strong><span class="text-neutral-400"> - in the cloud, several apps query it at the same time</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">Supabase Project</strong><span class="text-neutral-400"> - account, organization, region, and database password</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">Tables, columns, and types</strong><span class="text-neutral-400"> - text, int, bool, timestamp, and the primary key id</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">insert and select</strong><span class="text-neutral-400"> - insert and query using the Table Editor or SQL</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">Automated API and authentication</strong><span class="text-neutral-400"> - anon key, JS client, login, and RLS for protection</span></div>
+</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+<h3 class="font-semibold text-blue-400 mb-2">Next Module:</h3>
+<p class="text-neutral-300">2.3 - APIs: How Systems Communicate (understand requests, JSON, and how to consume external data)</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">
+            ← Back to Track
+          </a>
+<a class="flex-1 text-center px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-500 transition-colors" href="modulo-2-3.html">
+            Next Module →
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>From Zero to Deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

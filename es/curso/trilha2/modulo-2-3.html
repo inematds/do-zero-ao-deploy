@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>APIs: Conectando servicios | Desde cero hasta el deploy</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'blue' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'blue');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha blue) */
+    html:not(.dark) .text-blue-400 { color: #2563eb; }
+    html:not(.dark) .bg-blue-500\/20 { background-color: rgba(37, 99, 235, 0.12); }
+    html:not(.dark) .bg-blue-500\/10 { background-color: rgba(37, 99, 235, 0.08); }
+    html:not(.dark) .border-blue-500\/30 { border-color: rgba(37, 99, 235, 0.25); }
+    html:not(.dark) .hover\:bg-blue-500\/30:hover { background-color: rgba(37, 99, 235, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha2/modulo-2-3.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha2/modulo-2-3.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha2/modulo-2-3.html" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha2/modulo-2-3.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="../../../en/curso/trilha2/modulo-2-3.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">EN</a><a href="modulo-2-3.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">De cero al deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" href="../trilha1/index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal y Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-blue-400 bg-blue-500/10" href="index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy moderno</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors" href="../trilha3/index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor propio</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" href="../trilha4/index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors" href="../trilha5/index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- BREADCRUMB -->
+<nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex items-center space-x-2 text-sm text-neutral-400">
+<a class="hover:text-blue-400" href="../../index.html">Inicio</a>
+<span>/</span>
+<a class="hover:text-blue-400" href="index.html">Ruta 2</a>
+<span>/</span>
+<span class="text-blue-400">Módulo 2.3</span>
+</div>
+</nav>
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full mb-4">MÓDULO 2.3</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">🔌 API: conectar servicios</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Una API es el enchufe que conecta tu sitio con cualquier servicio del mundo: bases de datos, mapas, clima, pagos. Aquí aprenderás qué es una API, cómo comunicarte con ella y cómo manejar los errores cuando algo sale mal.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-blue-400">6</div>
+<div class="text-xs text-neutral-400">Temas</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-blue-400">45</div>
+<div class="text-xs text-neutral-400">Minutos</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-blue-400">Básico</div>
+<div class="text-xs text-neutral-400">Nivel</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-blue-400">Práctico</div>
+<div class="text-xs text-neutral-400">Tipo</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="2-3" data-inema-track="2" id="conteudo">
+<!-- ============================================ -->
+<!-- TOPICO 1: O que e uma API                    -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-3#topico-1" id="topico-1">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold">Qué es una API</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-3-t1-p1">
+        API quiere decir <strong class="text-blue-400">Application Programming Interface</strong> (Interfaz de Programación de Aplicaciones). Parece complicado, pero la idea es sencilla: es una forma estandarizada de que un programa le pida cosas a otro. Tu sitio pide «dame el pronóstico del tiempo de hoy» y otro servicio responde, sin que tu sitio tenga que saber cómo se calculó esa información.
+      </p>
+<!-- SVG: Cliente -> Requisicao -> Servidor/API -> Resposta JSON -->
+<div class="rounded-2xl border border-blue-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="Diagrama del flujo de una API: el cliente envía una solicitud GET o POST, el servidor de la API la procesa y devuelve una respuesta en formato JSON" class="w-full h-auto" role="img" viewbox="0 0 800 230">
+<defs>
+<lineargradient id="m23-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#60a5fa"></stop><stop offset="1" stop-color="#3b82f6"></stop>
+</lineargradient>
+<filter height="180%" id="m23-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="m23-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#60a5fa" opacity="0.12" r="1.3"></circle>
+</pattern>
+</defs>
+<rect fill="url(#m23-grid)" height="230" width="800" x="0" y="0"></rect>
+<!-- Cliente -->
+<rect fill="#0e1622" height="90" rx="14" stroke="#60a5fa" stroke-width="2" width="180" x="30" y="70"></rect>
+<text fill="#60a5fa" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="120" y="60">CLIENTE (tu sitio)</text>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="30" text-anchor="middle" x="120" y="118">💻</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="12" text-anchor="middle" x="120" y="148">quién lo solicita</text>
+<!-- Requisicao (ida) -->
+<line class="wf-a" stroke="#60a5fa" stroke-width="2.5" x1="216" x2="300" y1="95" y2="95"></line>
+<polygon fill="#60a5fa" points="300,95 290,90 290,100"></polygon>
+<text fill="#60a5fa" font-family="monospace" font-size="12" text-anchor="middle" x="262" y="86">GET / POST</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="262" y="112">solicitud</text>
+<!-- Servidor/API -->
+<g filter="url(#m23-glow)">
+<rect fill="#0e1622" height="90" rx="14" stroke="url(#m23-grad)" stroke-width="2" width="180" x="310" y="70"></rect>
+</g>
+<text fill="#60a5fa" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="400" y="60">SERVIDOR / API</text>
+<text fill="#60a5fa" font-family="Inter,sans-serif" font-size="30" text-anchor="middle" x="400" y="118">🍳</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="12" text-anchor="middle" x="400" y="148">la cocina</text>
+<!-- Resposta (volta) -->
+<line class="wf-a" stroke="#38bdf8" stroke-width="2.5" x1="496" x2="580" y1="95" y2="95"></line>
+<polygon fill="#38bdf8" points="580,95 570,90 570,100"></polygon>
+<text fill="#38bdf8" font-family="monospace" font-size="12" text-anchor="middle" x="538" y="86">200 OK</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="538" y="112">respuesta</text>
+<!-- JSON -->
+<rect fill="#0e1622" height="110" rx="14" stroke="#38bdf8" stroke-width="2" width="180" x="590" y="60"></rect>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="680" y="50">RESPUESTA JSON</text>
+<text fill="#9ca3af" font-family="monospace" font-size="12" x="606" y="90">{</text>
+<text fill="#60a5fa" font-family="monospace" font-size="12" x="618" y="110">"temp": 24,</text>
+<text fill="#60a5fa" font-family="monospace" font-size="12" x="618" y="130">"ciudad": "SP"</text>
+<text fill="#9ca3af" font-family="monospace" font-size="12" x="606" y="150">}</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="13" text-anchor="middle" x="400" y="205">No ves la cocina. Solo pides del menú y recibes el plato listo.</text>
+</svg>
+</div>
+<div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: el menú y el mesero del restaurante
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m2-3-t1-p2">Imagina que estás en un restaurante. No entras en la cocina para cocinar. Miras el <strong class="text-blue-400">menú</strong> (la lista de lo que puedes pedir), llama al <strong class="text-blue-400">mesero</strong> (hace el pedido) y recibe el plato listo. La cocina sigue oculta.</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span><strong>El menú</strong> = la documentación de la API (lo que puedes solicitar)</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span><strong>El pedido al mesero</strong> = la solicitud (pides algo)</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span><strong>El plato que llega</strong> = la respuesta (generalmente en JSON)</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span><strong>La cocina oculta</strong> = el servidor (no necesitas saber cómo funciona)</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Ya usas APIs sin darte cuenta
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-3-t1-p3">Cuando un sitio muestra «Iniciar sesión con Google», se está comunicando con la API de Google. Cuando una app muestra un mapa, está usando la API de Google Maps. Cuando ves la cotización actualizada del dólar, hay una API detrás. Las APIs son la forma en que los servicios de Internet se comunican entre sí.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 2: Os verbos GET/POST/PUT/DELETE      -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-3#topico-2" id="topico-2">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold">Los verbos: GET, POST, PUT, DELETE</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-3-t2-p1">
+        Toda solicitud tiene un <strong class="text-blue-400">verbo</strong> que indica la intención de la solicitud. Hay cuatro principales, y cada uno corresponde a una acción cotidiana: leer, crear, actualizar y borrar. Quienes ya trabajaron con bases de datos lo conocen como CRUD (Create, Read, Update, Delete).
+      </p>
+<!-- Grid dos 4 verbos -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<div class="flex items-center justify-between mb-3">
+<code class="text-blue-400 font-mono text-lg font-bold">GET</code>
+<span class="text-xs text-neutral-500 font-mono">leer</span>
+</div>
+<p class="text-neutral-300 text-sm">Busca información sin cambiar nada. Es el verbo más común. <br/><span class="text-neutral-400">Ej.: «dame la lista de usuarios».</span></p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<div class="flex items-center justify-between mb-3">
+<code class="text-blue-400 font-mono text-lg font-bold">POST</code>
+<span class="text-xs text-neutral-500 font-mono">crear</span>
+</div>
+<p class="text-neutral-300 text-sm">Envía datos nuevos para crear algo. <br/><span class="text-neutral-400">Ej.: «registra este nuevo usuario».</span></p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<div class="flex items-center justify-between mb-3">
+<code class="text-blue-400 font-mono text-lg font-bold">PUT</code>
+<span class="text-xs text-neutral-500 font-mono">actualizar</span>
+</div>
+<p class="text-neutral-300 text-sm">Modifica algo que ya existe. <br/><span class="text-neutral-400">Ej.: «cambia el correo electrónico de este usuario».</span></p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<div class="flex items-center justify-between mb-3">
+<code class="text-red-400 font-mono text-lg font-bold">DELETE</code>
+<span class="text-xs text-neutral-500 font-mono">borrar</span>
+</div>
+<p class="text-neutral-300 text-sm">Elimina algo. <br/><span class="text-neutral-400">Ej.: «borra este usuario».</span></p>
+</div>
+</div>
+<div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: una libreta de contactos
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-3-t2-p2">Piensa en una agenda de contactos en el celular. <strong class="text-blue-400">GET</strong> y es abrir y leer un contacto. <strong class="text-blue-400">POST</strong> y es agregar un contacto nuevo. <strong class="text-blue-400">PUT</strong> y editar el teléfono de un contacto que ya existe. <strong class="text-red-400">DELETE</strong> y es borrar el contacto. Son las cuatro cosas que haces con cualquier lista de datos.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: GET no cambia nada
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-3-t2-p3">Una regla de oro: un <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">GET</code> nunca debe modificar datos. Solo lee. Si necesitas crear, actualizar o borrar algo, usa POST, PUT o DELETE. Esto evita que un simple clic en "actualizar página" cause daños en el servidor.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 3: Testar APIs com curl e Thunder/Postman -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-3#topico-3" id="topico-3">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold">Probar APIs: curl, Thunder Client y Postman</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-3-t3-p1">
+        Antes de escribir una línea de código en tu sitio, es bueno <strong class="text-blue-400">probar la API</strong> para ver qué responde. Tienes tres opciones: el <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">curl</code> (en la terminal), Thunder Client (extensión de VS Code) y Postman (aplicación). Los tres hacen lo mismo: envían una solicitud y muestran la respuesta.
+      </p>
+<!-- curl no terminal -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-blue-400 font-mono">curl</code> - probar desde el terminal</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m2-3-t3-p2">curl ya viene instalado en Mac, Linux y Windows moderno. Solo tienes que escribir la URL de la API:</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Solicitud GET simple</p>
+<p class="text-blue-400">$ curl https://api.exemplo.com/usuarios/1</p>
+<p class="text-neutral-400 mt-3"># La API responde con un JSON:</p>
+<p class="text-neutral-300">{"id": 1, "nome": "Ana", "email": "ana@email.com"}</p>
+</div>
+</div>
+<!-- curl com verbos e output formatado -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">curl con POST y una respuesta clara</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Enviar datos con POST (-X define el verbo, -d envía el cuerpo)</p>
+<p class="text-blue-400">$ curl -X POST https://api.exemplo.com/usuarios \</p>
+<p class="text-blue-400">  -H "Content-Type: application/json" \</p>
+<p class="text-blue-400">  -d '{"nome": "Bia", "email": "bia@email.com"}'</p>
+<p class="text-neutral-300 mt-2">{"id": 2, "nome": "Bia", "email": "bia@email.com"}</p>
+<p class="text-neutral-400 mt-3"># Hacer que el JSON sea legible pasándolo por jq</p>
+<p class="text-blue-400">$ curl https://api.exemplo.com/usuarios/1 | jq</p>
+<p class="text-neutral-300">{</p>
+<p class="text-neutral-300">  "id": 1,</p>
+<p class="text-neutral-300">  "nombre": "Ana",</p>
+<p class="text-neutral-300">  "email": "ana@email.com"</p>
+<p class="text-neutral-300">}</p>
+</div>
+</div>
+<!-- O que voce vai ver na tela -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver en la pantalla de Thunder Client
+        </h3>
+<p class="text-neutral-300 text-sm mb-3" data-inema-block="m2-3-t3-p3">Thunder Client es una extensión gratuita de VS Code. La pantalla tiene tres partes:</p>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span>Arriba: un campo para elegir el verbo (GET, POST...) y pegar la URL, con un botón <strong>Send</strong>.</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span>En el medio: pestañas para Headers, Body y Auth (cuando la API pide una contraseña o un token).</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span>Abajo: la respuesta en JSON coloreado y el estado (ej.: <strong>200 OK</strong>) con el tiempo que tomó.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ Qué HACER</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Probar la API antes de ponerla en el código</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Guardar las solicitudes que usas mucho</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Usar <code class="font-mono text-sm">jq</code> para leer un JSON grande</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Pegar tokens secretos en capturas públicas</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Probar DELETE directamente en la API de producción</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Ignorar el código de estado de la respuesta</span></li>
+</ul>
+</div>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 4: Conectar o frontend a API do Supabase -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-3#topico-4" id="topico-4">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold">Conectar el Frontend a la API de Supabase</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-3-t4-p1">
+        Ahora vamos a salir de la terminal y hacer la misma solicitud <strong class="text-blue-400">desde dentro de tu sitio</strong>, con JavaScript. La herramienta para eso es <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">fetch</code>, que ya viene en el navegador. En el módulo anterior creaste una base de datos en Supabase. Esta expone una API REST automática, así que puedes consultar tus datos directamente desde el frontend.
+      </p>
+<!-- Timeline: passos da requisicao fetch -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+<span class="text-blue-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Arma la URL y los encabezados</h4>
+<p class="text-sm text-neutral-400 mb-3">Supabase proporciona una URL del proyecto y una clave pública (anon key). Ambas van en la solicitud.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400">// Datos que muestra el panel de Supabase</p>
+<p class="text-blue-400">const URL = "https://seu-projeto.supabase.co";</p>
+<p class="text-blue-400">const CHAVE = "sua-chave-publica-anon";</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+<span class="text-blue-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Haz el GET con fetch</h4>
+<p class="text-sm text-neutral-400 mb-3">Busca todas las filas de la tabla «tarefas». El <code class="font-mono">await</code> espera a que llegue la respuesta.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-blue-400">const resposta = await fetch(</p>
+<p class="text-blue-400">  URL + "/rest/v1/tarefas?select=*",</p>
+<p class="text-blue-400">  { headers: { apikey: CHAVE } }</p>
+<p class="text-blue-400">);</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+<span class="text-blue-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Convierte la respuesta en datos</h4>
+<p class="text-sm text-neutral-400 mb-3">La respuesta llega como texto. El <code class="font-mono">.json()</code> convierte en un array que usas en el sitio.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-blue-400">const tarefas = await resposta.json();</p>
+<p class="text-blue-400">console.log(tarefas);</p>
+<p class="text-neutral-300 mt-2">[{ id: 1, titulo: "Estudiar APIs", feito: false }]</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Codigo completo -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">El código completo, todo junto</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400">// Busca tareas de Supabase y las muestra en pantalla</p>
+<p class="text-blue-400">async function carregarTarefas() {</p>
+<p class="text-blue-400">  const URL = "https://seu-projeto.supabase.co";</p>
+<p class="text-blue-400">  const CHAVE = "sua-chave-publica-anon";</p>
+<p class="text-blue-400">  const r = await fetch(URL + "/rest/v1/tarefas?select=*", {</p>
+<p class="text-blue-400">    headers: { apikey: CHAVE }</p>
+<p class="text-blue-400">  });</p>
+<p class="text-blue-400">  const tarefas = await r.json();</p>
+<p class="text-blue-400">  tarefas.forEach(t =&gt; console.log(t.titulo));</p>
+<p class="text-blue-400">}</p>
+<p class="text-blue-400">carregarTarefas();</p>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-3-t4-p2"><strong>Problema:</strong> "La solicitud vuelve vacía o con un error de CORS / permisos." <br/><strong>Solución:</strong> En Supabase, activa las políticas RLS (Row Level Security) para permitir la lectura pública de la tabla y comprueba que la URL del proyecto y la clave anon sean correctas (sin espacios de más). La clave anon es segura para usar en el frontend; la clave <code class="font-mono text-sm">service_role</code> NUNCA debe ir al navegador.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 5: APIs publicas uteis                -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-3#topico-5" id="topico-5">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold">APIs públicas útiles: clima y código postal</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-3-t5-p1">
+        Hay miles de APIs públicas y gratuitas que puedes usar ahora mismo. Dos muy prácticas en Brasil: la de <strong class="text-blue-400">clima</strong> y es la de <strong class="text-blue-400">CEP</strong> (ViaCEP). Probemos las dos con fetch.
+      </p>
+<!-- ViaCEP -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">ViaCEP - dirección a partir del código postal</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m2-3-t5-p2">Pasas el código postal en la URL y recibes la dirección completa. No necesitas una clave ni registrarte. Es ideal para completar formularios de dirección.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm mb-3">
+<p class="text-neutral-400"># Prueba en la terminal con curl</p>
+<p class="text-blue-400">$ curl https://viacep.com.br/ws/01001000/json/</p>
+<p class="text-neutral-300 mt-2">{</p>
+<p class="text-neutral-300">  "código postal": "01001-000",</p>
+<p class="text-neutral-300">  "dirección": "Praça da Sé",</p>
+<p class="text-neutral-300">  "barrio": "Se",</p>
+<p class="text-neutral-300">  "localidad": "São Paulo",</p>
+<p class="text-neutral-300">  "uf": "SP"</p>
+<p class="text-neutral-300">}</p>
+</div>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400">// Lo mismo con fetch, en el sitio</p>
+<p class="text-blue-400">const cep = "01001000";</p>
+<p class="text-blue-400">const r = await fetch("https://viacep.com.br/ws/" + cep + "/json/");</p>
+<p class="text-blue-400">const end = await r.json();</p>
+<p class="text-blue-400">console.log(end.localidade); // "Sao Paulo"</p>
+</div>
+</div>
+<!-- Clima -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Clima - pronóstico del tiempo (Open-Meteo)</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m2-3-t5-p3">Open-Meteo es gratis y no pide una clave. Le pasas la latitud y la longitud y recibes la temperatura actual.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Temperatura actual en São Paulo</p>
+<p class="text-blue-400">$ curl "https://api.open-meteo.com/v1/forecast?latitude=-23.55&amp;longitude=-46.63&amp;current=temperature_2m"</p>
+<p class="text-neutral-300 mt-2">{</p>
+<p class="text-neutral-300">  "current": { "temperature_2m": 24.3 }</p>
+<p class="text-neutral-300">}</p>
+</div>
+</div>
+<div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: las API públicas son bibliotecas abiertas
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-3-t5-p4">Una API pública es como una biblioteca de barrio: cualquiera entra, consulta un libro y se va, sin pagar. Algunas solo piden un registro (una "credencial", que es la clave de API) para controlar cuántas consultas haces al día. ViaCEP y Open-Meteo ni siquiera exigen credencial.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: dónde encontrar más APIs
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-3-t5-p5">Busca listas de «public APIs» en GitHub. Hay APIs de cotización de monedas, feriados, frases motivacionales, datos de películas, Pokémon y mucho más. Empieza por las que no piden clave: es la forma más rápida de practicar fetch.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 6: Tratamento de erros               -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-3#topico-6" id="topico-6">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold">Manejo de errores: status y try/catch</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-3-t6-p1">
+        No todas las solicitudes tienen éxito. Se cae internet, falla el servidor, el código postal no existe. Por eso, todo código que se comunica con una API necesita <strong class="text-blue-400">manejar errores</strong>. Dos herramientas: leer el <strong class="text-blue-400">código de estado</strong> de la respuesta y envolver todo en un <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">try/catch</code>.
+      </p>
+<!-- Codigos de status -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6 text-center">
+<div class="text-3xl font-bold text-emerald-400 mb-2">200</div>
+<p class="text-sm text-neutral-300"><strong>OK</strong><br/>Todo salió bien. Llegó la respuesta.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 text-center">
+<div class="text-3xl font-bold text-primary mb-2">404</div>
+<p class="text-sm text-neutral-300"><strong>No encontrado</strong><br/>El recurso solicitado no existe.</p>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 text-center">
+<div class="text-3xl font-bold text-red-400 mb-2">500</div>
+<p class="text-sm text-neutral-300"><strong>Error del servidor</strong><br/>La culpa es de la API, no tuya.</p>
+</div>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-3-t6-p2">
+        Una regla sencilla: los estados que empiezan con <strong class="text-emerald-400">2</strong> son éxitos, con <strong class="text-primary">4</strong> son errores tuyos (pediste algo mal), y con <strong class="text-red-400">5</strong> son errores del servidor.
+      </p>
+<!-- Codigo com try/catch -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Manejo de errores con try/catch y status</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-blue-400">async function buscarCep(cep) {</p>
+<p class="text-blue-400">  try {</p>
+<p class="text-blue-400">    const r = await fetch("https://viacep.com.br/ws/" + cep + "/json/");</p>
+<p class="text-neutral-400">    // r.ok es true cuando el estado es 200-299</p>
+<p class="text-blue-400">    if (!r.ok) {</p>
+<p class="text-blue-400">      throw new Error("Servidor respondeu " + r.status);</p>
+<p class="text-blue-400">    }</p>
+<p class="text-blue-400">    const dados = await r.json();</p>
+<p class="text-blue-400">    if (dados.erro) {</p>
+<p class="text-blue-400">      alert("No se encontró el código postal. Revisa el número.");</p>
+<p class="text-blue-400">      return;</p>
+<p class="text-blue-400">    }</p>
+<p class="text-blue-400">    console.log(dados.localidade);</p>
+<p class="text-blue-400">  } catch (e) {</p>
+<p class="text-neutral-400">    // Entra aquí si se cayó internet o falló el fetch</p>
+<p class="text-blue-400">    alert("No fue posible conectar. Inténtalo de nuevo.");</p>
+<p class="text-blue-400">  }</p>
+<p class="text-blue-400">}</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ Qué HACER</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Verificar <code class="font-mono text-sm">r.ok</code> o <code class="font-mono text-sm">r.status</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Envolver el fetch en un <code class="font-mono text-sm">try/catch</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Mostrar un mensaje claro al usuario</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Suponer que la respuesta siempre llega</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Mostrar el error técnico sin procesar al usuario</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Dejar la pantalla bloqueada esperando para siempre</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-3-t6-p2b"><strong>Problema:</strong> "El fetch no llegó al catch, pero el sitio dejó de funcionar." <br/><strong>Solución:</strong> O <code class="font-mono text-sm">fetch</code> solo entra en catch cuando falla la conexión. Un status 404 o 500 se considera una respuesta válida para fetch. Por eso NECESITAS comprobar <code class="font-mono text-sm">r.ok</code> manualmente, como en el ejemplo anterior. Sin eso, intentas leer un JSON que no existe y el sitio falla.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- RESUMO -->
+<section class="mb-12">
+<div class="bg-gradient-to-br from-blue-900/40 via-dark-800 to-dark-800 rounded-xl border border-blue-500/30 p-8">
+<h2 class="text-2xl font-bold mb-6 flex items-center">
+<span class="mr-3">📚</span> Resumen del módulo
+        </h2>
+<div class="space-y-4 mb-8">
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">Una API es un menú + un mesero</strong><span class="text-neutral-400"> - tú pides, la cocina responde, sin ver la cocina</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">GET, POST, PUT, DELETE</strong><span class="text-neutral-400"> - leer, crear, actualizar y borrar datos</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">curl, Thunder Client y Postman</strong><span class="text-neutral-400"> - probar la API antes de programar</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">fetch en el frontend</strong><span class="text-neutral-400"> - conectar tu sitio a Supabase y a APIs públicas (ViaCEP, clima)</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">Manejo de errores</strong><span class="text-neutral-400"> - estado 200/404/500, try/catch y mensajes claros para el usuario</span></div>
+</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+<h3 class="font-semibold text-blue-400 mb-2">Siguiente módulo:</h3>
+<p class="text-neutral-300">2.4 - Variables de entorno (guarda claves y secretos fuera del código, de forma segura)</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">
+            ← Volver a la ruta
+          </a>
+<a class="flex-1 text-center px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-500 transition-colors" href="modulo-2-4.html">
+            Siguiente módulo →
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>De cero al deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>Cron: Automated Tasks | From Zero to Deploy</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'amber' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'amber');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha amber) */
+    html:not(.dark) .text-amber-400 { color: #b45309; }
+    html:not(.dark) .bg-amber-500\/20 { background-color: rgba(180, 83, 9, 0.12); }
+    html:not(.dark) .bg-amber-500\/10 { background-color: rgba(180, 83, 9, 0.08); }
+    html:not(.dark) .border-amber-500\/30 { border-color: rgba(180, 83, 9, 0.25); }
+    html:not(.dark) .hover\:bg-amber-500\/30:hover { background-color: rgba(180, 83, 9, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha4/modulo-4-4.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha4/modulo-4-4.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha4/modulo-4-4.html" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha4/modulo-4-4.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="modulo-4-4.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">EN</a><a href="../../../es/curso/trilha4/modulo-4-4.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">From Zero to Deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" href="../trilha1/index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal &amp; Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" href="../trilha2/index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Modern Deployment</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors" href="../trilha3/index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Your Own Server</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-amber-400 bg-amber-500/10" href="index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors" href="../trilha5/index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">AI</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- BREADCRUMB -->
+<nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex items-center space-x-2 text-sm text-neutral-400">
+<a class="hover:text-amber-400" href="../../index.html">Start</a>
+<span>/</span>
+<a class="hover:text-amber-400" href="index.html">Track 4</a>
+<span>/</span>
+<span class="text-amber-400">Module 4.4</span>
+</div>
+</nav>
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full mb-4">MODULE 4.4</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">⏰ Cron: Automated Tasks</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Cron is the server’s programmable alarm clock. You say, "every day at 3 a.m., make a backup," and the server does it on its own, forever. Here you’ll learn to schedule tasks that run without you needing to be there.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-amber-400">6</div>
+<div class="text-xs text-neutral-400">Topics</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-amber-400">45</div>
+<div class="text-xs text-neutral-400">Minutes</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-amber-400">Basic</div>
+<div class="text-xs text-neutral-400">Level</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-amber-400">Hands-on</div>
+<div class="text-xs text-neutral-400">Type</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="4-4" data-inema-track="4" id="conteudo">
+<!-- ============================================ -->
+<!-- TOPICO 1: O que e cron                       -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-4-4#topico-1" id="topico-1">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold">What Is Cron</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m4-4-t1-p1">
+        O <strong class="text-amber-400">cron</strong> is a program that comes preinstalled on every Linux server. Its job is simple: watch the clock and, at the right time, run the commands you scheduled. You write the task once, and it repeats on its own forever, without you needing to open the terminal again.
+      </p>
+<!-- SVG: Linha do tempo com disparos agendados -->
+<div class="rounded-2xl border border-amber-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="24-hour timeline with tasks scheduled by cron: backup at 3 a.m., cleanup at 4 a.m., report at 9 a.m., each triggered automatically at the scheduled time" class="w-full h-auto" role="img" viewbox="0 0 800 230">
+<defs>
+<lineargradient id="m44-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#fbbf24"></stop><stop offset="1" stop-color="#f59e0b"></stop>
+</lineargradient>
+<filter height="180%" id="m44-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="m44-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#fbbf24" opacity="0.12" r="1.3"></circle>
+</pattern>
+</defs>
+<rect fill="url(#m44-grid)" height="230" width="800" x="0" y="0"></rect>
+<text fill="#fbbf24" font-family="Inter,sans-serif" font-size="14" font-weight="600" text-anchor="middle" x="400" y="28">CRON: A DAY ON THE SERVER, MAPPED OUT</text>
+<!-- relogio / cron como motor -->
+<g filter="url(#m44-glow)">
+<circle cx="60" cy="120" fill="#1f1604" r="30" stroke="url(#m44-grad)" stroke-width="2"></circle>
+</g>
+<line stroke="#fbbf24" stroke-linecap="round" stroke-width="2" x1="60" x2="60" y1="120" y2="100"></line>
+<line stroke="#38bdf8" stroke-linecap="round" stroke-width="2" x1="60" x2="74" y1="120" y2="124"></line>
+<text fill="#fbbf24" font-family="Inter,sans-serif" font-size="12" font-weight="600" text-anchor="middle" x="60" y="170">cron</text>
+<!-- eixo do tempo -->
+<line stroke="#4b5563" stroke-width="2" x1="120" x2="760" y1="120" y2="120"></line>
+<polygon fill="#4b5563" points="760,120 750,115 750,125"></polygon>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="120" y="210">00h</text>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="335" y="210">06h</text>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="550" y="210">12h</text>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="745" y="210">23h</text>
+<!-- disparo 1: backup 03h -->
+<line class="wf-a" stroke="#fbbf24" stroke-width="2" x1="200" x2="200" y1="120" y2="70"></line>
+<circle cx="200" cy="120" fill="#fbbf24" r="6"></circle>
+<rect fill="#1f1604" height="24" rx="6" stroke="#fbbf24" stroke-width="1.5" width="80" x="160" y="46"></rect>
+<text fill="#fbbf24" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="200" y="62">backup 03h</text>
+<!-- disparo 2: limpeza 04h -->
+<line class="wf-a" stroke="#38bdf8" stroke-width="2" x1="250" x2="250" y1="120" y2="90"></line>
+<circle cx="250" cy="120" fill="#38bdf8" r="6"></circle>
+<rect fill="#0e2230" height="24" rx="6" stroke="#38bdf8" stroke-width="1.5" width="92" x="244" y="148"></rect>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="290" y="164">04:00 cleanup</text>
+<!-- disparo 3: relatorio 09h -->
+<line class="wf-a" stroke="#fbbf24" stroke-width="2" x1="450" x2="450" y1="120" y2="70"></line>
+<circle cx="450" cy="120" fill="#fbbf24" r="6"></circle>
+<rect fill="#1f1604" height="24" rx="6" stroke="#fbbf24" stroke-width="1.5" width="88" x="406" y="46"></rect>
+<text fill="#fbbf24" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="450" y="62">9 a.m. report</text>
+<!-- disparo 4: a cada 5 min -->
+<circle cx="600" cy="120" fill="#38bdf8" opacity="0.8" r="5"></circle>
+<circle cx="630" cy="120" fill="#38bdf8" opacity="0.8" r="5"></circle>
+<circle cx="660" cy="120" fill="#38bdf8" opacity="0.8" r="5"></circle>
+<rect fill="#0e2230" height="24" rx="6" stroke="#38bdf8" stroke-width="1.5" width="120" x="588" y="148"></rect>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="648" y="164">check every 5 min</text>
+</svg>
+</div>
+<div class="bg-gradient-to-br from-amber-900/30 to-dark-800 rounded-xl border border-amber-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-amber-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogy: The Programmable Alarm Clock
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m4-4-t1-p2">Think of cron as your phone's alarm clock, only much more powerful. On an alarm clock, you set a time and an action: "7 a.m., play the music." In cron, you set a time and a command: "3 a.m., run the backup."</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span>The alarm goes off <strong>every day</strong> at the same time, even if you’re not watching.</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span>Cron <strong>run the command</strong> every day at the scheduled time, even if no one is logged in to the server.</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span>The difference: an alarm clock makes noise; cron does <strong>work</strong> (backup, cleanup, email sending).</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Why cron is so widely used
+        </h3>
+<p class="text-neutral-300" data-inema-block="m4-4-t1-p3">Every task that needs <strong>if it repeats over time</strong> and a candidate to become a cron job: database backup, temporary file cleanup, certificate renewal, report delivery, checking which sites are online. Instead of remembering to do this manually (and forgetting half the time), cron does it on autopilot. Each scheduled task is called a <strong class="text-amber-400">cron job</strong>.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 2: Sintaxe do crontab                 -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-4-4#topico-2" id="topico-2">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold">Crontab Syntax: The 5 Fields</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m4-4-t2-p1">
+        Each scheduled task line has <strong class="text-amber-400">5 time fields</strong> followed by the command. The 5 fields answer, from left to right: at what minute, at what hour, on what day of the month, in what month, and on what day of the week. After them comes the command to run.
+      </p>
+<!-- SVG: os 5 campos do crontab -->
+<div class="rounded-2xl border border-amber-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="Diagram of the five crontab fields: asterisk asterisk asterisk asterisk asterisk, identifying minute, hour, day of the month, month, and day of the week, and the command to run" class="w-full h-auto" role="img" viewbox="0 0 800 240">
+<defs>
+<lineargradient id="m44b-grad" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#fbbf24"></stop><stop offset="1" stop-color="#f59e0b"></stop>
+</lineargradient>
+<filter height="180%" id="m44b-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+</defs>
+<rect fill="#0b1220" height="240" opacity="0.0" width="800" x="0" y="0"></rect>
+<text fill="#fbbf24" font-family="Inter,sans-serif" font-size="14" font-weight="600" text-anchor="middle" x="400" y="34">THE CRONTAB LINE</text>
+<!-- os 5 asteriscos -->
+<g font-family="monospace" font-size="34" font-weight="700">
+<text class="wf-a" fill="#fbbf24" text-anchor="middle" x="120" y="100">*</text>
+<text class="wf-a" fill="#fbbf24" text-anchor="middle" x="220" y="100">*</text>
+<text class="wf-a" fill="#fbbf24" text-anchor="middle" x="320" y="100">*</text>
+<text fill="#38bdf8" text-anchor="middle" x="420" y="100">*</text>
+<text fill="#38bdf8" text-anchor="middle" x="520" y="100">*</text>
+</g>
+<g filter="url(#m44b-glow)">
+<rect fill="#1f1604" height="34" rx="8" stroke="url(#m44b-grad)" stroke-width="2" width="150" x="600" y="78"></rect>
+</g>
+<text fill="#fbbf24" font-family="monospace" font-size="16" text-anchor="middle" x="675" y="100">command</text>
+<!-- linhas guia -->
+<g stroke="#4b5563" stroke-width="1.5">
+<line x1="120" x2="120" y1="112" y2="150"></line>
+<line x1="220" x2="220" y1="112" y2="170"></line>
+<line x1="320" x2="320" y1="112" y2="150"></line>
+<line x1="420" x2="420" y1="112" y2="170"></line>
+<line x1="520" x2="520" y1="112" y2="150"></line>
+</g>
+<!-- rotulos -->
+<text fill="#d1d5db" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="120" y="166">minute</text>
+<text fill="#6b7280" font-family="monospace" font-size="10" text-anchor="middle" x="120" y="182">0-59</text>
+<text fill="#d1d5db" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="220" y="186">time</text>
+<text fill="#6b7280" font-family="monospace" font-size="10" text-anchor="middle" x="220" y="202">0-23</text>
+<text fill="#d1d5db" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="320" y="166">day of the month</text>
+<text fill="#6b7280" font-family="monospace" font-size="10" text-anchor="middle" x="320" y="182">1-31</text>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="420" y="186">month</text>
+<text fill="#6b7280" font-family="monospace" font-size="10" text-anchor="middle" x="420" y="202">1-12</text>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="520" y="166">day of the week</text>
+<text fill="#6b7280" font-family="monospace" font-size="10" text-anchor="middle" x="520" y="182">0-6 (Sun=0)</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="12" text-anchor="middle" x="400" y="228">* means "all" — every minute, every hour, every day...</text>
+</svg>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">The golden rule</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m4-4-t2-p2">The asterisk <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">*</code> means “any value.” The task only runs when <strong>all</strong> the fields match the current clock.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># minute hour day month weekday command</p>
+<p class="text-amber-400">  *      *    *   *   *           command</p>
+<p class="text-neutral-400 mt-2"># The line above runs EVERY MINUTE (everything is *)</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Examples to read carefully</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm space-y-1">
+<p class="text-amber-400">0 3 * * *      <span class="text-neutral-400"># every day at 03h00</span></p>
+<p class="text-amber-400">30 8 * * 1     <span class="text-neutral-400"># every Monday at 08h30</span></p>
+<p class="text-amber-400">*/5 * * * *    <span class="text-neutral-400"># every 5 minutes</span></p>
+<p class="text-amber-400">0 */2 * * *    <span class="text-neutral-400"># every 2 hours, at minute 0</span></p>
+<p class="text-amber-400">0 0 1 * *      <span class="text-neutral-400"># on the 1st of every month, at midnight</span></p>
+<p class="text-amber-400">0 9 * * 1-5    <span class="text-neutral-400"># Mon–Fri at 09h00 (business days)</span></p>
+</div>
+<p class="text-neutral-400 text-sm mt-3">O <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">/</code> means “every N items.” The <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">-</code> and an interval. The comma (<code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">1,15</code>) lists specific values.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Tip: use crontab.guru
+        </h3>
+<p class="text-neutral-300" data-inema-block="m4-4-t2-p3">If you're unsure what a line does, paste it into the site <strong>crontab.guru</strong>. It translates the expression into plain English ("every 5 minutes", "every Sunday at midnight"). It’s the fastest way to check that you entered the right schedule before saving.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 3: crontab -e                         -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-4-4#topico-3" id="topico-3">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold">crontab -e: Adding Tasks</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m4-4-t3-p1">
+        To view and edit your user's scheduled tasks, use the command <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">crontab</code>. It opens a special file where each line is a scheduled task. You don’t edit this file directly: let the command <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">crontab -e</code> open the editor for you.
+      </p>
+<!-- Timeline de passos -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+<span class="text-amber-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Open the task editor</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-amber-400">$ crontab -e</p>
+<p class="text-neutral-400 mt-2"># The first time, it asks which editor to use.</p>
+<p class="text-neutral-300">Select an editor. To change later, run 'select-editor'.</p>
+<p class="text-neutral-300">  1. /bin/nano        &lt;---- easiest</p>
+<p class="text-neutral-300">  2. /usr/bin/vim.basic</p>
+<p class="text-neutral-400 mt-1"># Choose 1 (nano) by typing 1 and pressing Enter.</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+<span class="text-amber-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Add a line at the end of the file</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Runs every day at 03:00</p>
+<p class="text-amber-400">0 3 * * * /home/usuario/backup.sh</p>
+</div>
+<p class="text-neutral-300 text-sm mt-3">Each task is in <strong class="text-amber-400">one line</strong>. Use the script's full path to avoid surprises.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+<span class="text-amber-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Save and exit</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># In nano: Ctrl+O, Enter (save), then Ctrl+X (exit)</p>
+<p class="text-neutral-300">crontab: installing new crontab</p>
+</div>
+<p class="text-neutral-300 text-sm mt-3">The message <strong class="text-amber-400">"installing new crontab"</strong> confirms that cron has already registered your scheduled task.</p>
+</div>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Commands for managing crontab</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Edit the tasks</p>
+<p class="text-amber-400">$ crontab -e</p>
+<p class="text-neutral-400 mt-3"># View (list) the current tasks</p>
+<p class="text-amber-400">$ crontab -l</p>
+<p class="text-neutral-300">0 3 * * * /home/usuario/backup.sh</p>
+<p class="text-neutral-400 mt-3"># Delete ALL tasks (be careful)</p>
+<p class="text-red-400">$ crontab -r</p>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Common Error
+        </h3>
+<p class="text-neutral-300" data-inema-block="m4-4-t3-p2"><strong>Problem:</strong> "My script runs in the terminal, but cron doesn’t execute anything." <br/><strong>Solution:</strong> Almost always, it’s a path issue. Cron runs with an almost empty environment, without your PATH. Always use <strong>full paths</strong> (e.g.: <code class="font-mono text-sm text-red-400">/usr/bin/python3 /home/usuario/script.py</code> instead of just <code class="font-mono text-sm text-red-400">python3 script.py</code>) and grant execute permission with <code class="font-mono text-sm text-red-400">chmod +x backup.sh</code>.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 4: Exemplos praticos                  -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-4-4#topico-4" id="topico-4">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold">Practical Everyday Examples</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m4-4-t4-p1">
+        Theory only matters when it turns into practice. Here are three tasks that practically every server ends up needing: a <strong class="text-amber-400">daily backup</strong>, a <strong class="text-amber-400">log cleanup</strong> old ones and one <strong class="text-amber-400">weekly report</strong>. Copy it, adapt the paths, and use it.
+      </p>
+<!-- Backup diario -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">💾 Daily database backup</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m4-4-t4-p2">Every day at 02h00, compacts the database and saves it with the date in the filename.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># run crontab -e and add:</p>
+<p class="text-amber-400">0 2 * * * pg_dump app | gzip &gt; /backups/app-$(date +\%F).sql.gz</p>
+<p class="text-neutral-400 mt-2"># Result, one file per day:</p>
+<p class="text-neutral-300">/backups/app-2026-06-17.sql.gz</p>
+<p class="text-neutral-300">/backups/app-2026-06-18.sql.gz</p>
+</div>
+<p class="text-neutral-400 text-sm mt-3">In crontab, the percent sign needs to become <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">\%</code> (with a backslash), or cron will treat it as a line break.</p>
+</div>
+<!-- Limpeza de logs -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">🧹 Cleaning Up Old Logs</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m4-4-t4-p3">Every Sunday at midnight, delete log files older than 30 days.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Sunday at 04:00 (day of the week = 0)</p>
+<p class="text-amber-400">0 4 * * 0 find /var/log/app -name "*.log" -mtime +30 -delete</p>
+</div>
+<p class="text-neutral-400 text-sm mt-3"><code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">-mtime +30</code> = modified more than 30 days ago. This keeps the logs from filling up the server's disk.</p>
+</div>
+<!-- Relatorio semanal -->
+<div class="bg-gradient-to-br from-amber-900/30 to-dark-800 rounded-xl border border-amber-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-amber-400 mb-4 flex items-center">
+<span class="mr-2">📊</span> Weekly email report
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m4-4-t4-p4">Every Monday at 08h00, run a script that builds the weekly report and sends it.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Monday (day of the week = 1) at 08:00</p>
+<p class="text-amber-400">0 8 * * 1 /usr/bin/python3 /home/usuario/relatorio.py</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ What TO DO</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Use the full path to scripts and binaries</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Test the command in the terminal before scheduling it</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Run heavy tasks overnight</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ What NOT to do</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Use relative paths (e.g., <code class="font-mono text-sm">./script.sh</code>)</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Forget to escape the <code class="font-mono text-sm">%</code> with <code class="font-mono text-sm">\%</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Schedule everything for the same minute (overloads the system)</span></li>
+</ul>
+</div>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 5: Logs de cron                        -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-4-4#topico-5" id="topico-5">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold">Logs: How to Tell Whether Cron Ran</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m4-4-t5-p1">
+        Cron is silent: it runs in the background and doesn’t show anything on your screen. That’s why the most common question is <strong class="text-amber-400">"did it run?"</strong>. The answer comes from the logs. The system records every time a cron job runs, and you can redirect your command's output to its own file.
+      </p>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Where cron records the run
+        </h3>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Ubuntu/Debian: the log is in syslog</p>
+<p class="text-amber-400">$ grep CRON /var/log/syslog</p>
+<p class="text-neutral-300">Jun 17 03:00:01 srv CRON[1234]: (usuario) CMD (/home/usuario/backup.sh)</p>
+<p class="text-neutral-400 mt-3"># On many systems, also:</p>
+<p class="text-amber-400">$ journalctl -u cron --since today</p>
+</div>
+<p class="text-neutral-300 text-sm mt-4" data-inema-block="m4-4-t5-p2">These lines prove that the cron <strong class="text-blue-400">triggered</strong> the command. But they don’t show what your command printed or whether it failed. To see that, redirect the output.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Redirect the output to a file</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m4-4-t5-p3">Add <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-amber-400">&gt;&gt; arquivo.log 2&gt;&amp;1</code> at the end of the line. That way, both normal output and errors go to the file.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Save output and errors to backup.log</p>
+<p class="text-amber-400">0 2 * * * /home/usuario/backup.sh &gt;&gt; /home/usuario/backup.log 2&gt;&amp;1</p>
+<p class="text-neutral-400 mt-3"># Then, read the file to check</p>
+<p class="text-amber-400">$ tail -n 20 /home/usuario/backup.log</p>
+<p class="text-neutral-300">[2026-06-17 02:00] Backup completed: 1 table, 3.2 MB</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">What each part means</h3>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span><code class="bg-dark-700 px-1.5 py-0.5 rounded font-mono text-amber-400">&gt;&gt;</code> appends to the end of the file (without deleting what was already there).</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span><code class="bg-dark-700 px-1.5 py-0.5 rounded font-mono text-amber-400">&gt;</code> (one only) overwrites the file on every run.</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span><code class="bg-dark-700 px-1.5 py-0.5 rounded font-mono text-amber-400">2&gt;&amp;1</code> sends errors to the same place as standard output.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Tip: cron can email you
+        </h3>
+<p class="text-neutral-300" data-inema-block="m4-4-t5-p4">If a cron job prints something and you <strong>no</strong> redirects the output; cron tries to email this output to the task owner (variable <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">MAILTO</code>). On servers without email configured, this only creates noise. That's why the usual practice is to always redirect output to a log file and read it from there.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 6: systemd timers                      -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-4-4#topico-6" id="topico-6">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold">Alternative: systemd timers</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m4-4-t6-p1">
+        Cron is great and simple, but there’s a more modern sibling: <strong class="text-amber-400">systemd timers</strong>. In module 4.3, you saw systemd managing services. It can also schedule tasks. A timer starts a service at the right time, much like cron, but with more features.
+      </p>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">What a timer looks like</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m4-4-t6-p2">There are two files: one <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">.service</code> (what to run) and a <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">.timer</code> (when it runs).</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># backup.timer</p>
+<p class="text-neutral-300">[Timer]</p>
+<p class="text-amber-400">OnCalendar=*-*-* 03:00:00</p>
+<p class="text-amber-400">Persistent=true</p>
+<p class="text-neutral-300">[Install]</p>
+<p class="text-neutral-300">WantedBy=timers.target</p>
+<p class="text-neutral-400 mt-3"># Enable and view the active timers</p>
+<p class="text-amber-400">$ systemctl enable --now backup.timer</p>
+<p class="text-amber-400">$ systemctl list-timers</p>
+</div>
+<p class="text-neutral-400 text-sm mt-3">The row <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">Persistent=true</code> runs the task as soon as the machine starts, in case it was turned off at the scheduled time. Simple cron doesn't do this.</p>
+</div>
+<!-- Comparacao quando usar cada um -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-6">
+<h4 class="font-bold text-amber-400 mb-4">⏰ Prefer cron when</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-amber-400">✓</span><span>The task is simple (one command, one schedule)</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400">✓</span><span>You want to write it and forget about it quickly</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400">✓</span><span>The server stays on all the time</span></li>
+</ul>
+</div>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6">
+<h4 class="font-bold text-blue-400 mb-4">⚙ Prefer systemd timer when</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-blue-400">✓</span><span>Need to run what you missed while it was off</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400">✓</span><span>Want logs integrated with <code class="font-mono text-sm">journalctl</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400">✓</span><span>You already manage the rest with systemd</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-gradient-to-br from-amber-900/30 to-dark-800 rounded-xl border border-amber-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-amber-400 mb-3 flex items-center">
+<span class="mr-2">🧠</span> Analogy: Two Alarm Clocks
+        </h3>
+<p class="text-neutral-300" data-inema-block="m4-4-t6-p3">Cron is the reliable, straightforward analog bedside alarm clock: you turn the dial, and that’s it. A systemd timer is like a phone alarm app: a smart alarm that catches up on missed runs and keeps a history of when it went off. Both wake you up. Start with cron; when you need the extra features, switch to the timer.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Mark as read</span>
+</button>
+</div>
+</section>
+<!-- RESUMO -->
+<section class="mb-12">
+<div class="bg-gradient-to-br from-amber-900/40 via-dark-800 to-dark-800 rounded-xl border border-amber-500/30 p-8">
+<h2 class="text-2xl font-bold mb-6 flex items-center">
+<span class="mr-3">📚</span> Module Summary
+        </h2>
+<div class="space-y-4 mb-8">
+<div class="flex items-start space-x-3">
+<span class="text-amber-400 mt-1">✓</span>
+<div><strong class="text-white">Cron is the server’s alarm clock</strong><span class="text-neutral-400"> - runs commands on a set schedule, by itself</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-amber-400 mt-1">✓</span>
+<div><strong class="text-white">5 fields: minute hour day month day-of-week</strong><span class="text-neutral-400"> - * = any value</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-amber-400 mt-1">✓</span>
+<div><strong class="text-white">crontab -e, -l, -r</strong><span class="text-neutral-400"> - edit, list, and remove tasks</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-amber-400 mt-1">✓</span>
+<div><strong class="text-white">Full path and log</strong><span class="text-neutral-400"> - use an absolute path and &gt;&gt; arquivo.log 2&gt;&amp;1</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-amber-400 mt-1">✓</span>
+<div><strong class="text-white">systemd timers</strong><span class="text-neutral-400"> - a modern alternative when you need more features</span></div>
+</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+<h3 class="font-semibold text-amber-400 mb-2">Next Track:</h3>
+<p class="text-neutral-300">Track 5 - AI Assistants: you already know the terminal, deploys, servers, and automation. Now it’s time to put AI to work with you.</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">
+            ← Back to Track
+          </a>
+<a class="flex-1 text-center px-6 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-500 transition-colors" href="../trilha5/index.html">
+            Next Track →
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>From Zero to Deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

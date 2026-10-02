@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>Ruta 3: Servidor propio | De cero al deploy</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'purple' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'purple');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.purple;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha purple) */
+    html:not(.dark) .text-purple-400 { color: #7c3aed; }
+    html:not(.dark) .bg-purple-500\/20 { background-color: rgba(124, 58, 237, 0.12); }
+    html:not(.dark) .bg-purple-500\/10 { background-color: rgba(124, 58, 237, 0.08); }
+    html:not(.dark) .border-purple-500\/30 { border-color: rgba(124, 58, 237, 0.25); }
+    html:not(.dark) .hover\:bg-purple-500\/30:hover { background-color: rgba(124, 58, 237, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+
+    /* Topicos expansiveis */
+    .topic-explanation { display: none; }
+    .topic-explanation.active { display: block; }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha3/" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha3/" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha3/" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha3/" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="../../../en/curso/trilha3/" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">EN</a><a href="./" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">De cero al deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" href="../trilha1/index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal y Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" href="../trilha2/index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy moderno</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-purple-400 bg-purple-500/10" href="index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor propio</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" href="../trilha4/index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors" href="../trilha5/index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- HEADER DE TRILHA -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">TRILHA 3</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">🖥️ Servidor propio</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Tener y proteger tu propio servidor en la nube: VPS, SSH, firewall y gestión de acceso. Al terminar, tendrás una máquina propia funcionando las 24 horas, a la que accederás mediante un túnel seguro y protegida contra intrusos.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">4</div>
+<div class="text-xs text-neutral-400">Módulos</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">24</div>
+<div class="text-xs text-neutral-400">Temas</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">~3h</div>
+<div class="text-xs text-neutral-400">Duración</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">Intermedio</div>
+<div class="text-xs text-neutral-400">Nivel</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<!-- HERO SVG: fan-out (voce -> VPS/SSH/firewall/tokens -> servidor blindado) -->
+<div class="rounded-2xl border border-purple-500/30 bg-dark-900/40 p-3 sm:p-4 mb-10 overflow-hidden">
+<svg aria-label="Diagrama de flujo: partes de un servidor básico, pasas por VPS, SSH, firewall y gestión de tokens, y todo converge en un servidor propio protegido" class="w-full h-auto" role="img" viewbox="0 0 800 280">
+<defs>
+<lineargradient id="t3hero-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#c084fc"></stop><stop offset="1" stop-color="#a855f7"></stop>
+</lineargradient>
+<filter height="180%" id="t3hero-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="t3hero-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#c084fc" opacity="0.10" r="1.3"></circle>
+</pattern>
+</defs>
+<rect fill="url(#t3hero-grid)" height="280" width="800" x="0" y="0"></rect>
+<!-- Origem: VOCE -->
+<g filter="url(#t3hero-glow)">
+<rect fill="#1a1230" height="60" rx="14" stroke="url(#t3hero-grad)" stroke-width="2" width="120" x="30" y="110"></rect>
+</g>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="15" font-weight="600" text-anchor="middle" x="90" y="138">TÚ</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="90" y="158">servidor sin configurar</text>
+<!-- Ramos (linhas) -->
+<path class="wf-a" d="M150 140 C 240 140, 240 48, 330 48" fill="none" stroke="#c084fc" stroke-width="2.5"></path>
+<path class="wf-a" d="M150 140 C 240 140, 240 110, 330 110" fill="none" stroke="#38bdf8" stroke-width="2.5"></path>
+<path class="wf-a" d="M150 140 C 240 140, 240 172, 330 172" fill="none" stroke="#c084fc" stroke-width="2.5"></path>
+<path class="wf-a" d="M150 140 C 240 140, 240 234, 330 234" fill="none" stroke="#38bdf8" stroke-width="2.5"></path>
+<!-- Ramo 1: VPS -->
+<rect fill="#1a1a2e" height="52" rx="12" stroke="#c084fc" stroke-width="1.8" width="160" x="330" y="22"></rect>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="410" y="44">VPS</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="410" y="62">PC en la nube</text>
+<!-- Ramo 2: SSH -->
+<rect fill="#1a1a2e" height="52" rx="12" stroke="#38bdf8" stroke-width="1.8" width="160" x="330" y="84"></rect>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="410" y="106">SSH</text>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="410" y="124">túnel seguro</text>
+<!-- Ramo 3: FIREWALL -->
+<rect fill="#1a1a2e" height="52" rx="12" stroke="#c084fc" stroke-width="1.8" width="160" x="330" y="146"></rect>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="410" y="168">FIREWALL</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="410" y="186">el portero</text>
+<!-- Ramo 4: TOKENS -->
+<rect fill="#1a1a2e" height="52" rx="12" stroke="#38bdf8" stroke-width="1.8" width="160" x="330" y="208"></rect>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="410" y="230">TOKENS</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="410" y="248">llaves del reino</text>
+<!-- Convergencia -->
+<path d="M490 48 C 580 48, 580 140, 650 140" fill="none" opacity="0.8" stroke="#c084fc" stroke-width="2.5"></path>
+<path d="M490 110 C 580 110, 580 140, 650 140" fill="none" opacity="0.8" stroke="#38bdf8" stroke-width="2.5"></path>
+<path d="M490 172 C 580 172, 580 140, 650 140" fill="none" opacity="0.8" stroke="#c084fc" stroke-width="2.5"></path>
+<path d="M490 234 C 580 234, 580 140, 650 140" fill="none" opacity="0.8" stroke="#38bdf8" stroke-width="2.5"></path>
+<!-- Resultado: SERVIDOR BLINDADO -->
+<g filter="url(#t3hero-glow)">
+<rect fill="#1a1230" height="68" rx="14" stroke="url(#t3hero-grad)" stroke-width="2.4" width="120" x="650" y="106"></rect>
+</g>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="15" font-weight="600" text-anchor="middle" x="710" y="134">🛡️ SEGURO</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="710" y="156">tu servidor</text>
+</svg>
+</div>
+<!-- ============================================ -->
+<!-- MAPA DA TRILHA                               -->
+<!-- ============================================ -->
+<section class="mb-12">
+<h2 class="text-2xl font-bold mb-6">Mapa de la ruta</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-purple-500/30 p-5 transition-all" href="#modulo-3-1">
+<div class="flex items-center justify-between mb-2">
+<span class="text-purple-400 font-bold text-sm">3.1</span>
+<span class="text-xs text-neutral-500">~45 min</span>
+</div>
+<h3 class="font-semibold mb-1 group-hover:text-purple-400 transition-colors">🖥️ VPS</h3>
+<p class="text-xs text-neutral-400">Tu PC en la nube</p>
+</a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-purple-500/30 p-5 transition-all" href="#modulo-3-2">
+<div class="flex items-center justify-between mb-2">
+<span class="text-purple-400 font-bold text-sm">3.2</span>
+<span class="text-xs text-neutral-500">~45 min</span>
+</div>
+<h3 class="font-semibold mb-1 group-hover:text-purple-400 transition-colors">🔐 SSH</h3>
+<p class="text-xs text-neutral-400">Túnel secreto</p>
+</a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-purple-500/30 p-5 transition-all" href="#modulo-3-3">
+<div class="flex items-center justify-between mb-2">
+<span class="text-purple-400 font-bold text-sm">3.3</span>
+<span class="text-xs text-neutral-500">~45 min</span>
+</div>
+<h3 class="font-semibold mb-1 group-hover:text-purple-400 transition-colors">🛡️ Firewall</h3>
+<p class="text-xs text-neutral-400">El portero del servidor</p>
+</a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-purple-500/30 p-5 transition-all" href="#modulo-3-4">
+<div class="flex items-center justify-between mb-2">
+<span class="text-purple-400 font-bold text-sm">3.4</span>
+<span class="text-xs text-neutral-500">~45 min</span>
+</div>
+<h3 class="font-semibold mb-1 group-hover:text-purple-400 transition-colors">🎫 Tokens y acceso</h3>
+<p class="text-xs text-neutral-400">Las llaves del reino</p>
+</a>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- CONTEUDO DETALHADO                           -->
+<!-- ============================================ -->
+<h2 class="text-2xl font-bold mb-6">Contenido detallado</h2>
+<!-- ===== MODULO 3.1 ===== -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20" id="modulo-3-1">
+<div class="p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2">
+<span class="text-purple-400 font-bold">3.1</span>
+<span class="text-xs text-neutral-500">~45 min</span>
+</div>
+<h3 class="text-2xl font-bold mb-2">🖥️ VPS</h3>
+<p class="text-neutral-400 text-sm">Un VPS es tu PC en la nube: una máquina Linux que permanece encendida las 24 horas del día y a la que puedes acceder desde cualquier lugar del mundo. Aquí contratas, accedes y cuidas tu primera.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<!-- Topico 1 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+<span class="text-lg">🖥️</span>
+<div>
+<span class="font-medium">Qué es un VPS</span>
+<span class="text-neutral-500 text-sm ml-2">- servidor privado virtual</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">VPS significa Virtual Private Server, un servidor privado virtual. Es una parte de una computadora potente, en un centro de datos, que queda solo para ti y funciona día y noche.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Con un VPS alojas sitios, bots, bases de datos y APIs sin depender de servicios listos para usar. Es tu computadora en la nube, bajo tu control total.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">El VPS tiene una IP pública fija, ejecuta Linux y permanece siempre encendido. A diferencia de tu portátil, no se apaga cuando cierras la tapa.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 2 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+<span class="text-lg">🏢</span>
+<div>
+<span class="font-medium">Proveedores</span>
+<span class="text-neutral-500 text-sm ml-2">- DigitalOcean, Hetzner, Contabo</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Los proveedores son las empresas que alquilan VPS por mes. DigitalOcean es sencillo y tiene muchos tutoriales; Hetzner ofrece una excelente relación calidad-precio; Contabo ofrece muchos recursos a bajo costo.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Elegir el proveedor adecuado evita pagar de más o quedar atado. Para empezar, cualquiera de los tres sirve; lo que cambia es el precio, la ubicación del centro de datos y el soporte.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Compara el precio mensual, la RAM, la vCPU y la región. Elige un centro de datos cerca de tus usuarios para que el sitio responda más rápido.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 3 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+<span class="text-lg">💳</span>
+<div>
+<span class="font-medium">Contratar el primer VPS</span>
+<span class="text-neutral-500 text-sm ml-2">- del registro a la IP</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">El paso a paso para crear una cuenta, elegir el plan más barato (el «droplet» o «servidor»), seleccionar Ubuntu y hacer clic para crear la máquina.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Es el momento en que la máquina empieza a existir. En pocos minutos recibes una IP pública y una contraseña de acceso listas para usar.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Elige Ubuntu LTS, el plan más económico y una región cercana. Anota la IP y la contraseña de root que el proveedor muestra al final.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 4 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+<span class="text-lg">💻</span>
+<div>
+<span class="font-medium">Primer acceso desde la consola web</span>
+<span class="text-neutral-500 text-sm ml-2">- terminal en el navegador</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Todo proveedor ofrece una consola web: una terminal que se abre dentro del navegador y te conecta al servidor sin necesidad de ningún programa.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Es la forma más rápida de entrar al servidor por primera vez, incluso antes de configurar SSH. Funciona hasta cuando el acceso normal falla.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Inicia sesión como <code class="font-mono">root</code> con la contraseña que te envió el proveedor. La consola web es tu plan B de emergencia: guarda este acceso.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 5 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+<span class="text-lg">🐧</span>
+<div>
+<span class="font-medium">Entender Linux en el servidor</span>
+<span class="text-neutral-500 text-sm ml-2">- usuarios, carpetas, permisos</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Una visión general de cómo funciona Linux en el servidor: el usuario root (jefe), los usuarios comunes, el árbol de carpetas y los permisos de archivo.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">El servidor no tiene ventanas ni clics: todo se hace con comandos. Entender los usuarios y los permisos evita que dañes el sistema o dejes brechas abiertas.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Crea un usuario común y usa <code class="font-mono">sudo</code> en vez de usar root todo el tiempo. <code class="font-mono">whoami</code> muestra quién eres; los permisos controlan quién puede leer y escribir.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 6 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+<span class="text-lg">🔧</span>
+<div>
+<span class="font-medium">Actualización y mantenimiento básico</span>
+<span class="text-neutral-500 text-sm ml-2">- update, upgrade, disco</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Los comandos para cuidar del servidor: <code class="font-mono">apt update</code> e <code class="font-mono">apt upgrade</code> para actualizar programas y revisar el espacio en disco y la memoria.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Un servidor desactualizado y con puertos abiertos es una puerta para los intrusos. Actualizarlo con frecuencia cierra brechas de seguridad y mantiene todo funcionando.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Ejecuta <code class="font-mono">apt update &amp;&amp; apt upgrade</code> cada semana. Usa <code class="font-mono">df -h</code> para ver el disco y <code class="font-mono">free -h</code> para ver la memoria.</p></div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+<button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors" onclick="openModal('modal-3-1')">Ver en modal</button>
+<a class="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors" href="modulo-3-1.html">Ver completo</a>
+</div>
+</div>
+<!-- ===== MODULO 3.2 ===== -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20" id="modulo-3-2">
+<div class="p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2">
+<span class="text-purple-400 font-bold">3.2</span>
+<span class="text-xs text-neutral-500">~45 min</span>
+</div>
+<h3 class="text-2xl font-bold mb-2">🔐 SSH</h3>
+<p class="text-neutral-400 text-sm">SSH es el túnel secreto entre tu computadora y el servidor: todo lo que pasa por él está cifrado. Con claves, entras sin escribir una contraseña y con mucha más seguridad.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<!-- Topico 1 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+<span class="text-lg">🔐</span>
+<div>
+<span class="font-medium">Qué es SSH</span>
+<span class="text-neutral-500 text-sm ml-2">- conexión remota segura</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">SSH (Secure Shell) es un protocolo que crea un túnel cifrado entre tu computadora y el servidor. Todo lo que escribes viaja protegido.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Es la forma estándar de controlar cualquier servidor Linux del mundo. Sin SSH, no puedes operar máquinas remotas de forma segura.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Piensa en un túnel blindado: nadie en el camino puede leer lo que pasa. El servidor escucha SSH en el puerto 22 de forma predeterminada.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 2 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+<span class="text-lg">🔑</span>
+<div>
+<span class="font-medium">Generar par de claves</span>
+<span class="text-neutral-500 text-sm ml-2">- ssh-keygen</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">El comando <code class="font-mono">ssh-keygen</code> crea un par de claves: una privada (solo tú la tienes) y una pública (va al servidor). Juntas, demuestran quién eres.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Las claves son más seguras que las contraseñas: no se pueden adivinar y no viajan por la red. Son la base del acceso sin contraseña.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">La privada (<code class="font-mono">id_ed25519</code>) nunca sale de tu PC; la pública (<code class="font-mono">.pub</code>) se puede distribuir. Protege la privada con una passphrase.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 3 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+<span class="text-lg">📤</span>
+<div>
+<span class="font-medium">Copiar la clave pública al servidor</span>
+<span class="text-neutral-500 text-sm ml-2">- ssh-copy-id</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">El paso para llevar tu clave pública al servidor, normalmente con <code class="font-mono">ssh-copy-id</code>, que la coloca en el archivo <code class="font-mono">authorized_keys</code>.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Sin la clave pública en el servidor, este no reconoce tu clave privada. Este paso conecta los dos extremos del túnel.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">ssh-copy-id usuario@ip</code> lo hace todo de una vez. La clave queda en <code class="font-mono">~/.ssh/authorized_keys</code> dentro del servidor.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 4 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+<span class="text-lg">🔗</span>
+<div>
+<span class="font-medium">Conectar mediante ssh</span>
+<span class="text-neutral-500 text-sm ml-2">- entrar al servidor</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">El comando <code class="font-mono">ssh usuario@ip</code> abre la conexión con el servidor. Si las claves están bien, entras directamente, sin escribir la contraseña.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Es la puerta de entrada a tu día a día en el servidor. A partir de aquí, cada comando que ejecutas ocurre allí, en la nube.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">En la primera conexión te pregunta sobre la "fingerprint": escribe <code class="font-mono">yes</code>. Usa <code class="font-mono">exit</code> para salir y volver a tu PC.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 5 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+<span class="text-lg">⚙️</span>
+<div>
+<span class="font-medium">Alias y configuración</span>
+<span class="text-neutral-500 text-sm ml-2">- ~/.ssh/config</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">El archivo <code class="font-mono">~/.ssh/config</code> guarda alias para tus servidores, con IP, usuario y clave. Así escribes <code class="font-mono">ssh meuserver</code> en vez del comando completo.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Memorizar IPs y flags es agotador y propenso a errores. Un alias bien hecho permite acceder al instante y organizar varias máquinas.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Cada bloque empieza con <code class="font-mono">Host apelido</code> y enumera <code class="font-mono">HostName</code>, <code class="font-mono">User</code> e <code class="font-mono">IdentityFile</code>. Un archivo, varios servidores.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 6 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+<span class="text-lg">🚫</span>
+<div>
+<span class="font-medium">Deshabilitar el acceso con contraseña</span>
+<span class="text-neutral-500 text-sm ml-2">- solo entra la clave</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Una configuración en el servidor que prohíbe iniciar sesión con contraseña y exige una clave SSH. Editar <code class="font-mono">sshd_config</code> cierra la puerta a quienes no tienen la clave.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Las contraseñas pueden descifrarse por fuerza bruta; las claves, no. Desactivar la contraseña elimina de una vez la principal fuente de intrusiones en servidores.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Define <code class="font-mono">PasswordAuthentication no</code> y reinicia SSH. <strong class="text-red-400">Prueba la clave primero</strong> antes de cerrar la contraseña, para no quedarte afuera.</p></div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+<button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors" onclick="openModal('modal-3-2')">Ver en modal</button>
+<a class="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors" href="modulo-3-2.html">Ver completo</a>
+</div>
+</div>
+<!-- ===== MODULO 3.3 ===== -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20" id="modulo-3-3">
+<div class="p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2">
+<span class="text-purple-400 font-bold">3.3</span>
+<span class="text-xs text-neutral-500">~45 min</span>
+</div>
+<h3 class="text-2xl font-bold mb-2">🛡️ Firewall</h3>
+<p class="text-neutral-400 text-sm">El firewall es el portero del servidor: decide qué puertos quedan abiertos y quién puede entrar. Con él, expones solo lo necesario y bloqueas al resto del mundo.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<!-- Topico 1 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+<span class="text-lg">🛡️</span>
+<div>
+<span class="font-medium">Qué es un firewall</span>
+<span class="text-neutral-500 text-sm ml-2">- guardián de puertos</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Un firewall es un filtro que decide qué tráfico entra y cuál sale del servidor, puerto por puerto. Es el portero que revisa cada conexión antes de dejarla pasar.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Sin firewall, todos los servicios quedan expuestos en Internet. Con él, abres solo lo necesario y cierras el resto, lo que reduce mucho el riesgo de intrusión.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Los servicios escuchan en «puertos» numerados. El firewall aplica reglas para permitir (allow) y denegar (deny) por puerto y origen.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 2 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+<span class="text-lg">🪓</span>
+<div>
+<span class="font-medium">UFW: permitir/bloquear puertos</span>
+<span class="text-neutral-500 text-sm ml-2">- firewall sencillo de Ubuntu</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">UFW (Uncomplicated Firewall) es la forma fácil de administrar el firewall en Ubuntu. Con pocos comandos puedes permitir o bloquear puertos enteros.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">El firewall de Linux sin herramientas adicionales es complejo. UFW traduce todo en comandos simples y legibles, ideales para quienes están empezando.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">ufw allow 22</code> abre, <code class="font-mono">ufw deny</code> cierra y <code class="font-mono">ufw enable</code> inicia. <code class="font-mono">ufw status</code> muestra las reglas activas.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 3 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+<span class="text-lg">🔒</span>
+<div>
+<span class="font-medium">Puertos esenciales 22/80/443</span>
+<span class="text-neutral-500 text-sm ml-2">- SSH, HTTP, HTTPS</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Los tres puertos que casi todo servidor web necesita: <code class="font-mono">22</code> para SSH, <code class="font-mono">80</code> para HTTP y <code class="font-mono">443</code> para HTTPS.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Saber para qué sirve cada puerto evita dos errores clásicos: dejar todo abierto o cerrar el puerto SSH y perder el acceso.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Abre 22 (acceso), 80 y 443 (sitio) y cierra el resto. <strong class="text-red-400">Nunca</strong> bloquea la 22 sin garantizar otra vía de entrada.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 4 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+<span class="text-lg">👮</span>
+<div>
+<span class="font-medium">Fail2ban</span>
+<span class="text-neutral-500 text-sm ml-2">- bloquear a quien intenta invadir</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Fail2ban es un programa que vigila los logs y bloquea automáticamente cualquier IP que se equivoca de contraseña muchas veces seguidas, bloqueando los ataques de fuerza bruta.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Los servidores en internet reciben miles de intentos de intrusión al día. Fail2ban responde automáticamente, sin que tengas que estar pendiente.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Crea "jails" (cadenas) que supervisan servicios como SSH. Después de X intentos fallidos, la IP queda bloqueada durante un tiempo determinado.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 5 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+<span class="text-lg">🔒</span>
+<div>
+<span class="font-medium">SSL con Let's Encrypt</span>
+<span class="text-neutral-500 text-sm ml-2">- HTTPS gratis</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Let's Encrypt es una autoridad que emite certificados SSL gratuitos. Con la herramienta <code class="font-mono">certbot</code>, tu sitio empieza a usar HTTPS con el candado.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">HTTPS cifra el tráfico de tu sitio y los navegadores lo exigen. Sin el candado, los usuarios ven avisos de "sitio no seguro".</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">O <code class="font-mono">certbot</code> emite y renueva el certificado por sí solo. HTTPS usa el puerto 443 (recuerda abrirlo en el firewall).</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 6 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+<span class="text-lg">✅</span>
+<div>
+<span class="font-medium">Lista de verificación de seguridad</span>
+<span class="text-neutral-500 text-sm ml-2">- juntar todo</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Una lista de verificación que reúne las protecciones del recorrido: usuario común, clave SSH, contraseña desactivada, firewall activado, Fail2ban y HTTPS.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">La seguridad es la suma de varias capas. Una lista de verificación garantiza que no olvidaste ninguna y que el servidor quedó protegido.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Revisa cada elemento antes de poner algo importante en producción. Repite la lista de verificación cada vez que crees un servidor nuevo.</p></div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+<button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors" onclick="openModal('modal-3-3')">Ver en modal</button>
+<a class="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors" href="modulo-3-3.html">Ver completo</a>
+</div>
+</div>
+<!-- ===== MODULO 3.4 ===== -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 mb-6 scroll-mt-20" id="modulo-3-4">
+<div class="p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2">
+<span class="text-purple-400 font-bold">3.4</span>
+<span class="text-xs text-neutral-500">~45 min</span>
+</div>
+<h3 class="text-2xl font-bold mb-2">🎫 Tokens y acceso</h3>
+<p class="text-neutral-400 text-sm">Los tokens son las llaves del reino: dan acceso a APIs y servicios. Aquí aprendes a guardarlos, cambiarlos y auditar quién entra, sin exponer nunca un secreto.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<!-- Topico 1 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span>
+<span class="text-lg">🎫</span>
+<div>
+<span class="font-medium">Tipos de token</span>
+<span class="text-neutral-500 text-sm ml-2">- API key, JWT, PAT, OAuth</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Un panorama de los principales tipos de credenciales: API key (clave simple), JWT (token firmado con datos), PAT (token personal de GitHub) y OAuth (acceso delegado).</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Cada servicio usa un tipo de token. Saber distinguirlos evita confundir credenciales y usar la incorrecta en el lugar equivocado.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">La clave de API es la más simple; JWT lleva información dentro; OAuth es el "Iniciar sesión con Google". Todos demuestran quién eres ante el servicio.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 2 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span>
+<span class="text-lg">🗃️</span>
+<div>
+<span class="font-medium">Almacenar tokens en el servidor</span>
+<span class="text-neutral-500 text-sm ml-2">- archivo .env</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">La práctica de guardar tokens en variables de entorno, generalmente en un archivo <code class="font-mono">.env</code> que queda fuera del código y de Git.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Un token escrito directamente en el código se filtra fácilmente a GitHub y a Internet. El <code class="font-mono">.env</code> separa el secreto del programa.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Agrega <code class="font-mono">.env</code> al <code class="font-mono">.gitignore</code> siempre. Ajusta los permisos del archivo para que solo el propietario pueda leerlo.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 3 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span>
+<span class="text-lg">🔄</span>
+<div>
+<span class="font-medium">Rotación y vencimiento</span>
+<span class="text-neutral-500 text-sm ml-2">- cambiar antes de que se filtre</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">La rotación es el hábito de cambiar los tokens de vez en cuando; el vencimiento consiste en definir una fecha de validez para que dejen de funcionar por sí solos.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Un token que dura para siempre es peligroso: si se filtra, el daño es eterno. Rotarlo limita el tiempo durante el cual una filtración puede causar daños.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Prefiere tokens con vencimiento corto. Al cambiarlos, revoca el anterior. Si sospechas que hubo una filtración, rótalos de inmediato.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 4 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span>
+<span class="text-lg">🔑</span>
+<div>
+<span class="font-medium">Secrets managers (básico)</span>
+<span class="text-neutral-500 text-sm ml-2">- bóvedas de secretos</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Los secrets managers son bóvedas digitales que guardan tokens y contraseñas de forma segura, controlan el acceso y registran quién usó cada secreto.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Cuando el proyecto crece, distribuir los archivos <code class="font-mono">.env</code> se convierte en un caos y en un riesgo. Un almacén central organiza y protege todos los secretos.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Ejemplos: Vault, AWS Secrets Manager, Doppler. La idea central es: el secreto nunca queda en el código; siempre viene de la bóveda cuando se usa.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 5 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span>
+<span class="text-lg">📋</span>
+<div>
+<span class="font-medium">Auditoría de acceso</span>
+<span class="text-neutral-500 text-sm ml-2">- quién inició sesión y cuándo</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Auditoría es revisar los registros (logs) del servidor para saber quién entró, cuándo y qué hizo. En Linux, comandos como <code class="font-mono">last</code> y los logs de autenticación lo muestran.</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">Si algo sale mal, los logs cuentan la historia. Vigilar los accesos ayuda a detectar pronto una intrusión o un uso indebido.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm"><code class="font-mono">last</code> lista los últimos inicios de sesión; <code class="font-mono">/var/log/auth.log</code> guarda los intentos. Los intentos extraños son señal de ataque.</p></div>
+</div>
+</div>
+</div>
+<!-- Topico 6 -->
+<div class="topic-item">
+<button class="w-full px-6 py-4 flex items-center space-x-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)">
+<span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span>
+<span class="text-lg">✨</span>
+<div>
+<span class="font-medium">Buenas prácticas</span>
+<span class="text-neutral-500 text-sm ml-2">- reglas de oro</span>
+</div>
+</button>
+<div class="topic-explanation px-6 pb-4">
+<div class="bg-dark-700/50 rounded-lg p-4 space-y-3 ml-9">
+<div><span class="text-purple-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Un conjunto de reglas de oro para manejar tokens y accesos: el menor privilegio posible, nunca incluir secretos en el control de versiones y separar los entornos (prueba y producción).</p></div>
+<div><span class="text-purple-400 font-semibold">Por qué aprender:</span><p class="text-neutral-300 text-sm">La mayoría de las filtraciones ocurren por descuido, no por hackers geniales. Seguir buenas prácticas elimina los errores más comunes y peligrosos.</p></div>
+<div><span class="text-purple-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Dale a cada token solo el acceso mínimo necesario. Nunca pegues secretos en el código ni en el chat. Mantén separados los tokens de prueba y de producción.</p></div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 bg-dark-700/30 flex justify-start space-x-3">
+<button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-500 rounded-lg transition-colors" onclick="openModal('modal-3-4')">Ver en modal</button>
+<a class="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors" href="modulo-3-4.html">Ver completo</a>
+</div>
+</div>
+<!-- ============================================ -->
+<!-- NAVEGACAO FINAL                              -->
+<!-- ============================================ -->
+<div class="flex flex-col sm:flex-row gap-4 mt-12">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="../../index.html">
+        ← Volver al inicio
+      </a>
+<a class="flex-1 text-center px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-500 transition-colors" href="../trilha4/index.html">
+        Siguiente ruta →
+      </a>
+</div>
+</main>
+<!-- ============================================ -->
+<!-- MODAIS                                        -->
+<!-- ============================================ -->
+<div class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-3-1" onclick="if(event.target === this) closeModal()">
+<div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+<div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+<div class="flex items-center space-x-3">
+<span class="text-purple-400 font-bold">3.1</span>
+<span class="font-semibold">VPS</span>
+</div>
+<button class="text-neutral-400 hover:text-white text-2xl leading-none" onclick="closeModal()">×</button>
+</div>
+<iframe class="flex-1 w-full rounded-b-xl" src="modulo-3-1.html"></iframe>
+</div>
+</div>
+<div class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-3-2" onclick="if(event.target === this) closeModal()">
+<div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+<div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+<div class="flex items-center space-x-3">
+<span class="text-purple-400 font-bold">3.2</span>
+<span class="font-semibold">SSH</span>
+</div>
+<button class="text-neutral-400 hover:text-white text-2xl leading-none" onclick="closeModal()">×</button>
+</div>
+<iframe class="flex-1 w-full rounded-b-xl" src="modulo-3-2.html"></iframe>
+</div>
+</div>
+<div class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-3-3" onclick="if(event.target === this) closeModal()">
+<div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+<div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+<div class="flex items-center space-x-3">
+<span class="text-purple-400 font-bold">3.3</span>
+<span class="font-semibold">Firewall</span>
+</div>
+<button class="text-neutral-400 hover:text-white text-2xl leading-none" onclick="closeModal()">×</button>
+</div>
+<iframe class="flex-1 w-full rounded-b-xl" src="modulo-3-3.html"></iframe>
+</div>
+</div>
+<div class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-3-4" onclick="if(event.target === this) closeModal()">
+<div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600">
+<div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0">
+<div class="flex items-center space-x-3">
+<span class="text-purple-400 font-bold">3.4</span>
+<span class="font-semibold">Tokens y acceso</span>
+</div>
+<button class="text-neutral-400 hover:text-white text-2xl leading-none" onclick="closeModal()">×</button>
+</div>
+<iframe class="flex-1 w-full rounded-b-xl" src="modulo-3-4.html"></iframe>
+</div>
+</div>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>De cero al deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Toggle de Topicos
+    function toggleTopic(button) {
+      const topicItem = button.closest('.topic-item');
+      const explanation = topicItem.querySelector('.topic-explanation');
+      const moduleCard = button.closest('.bg-dark-800');
+
+      // Fecha outros topicos do mesmo modulo
+      moduleCard.querySelectorAll('.topic-explanation.active').forEach(exp => {
+        if (exp !== explanation) {
+          exp.classList.remove('active');
+        }
+      });
+
+      // Toggle do topico atual
+      explanation.classList.toggle('active');
+    }
+
+    // Modal com iframe
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeModal() {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.add('hidden');
+      });
+      document.body.style.overflow = 'auto';
+    }
+
+    // Fechar com ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>Tokens y gestión de acceso | De cero al deploy</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'purple' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'purple');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha purple) */
+    html:not(.dark) .text-purple-400 { color: #7c3aed; }
+    html:not(.dark) .bg-purple-500\/20 { background-color: rgba(124, 58, 237, 0.12); }
+    html:not(.dark) .bg-purple-500\/10 { background-color: rgba(124, 58, 237, 0.08); }
+    html:not(.dark) .border-purple-500\/30 { border-color: rgba(124, 58, 237, 0.25); }
+    html:not(.dark) .hover\:bg-purple-500\/30:hover { background-color: rgba(124, 58, 237, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha3/modulo-3-4.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha3/modulo-3-4.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha3/modulo-3-4.html" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha3/modulo-3-4.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="../../../en/curso/trilha3/modulo-3-4.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">EN</a><a href="modulo-3-4.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">De cero al deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" href="../trilha1/index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal y Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" href="../trilha2/index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy moderno</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-purple-400 bg-purple-500/10" href="index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor propio</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" href="../trilha4/index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors" href="../trilha5/index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- BREADCRUMB -->
+<nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex items-center space-x-2 text-sm text-neutral-400">
+<a class="hover:text-purple-400" href="../../index.html">Inicio</a>
+<span>/</span>
+<a class="hover:text-purple-400" href="index.html">Ruta 3</a>
+<span>/</span>
+<span class="text-purple-400">Módulo 3.4</span>
+</div>
+</nav>
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MÓDULO 3.4</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">🎫 Tokens y gestión del acceso</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Un token es la llave que abre las puertas de tus servicios: una API, una base de datos, un deploy. Si se filtra, el daño es tuyo. Aquí entenderás los tipos de token, cómo guardarlos de forma segura, cambiarlos antes de que se conviertan en un problema y seguir las buenas prácticas que distinguen al aficionado del profesional.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">6</div>
+<div class="text-xs text-neutral-400">Temas</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">45</div>
+<div class="text-xs text-neutral-400">Minutos</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">Básico</div>
+<div class="text-xs text-neutral-400">Nivel</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">Práctico</div>
+<div class="text-xs text-neutral-400">Tipo</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="3-4" data-inema-track="3" id="conteudo">
+<!-- ============================================ -->
+<!-- TOPICO 1: Tipos de Token                     -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-4#topico-1" id="topico-1">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold">Tipos de token: API Key, JWT, PAT y OAuth</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-4-t1-p1">
+        Uno <strong class="text-purple-400">token</strong> es un fragmento de texto secreto que demuestra quién eres ante un servicio. En vez de escribir tu usuario y contraseña cada vez, presentas el token y la puerta se abre. Hay varios tipos, cada uno para una situación. Saber cuál usar evita dolores de cabeza y mantiene todo más seguro.
+      </p>
+<!-- SVG: App -> Token -> Servico com cofre e rotacao -->
+<div class="rounded-2xl border border-purple-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="Flujo: la aplicación guarda el token en una bóveda, presenta el token y el servicio responde; una flecha de rotación indica el cambio periódico de la clave" class="w-full h-auto" role="img" viewbox="0 0 800 230">
+<defs>
+<lineargradient id="m34-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#c084fc"></stop><stop offset="1" stop-color="#a855f7"></stop>
+</lineargradient>
+<filter height="180%" id="m34-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="m34-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#c084fc" opacity="0.12" r="1.3"></circle>
+</pattern>
+</defs>
+<rect fill="url(#m34-grid)" height="230" width="800" x="0" y="0"></rect>
+<!-- App -->
+<rect fill="#1a1230" height="90" rx="14" stroke="#c084fc" stroke-width="2" width="170" x="40" y="70"></rect>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="125" y="58">TU APLICACIÓN</text>
+<!-- cofre dentro do app -->
+<rect fill="#0e0a1a" height="48" rx="8" stroke="#38bdf8" stroke-width="1.5" width="94" x="78" y="92"></rect>
+<circle cx="125" cy="116" fill="none" r="11" stroke="#38bdf8" stroke-width="2"></circle>
+<circle cx="125" cy="116" fill="#38bdf8" r="3"></circle>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="10" text-anchor="middle" x="125" y="135">caja fuerte / .env</text>
+<!-- Token em transito -->
+<g filter="url(#m34-glow)">
+<rect fill="#0e0a1a" height="46" rx="10" stroke="url(#m34-grad)" stroke-width="2" width="160" x="320" y="92"></rect>
+</g>
+<text fill="#c084fc" font-family="monospace" font-size="12" text-anchor="middle" x="400" y="112">Bearer abc123...</text>
+<text fill="#9ca3af" font-family="monospace" font-size="10" text-anchor="middle" x="400" y="128">el token</text>
+<!-- setas app->token->servico -->
+<line stroke="#c084fc" stroke-width="2" x1="210" x2="318" y1="115" y2="115"></line>
+<polygon fill="#c084fc" points="318,115 308,110 308,120"></polygon>
+<line stroke="#c084fc" stroke-width="2" x1="480" x2="588" y1="115" y2="115"></line>
+<polygon fill="#c084fc" points="588,115 578,110 578,120"></polygon>
+<!-- Servico -->
+<rect fill="#1a1230" height="90" rx="14" stroke="#a855f7" stroke-width="2" width="170" x="590" y="70"></rect>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="675" y="58">SERVICIO / API</text>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="14" font-weight="600" text-anchor="middle" x="675" y="112">✓ 200 OK</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="675" y="134">acceso autorizado</text>
+<!-- Rotacao (seta circular sob o token) -->
+<g class="wf-a">
+<path d="M 360 178 A 40 18 0 1 1 440 178" fill="none" stroke="#38bdf8" stroke-width="2"></path>
+<polygon fill="#38bdf8" points="440,178 432,170 446,170"></polygon>
+</g>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="400" y="208">rotación periódica</text>
+</svg>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h3 class="text-lg font-semibold text-white mb-2"><span class="mr-1">🔑</span> Clave de API</h3>
+<p class="text-neutral-300 text-sm" data-inema-block="m3-4-t1-p2">Una clave simple y fija, como <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">sk_live_a1B2c3...</code>. Identifica la aplicación, no a un usuario. Es ideal para servicios como el envío de correo electrónico, mapas o IA. <strong class="text-purple-400">Cuándo usar:</strong> integración sencilla máquina a máquina.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h3 class="text-lg font-semibold text-white mb-2"><span class="mr-1">🎫</span> JWT</h3>
+<p class="text-neutral-300 text-sm" data-inema-block="m3-4-t1-p3">"JSON Web Token". Un token firmado que lleva información (quién es el usuario, hasta cuándo es válido) dentro de sí mismo. Tiene un plazo de validez corto. <strong class="text-purple-400">Cuándo usar:</strong> sesiones de inicio de sesión en aplicaciones web y móviles.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h3 class="text-lg font-semibold text-white mb-2"><span class="mr-1">👤</span> PAT</h3>
+<p class="text-neutral-300 text-sm" data-inema-block="m3-4-t1-p4">"Personal Access Token". Una clave personal que actúa en tu nombre (ej.: un token de GitHub para hacer push). Reemplaza la contraseña en scripts y herramientas. <strong class="text-purple-400">Cuándo usar:</strong> automatización en tu nombre, como deploy mediante CI.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h3 class="text-lg font-semibold text-white mb-2"><span class="mr-1">🔗</span> OAuth</h3>
+<p class="text-neutral-300 text-sm" data-inema-block="m3-4-t1-p5">No es un token único, sino un flujo. El usuario hace clic en "Entrar con Google" y autoriza tu app sin darte nunca la contraseña. Al final, recibes un token de acceso. <strong class="text-purple-400">Cuándo usar:</strong> inicio de sesión social y acceso a datos de terceros.</p>
+</div>
+</div>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: las llaves de un hotel
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m3-4-t1-p6">Piensa en un hotel grande:</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>Clave de API</strong> = la llave maestra de servicio de la cafetería: abre todo lo de ese sector, siempre es la misma.</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>JWT</strong> = la tarjeta magnética de la habitación: sirve solo por unos días y después deja de funcionar.</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>PAT</strong> = la llave de tu casillero personal: es tuya y actúa en tu nombre.</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>OAuth</strong> = el valet: le das la llave del auto por un instante y lo estaciona, sin convertirse en el dueño del auto.</span></li>
+</ul>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 2: Armazenar tokens no servidor       -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-4#topico-2" id="topico-2">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold">Guardar tokens en el servidor de forma segura</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-4-t2-p1">
+        Tener el token es solo la mitad del trabajo. La otra mitad es <strong class="text-purple-400">dónde guardar</strong>. La regla de oro: el token nunca queda escrito en el código. Va en un archivo separado, el <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-purple-400">.env</code>, que solo puede leer el servidor y que Git ignora.
+      </p>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">El archivo <code class="text-purple-400 font-mono">.env</code></h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-4-t2-p2">Un archivo de texto simple, en formato <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">CHAVE=valor</code>, uno por línea:</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Crear y editar el archivo en el servidor</p>
+<p class="text-purple-400">$ nano .env</p>
+<p class="text-neutral-400 mt-3"># Dentro de él, tus claves:</p>
+<p class="text-neutral-300">DATABASE_URL=postgres://user:senha@host/db</p>
+<p class="text-neutral-300">API_KEY=sk_live_a1B2c3d4e5</p>
+<p class="text-neutral-300">JWT_SECRET=um-segredo-bem-longo-e-aleatorio</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Bloqueando el archivo: <code class="text-purple-400 font-mono">chmod 600</code></h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-4-t2-p3">De forma predeterminada, otros usuarios del servidor pueden leer tus archivos. El comando <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">chmod 600</code> dice: "solo el dueño puede leer y escribir; nadie más".</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Ver los permisos actuales</p>
+<p class="text-purple-400">$ ls -l .env</p>
+<p class="text-neutral-300">-rw-r--r-- 1 deploy deploy 180 jun 16 10:00 .env</p>
+<p class="text-neutral-400 mt-3"># Restringir: solo el propietario puede leer y escribir</p>
+<p class="text-purple-400">$ chmod 600 .env</p>
+<p class="text-purple-400">$ ls -l .env</p>
+<p class="text-neutral-300">-rw------- 1 deploy deploy 180 jun 16 10:00 .env</p>
+</div>
+</div>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver en la pantalla
+        </h3>
+<p class="text-neutral-300 text-sm mb-3" data-inema-block="m3-4-t2-p4">Lee la letra pequeña de <code class="bg-dark-900 px-1.5 py-0.5 rounded text-xs font-mono">ls -l</code>. Las primeras 10 indican quién puede modificar el archivo:</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-300">-rw-------   (después de chmod 600)</p>
+<p class="text-neutral-400 mt-2">#  rw- = el propietario puede leer y escribir</p>
+<p class="text-neutral-400">#  --- = el grupo no puede hacer nada</p>
+<p class="text-neutral-400">#  --- = los demás no pueden hacer nada</p>
+</div>
+<p class="text-neutral-300 text-sm mt-3">Si todavía aparece <code class="bg-dark-900 px-1.5 py-0.5 rounded text-xs font-mono">-rw-r--r--</code>, cualquiera en el servidor puede leerlo. Ejecuta chmod.</p>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-4-t2-p5"><strong>Problema:</strong> "Subí mi proyecto a GitHub y el token quedó expuesto públicamente." <br/><strong>Solución:</strong> O <code class="font-mono text-sm text-red-400">.env</code> fue al repositorio porque no estaba en el <code class="font-mono text-sm">.gitignore</code>. Agrega la línea <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">.env</code> al <code class="font-mono text-sm">.gitignore</code> ANTES del primer commit. Si ya se filtró, considera que el token está comprometido: revócalo y genera otro (ver tema 3). Borrar el archivo no basta, sigue en el historial.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 3: Rotacao e expiracao                -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-4#topico-3" id="topico-3">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold">Rotación y vencimiento: cambiar antes del problema</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-4-t3-p1">
+        Un token que nunca cambia es una bomba de tiempo. Cuanto más tiempo esté vigente, más posibilidades hay de que se filtre (en un log, una captura de pantalla, un backup antiguo). <strong class="text-purple-400">Rotar</strong> y generar una clave nueva cada cierto tiempo y descartar la anterior. <strong class="text-purple-400">Expiración</strong> y que el token caduque automáticamente después de un plazo.
+      </p>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: cambiar la cerradura
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-4-t3-p2">Cuando pierdes una llave de casa, no rezas para que nadie la encuentre: cambias la cerradura. Rotar un token es la misma idea, pero de forma preventiva, cada cierto tiempo, incluso sin tener la certeza de que se filtró. Así, si algún día aparece una copia de la llave antigua por ahí, ya no abre nada.</p>
+</div>
+<!-- Timeline: ciclo de vida da rotacao -->
+<h3 class="text-lg font-semibold text-white mb-4">El ciclo de rotación, paso a paso</h3>
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Genera la clave nueva</h4>
+<p class="text-sm text-neutral-400">En el panel del servicio, crea un token nuevo. Todavía no elimines el anterior.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Actualiza el servidor</h4>
+<p class="text-sm text-neutral-400 mb-3">Cambia el valor en el <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">.env</code> y reinicia la aplicación.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ nano .env</p>
+<p class="text-neutral-400"># Reemplaza API_KEY por el valor nuevo y guarda</p>
+<p class="text-purple-400">$ systemctl restart minha-app</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Confirma que funciona</h4>
+<p class="text-sm text-neutral-400">Prueba la app con la nueva clave. Avanza solo si todo está bien.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">4</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Revoca la clave anterior</h4>
+<p class="text-sm text-neutral-400">Ahora sí, elimina el token antiguo en el panel. La cerradura vieja ya no abre.</p>
+</div>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-4-t3-p3"><strong>Problema:</strong> "Revoké el token antiguo y el sitio dejó de funcionar." <br/><strong>Solución:</strong> Revocaste la clave anterior antes de confirmar que la nueva funcionaba. Sigue siempre este orden: genera una nueva, actualízala, pruébala y SOLO ENTONCES revoca la anterior. Mantener ambas válidas durante un período breve evita interrumpir el servicio en medio del cambio.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ Qué HACER</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Definir un plazo (ej.: cambiarla cada 90 días)</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Revocar de inmediato cualquier token filtrado</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Preferir tokens con expiración automática</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Usar la misma clave durante años sin cambiarla</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Ignorar una filtración "porque parece pequeña"</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Revocar la anterior antes de probar la nueva</span></li>
+</ul>
+</div>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 4: Secrets Managers                   -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-4#topico-4" id="topico-4">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold">Secrets Managers: La bóveda profesional</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-4-t4-p1">
+        O <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-purple-400">.env</code> resuelve bien para un servidor. Pero cuando tienes varios servidores, varias personas en el equipo y decenas de secretos, copiar archivos a mano se vuelve una pesadilla. Ahí es donde entran los <strong class="text-purple-400">administradores de secretos</strong>: programas dedicados a guardar y entregar secretos de forma segura.
+      </p>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver en la pantalla
+        </h3>
+<p class="text-neutral-300 text-sm mb-3" data-inema-block="m3-4-t4-p2">En vez de abrir un archivo, pides el secreto mediante un comando y aparece al instante (y queda registrado quién lo pidió):</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Ejemplo con Vault</p>
+<p class="text-purple-400">$ vault kv get secret/minha-app</p>
+<p class="text-neutral-300">==== Datos ====</p>
+<p class="text-neutral-300">API_KEY    sk_live_a1B2c3d4e5</p>
+<p class="text-neutral-400 mt-3"># Ejemplo con Doppler</p>
+<p class="text-purple-400">$ doppler secrets get API_KEY --plain</p>
+<p class="text-neutral-300">sk_live_a1B2c3d4e5</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h3 class="text-lg font-semibold text-white mb-2"><span class="mr-1">🛡</span> Vault (HashiCorp)</h3>
+<p class="text-neutral-300 text-sm" data-inema-block="m3-4-t4-p3">Bóveda robusta y open source. Guarda secretos, controla quién accede a cada uno e incluso puede generar credenciales temporales que vencen automáticamente. Es más potente, pero requiere más configuración.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h3 class="text-lg font-semibold text-white mb-2"><span class="mr-1">📦</span> Doppler</h3>
+<p class="text-neutral-300 text-sm" data-inema-block="m3-4-t4-p4">Servicio más sencillo y fácil de usar. Centralizas los secretos en un panel y este los inyecta en tus apps y entornos. Un excelente punto de partida para equipos pequeños.</p>
+</div>
+</div>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: la caja fuerte del banco
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-4-t4-p5">Guardar dinero debajo del colchón (el <code class="font-mono text-sm">.env</code> (suelto) funciona hasta cierto punto. Un secrets manager es la bóveda del banco: un solo lugar, con una puerta blindada, que registra cada vez que alguien entra y hasta puede tener llaves que solo funcionan durante un día. No guardas el secreto real en tu máquina; se lo pides a la bóveda cuando lo necesitas.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: empieza de forma sencilla
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-4-t4-p6">Para un proyecto personal en un solo VPS, el <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">.env</code> con <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">chmod 600</code> ya está muy bien. Adopta un secrets manager solo cuando lo necesites: muchos entornos, mucha gente o demasiados secretos para controlar a mano. La herramienta adecuada para cada escala.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 5: Auditoria de acesso                -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-4#topico-5" id="topico-5">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold">Auditoría: quién usó qué y cuándo</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-4-t5-p1">
+        De nada sirve bloquearlo todo si no puedes ver qué pasó. <strong class="text-purple-400">Auditoría de acceso</strong> y mantener un registro (log) de cada uso: qué token, qué acción, de dónde y a qué hora. Cuando algo sale mal, esos logs son tu cámara de seguridad.
+      </p>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Leyendo un log de acceso</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-4-t5-p2">Cada línea cuenta una historia: quién, cuándo, qué y cuál es el resultado.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Ver los últimos accesos registrados</p>
+<p class="text-purple-400">$ tail -n 5 /var/log/minha-app/access.log</p>
+<p class="text-neutral-300">10:01 token=deploy  acao=push    ip=200.1.1.5  ok</p>
+<p class="text-neutral-300">10:04 token=backup  acao=read    ip=200.1.1.5  ok</p>
+<p class="text-neutral-300">10:09 token=deploy  acao=delete  ip=45.9.9.9    ok</p>
+<p class="text-red-400">10:12 token=deploy  acao=delete  ip=45.9.9.9    FALHA</p>
+</div>
+<p class="text-neutral-400 text-sm mt-3">Observa la línea 3: el token <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">deploy</code> borró algo desde una IP extraña (<code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">45.9.9.9</code>). Señal de alerta.</p>
+</div>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver en la pantalla
+        </h3>
+<p class="text-neutral-300 text-sm mb-3" data-inema-block="m3-4-t5-p3">Para investigar un token específico, filtra el log. El <code class="bg-dark-900 px-1.5 py-0.5 rounded text-xs font-mono">grep</code> muestra solo las líneas que interesan:</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">$ grep "token=deploy" access.log</p>
+<p class="text-neutral-300">10:01 token=deploy acao=push   ip=200.1.1.5 ok</p>
+<p class="text-neutral-300">10:09 token=deploy acao=delete ip=45.9.9.9  ok</p>
+<p class="text-neutral-400 mt-2"># Filtrar solo los errores</p>
+<p class="text-purple-400">$ grep "FALHA" access.log</p>
+<p class="text-red-400">10:12 token=deploy acao=delete ip=45.9.9.9  FALHA</p>
+</div>
+</div>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: el libro de visitas del edificio
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-4-t5-p4">Un edificio bien cuidado tiene portero y libro de registro: nombre, hora de entrada y salida de cada visitante. Si desaparece algo, consultas el libro y descubres quién pasó. El registro de acceso es ese libro de visitas de tus tokens. Sin él, solo descubres que te robaron, nunca quién lo hizo.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: nunca registres el secreto en sí
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-4-t5-p5">En el registro, anota el <strong>nombre</strong> del token (p. ej.: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">token=deploy</code>), nunca el valor completo. Si escribes la clave entera en el log, el propio registro de seguridad se convierte en una filtración. Mucha gente suele leer los logs.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 6: Boas praticas                       -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-4#topico-6" id="topico-6">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold">Buenas prácticas: mínimo privilegio y un token por servicio</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-4-t6-p1">
+        Al reunirlo todo, dos reglas sostienen el resto: <strong class="text-purple-400">menor privilegio</strong> (cada token solo puede hacer lo mínimo que necesita) y <strong class="text-purple-400">un token por servicio</strong> (nunca compartas la misma clave entre cosas diferentes). Si sigues esto, una filtración será un rasguño, no una catástrofe.
+      </p>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: el llavero del conserje
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-4-t6-p2">Imagina un edificio donde una sola llave abre TODAS las puertas: apartamentos, caja fuerte, garaje. Si cae en la calle, se acabó. Un edificio bien administrado le da a cada persona solo la llave de SU puerta. ¿Perdiste una? Cambias solo esa cerradura. Los tokens funcionan igual: uno por servicio, cada uno con el mínimo de permisos.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ Qué HACER</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Un token para cada servicio (deploy, backup, monitor)</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Dar solo el permiso necesario (lectura, si no necesita escribir)</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Ponerle al token un nombre claro (token-backup-diario)</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Revocar de inmediato los tokens de quien dejó el equipo</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Una clave de "administrador total" usada para todo</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Enviar el token por WhatsApp o correo electrónico sin cuidado</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Dejar activos los tokens de exempleados</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Pegar el token directamente en el código "solo para probar rápido"</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Ejemplo: separando por servicio en el <code class="text-purple-400 font-mono">.env</code></h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Cada servicio, su propia clave con su nombre</p>
+<p class="text-neutral-300">DEPLOY_TOKEN=ghp_xxxxx    # solo hace push, nada más</p>
+<p class="text-neutral-300">BACKUP_TOKEN=bk_yyyyy     # so leitura do banco</p>
+<p class="text-neutral-300">EMAIL_API_KEY=re_zzzzz    # solo envía correo</p>
+<p class="text-neutral-400 mt-3"># Si EMAIL_API_KEY se filtra, el deploy y la copia de seguridad siguen siendo seguros</p>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">🏆</span> Llegaste al final de la Trilha 3
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-4-t6-p3">Contrataste un VPS, te conectaste por SSH, cerraste los puertos con un firewall y ahora sabes gestionar las claves de tus servicios. Tienes un servidor propio, seguro y bajo control. En la próxima trilha, pondrás tus aplicaciones a funcionar dentro de él de forma organizada, con <strong class="text-purple-400">Docker y automatización</strong>.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- RESUMO -->
+<section class="mb-12">
+<div class="bg-gradient-to-br from-purple-900/40 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-8">
+<h2 class="text-2xl font-bold mb-6 flex items-center">
+<span class="mr-3">📚</span> Resumen del módulo
+        </h2>
+<div class="space-y-4 mb-8">
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">Clave de API, JWT, PAT y OAuth</strong><span class="text-neutral-400"> - cada tipo de token para una situación</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">.env + chmod 600</strong><span class="text-neutral-400"> - guardar fuera del código y solo el dueño lo lee</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">Rotación y vencimiento</strong><span class="text-neutral-400"> - cambiar antes del problema; generar, probar y luego revocar</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">Secrets managers</strong><span class="text-neutral-400"> - Vault y Doppler centralizan los secretos cuando el equipo crece</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">Auditoría, mínimo privilegio y un token por servicio</strong><span class="text-neutral-400"> - mira quién lo usó y limita los daños</span></div>
+</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+<h3 class="font-semibold text-purple-400 mb-2">Siguiente ruta:</h3>
+<p class="text-neutral-300">Ruta 4 - Docker y automatización (empaqueta y ejecuta tus aplicaciones en el servidor de forma organizada)</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">
+            ← Volver a la ruta
+          </a>
+<a class="flex-1 text-center px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-500 transition-colors" href="../trilha4/index.html">
+            Siguiente ruta →
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>De cero al deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

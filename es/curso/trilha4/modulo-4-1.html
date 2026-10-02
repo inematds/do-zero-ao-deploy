@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>Docker para principiantes | De cero al deploy</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'amber' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'amber');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha amber) */
+    html:not(.dark) .text-amber-400 { color: #b45309; }
+    html:not(.dark) .bg-amber-500\/20 { background-color: rgba(180, 83, 9, 0.12); }
+    html:not(.dark) .bg-amber-500\/10 { background-color: rgba(180, 83, 9, 0.08); }
+    html:not(.dark) .border-amber-500\/30 { border-color: rgba(180, 83, 9, 0.25); }
+    html:not(.dark) .hover\:bg-amber-500\/30:hover { background-color: rgba(180, 83, 9, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha4/modulo-4-1.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha4/modulo-4-1.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha4/modulo-4-1.html" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha4/modulo-4-1.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="../../../en/curso/trilha4/modulo-4-1.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">EN</a><a href="modulo-4-1.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">De cero al deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" href="../trilha1/index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal y Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" href="../trilha2/index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy moderno</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors" href="../trilha3/index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor propio</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-amber-400 bg-amber-500/10" href="index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors" href="../trilha5/index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- BREADCRUMB -->
+<nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex items-center space-x-2 text-sm text-neutral-400">
+<a class="hover:text-amber-400" href="../../index.html">Inicio</a>
+<span>/</span>
+<a class="hover:text-amber-400" href="index.html">Ruta 4</a>
+<span>/</span>
+<span class="text-amber-400">Módulo 4.1</span>
+</div>
+</nav>
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full mb-4">MÓDULO 4.1</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">🐳 Docker para principiantes</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">"En mi máquina funciona" es la frase que Docker vino a desterrar. Con él, empaquetas tu programa con todo lo que necesita en una caja que funciona igual en cualquier computadora. Aquí entenderás los contenedores desde cero y ejecutarás el primero.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-amber-400">6</div>
+<div class="text-xs text-neutral-400">Temas</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-amber-400">45</div>
+<div class="text-xs text-neutral-400">Minutos</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-amber-400">Básico</div>
+<div class="text-xs text-neutral-400">Nivel</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-amber-400">Práctico</div>
+<div class="text-xs text-neutral-400">Tipo</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="4-1" data-inema-track="4" id="conteudo">
+<!-- ============================================ -->
+<!-- TOPICO 1: O que e um container               -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-4-1#topico-1" id="topico-1">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold">Qué es un contenedor</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m4-1-t1-p1">
+        Uno <strong class="text-amber-400">contenedor</strong> es una caja cerrada que lleva tu programa junto con todo lo que necesita para funcionar: el código, las bibliotecas, la versión correcta del lenguaje e incluso una pequeña parte del sistema operativo. Envías esa caja a cualquier computadora y funciona exactamente igual. Sin «instalar dependencias», sin «configurar el entorno», sin sorpresas.
+      </p>
+<!-- SVG: Imagem -> Containers rodando -->
+<div class="rounded-2xl border border-amber-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="Diagrama que muestra una imagen Docker que sirve de molde para ejecutar varios contenedores iguales" class="w-full h-auto" role="img" viewbox="0 0 800 230">
+<defs>
+<lineargradient id="m41-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#fbbf24"></stop><stop offset="1" stop-color="#f59e0b"></stop>
+</lineargradient>
+<filter height="180%" id="m41-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="m41-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#fbbf24" opacity="0.12" r="1.3"></circle>
+</pattern>
+</defs>
+<rect fill="url(#m41-grid)" height="230" width="800" x="0" y="0"></rect>
+<!-- Imagem (molde) -->
+<text fill="#fbbf24" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="150" y="28">IMAGEN (plantilla)</text>
+<g filter="url(#m41-glow)">
+<rect fill="#1f1604" height="130" rx="14" stroke="url(#m41-grad)" stroke-width="2" width="180" x="60" y="50"></rect>
+</g>
+<text fill="#fbbf24" font-family="Inter,sans-serif" font-size="34" text-anchor="middle" x="150" y="95">📦</text>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="150" y="130">código + libs</text>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="150" y="150">+ runtime + SO</text>
+<!-- Seta -->
+<path d="M250 115 L320 115" fill="none" marker-end="url(#m41-arrow)" stroke="#38bdf8" stroke-width="2.5"></path>
+<defs>
+<marker id="m41-arrow" markerheight="8" markerwidth="8" orient="auto" refx="6" refy="4">
+<path d="M0 0 L8 4 L0 8 z" fill="#38bdf8"></path>
+</marker>
+</defs>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="285" y="105">docker run</text>
+<!-- Containers rodando -->
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="560" y="28">CONTAINERS (instancias en ejecución)</text>
+<g class="wf-a">
+<rect fill="#0e2018" height="60" rx="10" stroke="#34d399" stroke-width="2" width="120" x="360" y="50"></rect>
+<circle cx="378" cy="68" fill="#34d399" r="4"></circle>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="450" y="86">app #1</text>
+</g>
+<g class="wf-a">
+<rect fill="#0e2018" height="60" rx="10" stroke="#34d399" stroke-width="2" width="120" x="500" y="50"></rect>
+<circle cx="518" cy="68" fill="#34d399" r="4"></circle>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="590" y="86">app #2</text>
+</g>
+<g class="wf-a">
+<rect fill="#0e2018" height="60" rx="10" stroke="#34d399" stroke-width="2" width="120" x="640" y="50"></rect>
+<circle cx="658" cy="68" fill="#34d399" r="4"></circle>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="730" y="86">app #3</text>
+</g>
+<g class="wf-a">
+<rect fill="#0e2018" height="60" rx="10" stroke="#34d399" stroke-width="2" width="120" x="430" y="130"></rect>
+<circle cx="448" cy="148" fill="#34d399" r="4"></circle>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="520" y="166">app #4</text>
+</g>
+<g class="wf-a">
+<rect fill="#0e2018" height="60" rx="10" stroke="#34d399" stroke-width="2" width="120" x="570" y="130"></rect>
+<circle cx="588" cy="148" fill="#34d399" r="4"></circle>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="660" y="166">app #5</text>
+</g>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="560" y="218">una imagen, muchos contenedores idénticos</text>
+</svg>
+</div>
+<div class="bg-gradient-to-br from-amber-900/30 to-dark-800 rounded-xl border border-amber-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-amber-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: la maleta de viaje completa
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m4-1-t1-p2">Imagina que vas a viajar y no confías en encontrar nada en el destino. Entonces preparas una maleta con TODO: ropa, cepillo, almohada, hasta un adaptador de corriente. Dondequiera que llegues, abres la maleta y tienes exactamente las mismas comodidades que en casa. El contenedor es esa maleta para tu programa.</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span><strong>La maleta:</strong> el contenedor (la caja cerrada)</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span><strong>Qué incluye:</strong> tu aplicación, las bibliotecas, la versión correcta de todo</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span><strong>El destino:</strong> cualquier computadora con Docker (tu PC, la nube, el servidor)</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span><strong>El resultado:</strong> se ejecuta igual en todas partes, sin «en mi máquina funciona»</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> El contenedor no es una máquina virtual
+        </h3>
+<p class="text-neutral-300" data-inema-block="m4-1-t1-p3">Puedes pensar que es una máquina virtual (VM), pero es mucho más ligera. Una VM carga un sistema operativo completo desde cero (pesa gigas, tarda minutos en arrancar). El contenedor comparte el sistema de la computadora y empaqueta solo lo que tu app necesita. Por eso arranca en <strong>segundos</strong> y ejecutas decenas de ellos en la misma computadora sin que se trabe.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 2: Instalar o Docker                  -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-4-1#topico-2" id="topico-2">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold">Instalando Docker</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m4-1-t2-p1">
+        Antes de ejecutar cualquier contenedor, necesitas instalar Docker. En el <strong class="text-amber-400">Windows y Mac</strong> instalas Docker Desktop (un programa con ventana). En <strong class="text-amber-400">Linux</strong>, instalas Docker Engine directamente desde la terminal. Veamos cómo hacerlo según el sistema.
+      </p>
+<!-- Timeline: instalacao por OS -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+<span class="text-amber-400 font-bold text-lg">W</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Windows</h4>
+<p class="text-sm text-neutral-400 mb-3">Docker Desktop (necesitas tener WSL2 activado)</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400 mb-1"># 1. Descarga el instalador</p>
+<p class="text-amber-400">docker.com/products/docker-desktop</p>
+<p class="text-neutral-400 mt-3 mb-1"># 2. Ejecuta el instalador, marca "Usar WSL 2"</p>
+<p class="text-amber-400">Docker Desktop Installer.exe</p>
+<p class="text-neutral-400 mt-3 mb-1"># 3. Reinicia y abre Docker Desktop</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+<span class="text-amber-400 font-bold text-lg">🍎</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">macOS</h4>
+<p class="text-sm text-neutral-400 mb-3">Docker Desktop (versión Intel o Apple Silicon)</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400 mb-1"># Opción 1: sitio oficial</p>
+<p class="text-amber-400">Descarga el .dmg y arrástralo a Aplicaciones</p>
+<p class="text-neutral-400 mt-3 mb-1"># Opción 2: Homebrew (si lo tienes)</p>
+<p class="text-amber-400">$ brew install --cask docker</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+<span class="text-amber-400 font-bold text-lg">🐧</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Linux (Ubuntu/Debian)</h4>
+<p class="text-sm text-neutral-400 mb-3">Docker Engine, instalado con el script oficial</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400 mb-1"># Script oficial de instalación</p>
+<p class="text-amber-400">$ curl -fsSL https://get.docker.com | sh</p>
+<p class="text-neutral-400 mt-3 mb-1"># Ejecutar docker sin sudo (vuelve a iniciar sesión después)</p>
+<p class="text-amber-400">$ sudo usermod -aG docker $USER</p>
+</div>
+</div>
+</div>
+</div>
+<!-- O que voce vai ver -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Cómo confirmar que se instaló
+        </h3>
+<p class="text-neutral-300 text-sm mb-3">Abre la terminal y pide la versión. Si aparece un número, está funcionando:</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-amber-400">$ docker --version</p>
+<p class="text-neutral-300">Docker version 27.3.1, build ce12230</p>
+<p class="text-neutral-400 mt-3"># Verificación más completa (cliente + servidor):</p>
+<p class="text-amber-400">$ docker info</p>
+<p class="text-neutral-300">Server Version: 27.3.1</p>
+<p class="text-neutral-300">Containers: 0    Images: 0</p>
+</div>
+<p class="text-neutral-300 text-sm mt-4" data-inema-block="m4-1-t2-p2">Si aparece la versión, Docker está instalado y listo. Puedes pasar al siguiente tema y ejecutar tu primer contenedor.</p>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m4-1-t2-p3"><strong>Problema:</strong> se ejecuta <code class="font-mono text-sm text-red-400">docker info</code> y aparece "Cannot connect to the Docker daemon". <br/><strong>Solución:</strong> Docker está instalado, pero el motor (daemon) no está encendido. En Windows/Mac, abre Docker Desktop y espera a que el ícono se ponga verde. En Linux, ejecuta <code class="font-mono text-sm">sudo systemctl start docker</code>.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 3: docker run                         -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-4-1#topico-3" id="topico-3">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold">docker run: Tu primer contenedor</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m4-1-t3-p1">
+        El comando <code class="text-amber-400 font-mono">docker run</code> y es el corazón de Docker. Lo hace todo de una vez: descarga la imagen (si no la tienes), crea un container a partir de ella y lo inicia. Pasaremos del "hola mundo" de Docker a ejecutar un servidor de verdad.
+      </p>
+<!-- hello-world -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-amber-400 font-mono">docker run hello-world</code> - La prueba</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m4-1-t3-p2">Este comando descarga una imagen diminuta, la ejecuta e imprime un mensaje. Es la forma oficial de confirmar que todo funciona.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-amber-400">$ docker run hello-world</p>
+<p class="text-neutral-400">Unable to find image 'hello-world:latest' locally</p>
+<p class="text-neutral-400">latest: Pulling from library/hello-world</p>
+<p class="text-neutral-300 mt-2">Hello from Docker!</p>
+<p class="text-neutral-300">This message shows that your installation</p>
+<p class="text-neutral-300">appears to be working correctly.</p>
+</div>
+</div>
+<!-- run -p -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-amber-400 font-mono">docker run -p</code> - Abriendo la puerta</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m4-1-t3-p3">El contenedor está cerrado. Para acceder desde el navegador a un sitio dentro de él, conectas un puerto tuyo a uno de sus puertos con <code class="font-mono text-amber-400">-p porta-sua:porta-do-container</code>.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Ejecutar nginx (servidor web) en el puerto 8080</p>
+<p class="text-amber-400">$ docker run -p 8080:80 nginx</p>
+<p class="text-neutral-400 mt-2"># -d = se ejecuta en segundo plano (detached)</p>
+<p class="text-amber-400">$ docker run -d -p 8080:80 nginx</p>
+<p class="text-neutral-300">a1b2c3d4e5f6...</p>
+<p class="text-neutral-400 mt-2"># Ahora ábrelo en el navegador:</p>
+<p class="text-neutral-300">http://localhost:8080</p>
+</div>
+<p class="text-neutral-400 text-sm mt-3">A la izquierda de <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">:</code> y es el puerto de tu computadora; a la derecha está el puerto dentro del contenedor.</p>
+</div>
+<!-- docker ps -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-amber-400 font-mono">docker ps</code> - Qué está en ejecución</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m4-1-t3-p4">Lista los contenedores que están activos ahora. Con <code class="font-mono text-amber-400">-a</code> también muestra los que ya se detuvieron.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-amber-400">$ docker ps</p>
+<p class="text-neutral-300">CONTAINERS ID   IMAGE   STATUS         PORTS</p>
+<p class="text-neutral-300">a1b2c3d4e5f6   nginx   Up 2 minutes   0.0.0.0:8080-&gt;80/tcp</p>
+<p class="text-neutral-400 mt-3"># Detener un contenedor por ID</p>
+<p class="text-amber-400">$ docker stop a1b2c3d4e5f6</p>
+<p class="text-neutral-400 mt-2"># Ver todos, incluso los detenidos</p>
+<p class="text-amber-400">$ docker ps -a</p>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: no hace falta memorizar el ID completo
+        </h3>
+<p class="text-neutral-300" data-inema-block="m4-1-t3-p5">El ID del contenedor es un código largo, pero solo necesitas escribir los <strong class="text-primary">primeros caracteres</strong> (por lo general, 3 o 4 ya son suficientes). En vez de <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">docker stop a1b2c3d4e5f6</code>, basta <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">docker stop a1b2</code>. Docker lo entiende.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-6">
+<h4 class="font-bold text-amber-400 mb-4">✓ Qué HACER</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-amber-400">✓</span><span>Usar <code class="font-mono text-sm">-d</code> para ejecutar servidores en segundo plano</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400">✓</span><span>Verificar con <code class="font-mono text-sm">docker ps</code> lo que está en línea</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400">✓</span><span>Detener los contenedores que ya no usas (libera puertos y memoria)</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Invertir el puerto (<code class="font-mono text-sm">-p 80:8080</code> cuando la app usa 80)</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Olvidar los contenedores encendidos y consumiendo recursos</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Usar tu mismo puerto en dos contenedores al mismo tiempo</span></li>
+</ul>
+</div>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 4: Imagens vs containers              -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-4-1#topico-4" id="topico-4">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold">Imágenes vs. contenedores</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m4-1-t4-p1">
+        Esta es la confusión número 1 de quienes empiezan. La regla es simple: la <strong class="text-amber-400">imagen y el molde</strong> (detenida, guardada en el disco) y el <strong class="text-amber-400">contenedor y la instancia en ejecución</strong> (activo, en ejecución). A partir de una sola imagen puedes crear tantos contenedores como quieras.
+      </p>
+<div class="bg-gradient-to-br from-amber-900/30 to-dark-800 rounded-xl border border-amber-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-amber-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: la receta y el pastel
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m4-1-t4-p2">A <strong>imagen</strong> y es la receta de cocina en un papel: solo describe, no se puede comer. El <strong>contenedor</strong> y es el pastel horneado de verdad, listo en la mesa. Con una receta puedes hornear todos los pasteles que quieras, todos iguales. ¿Te comiste uno? Haz otro con la misma receta.</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span><strong>Imagen (receta):</strong> archivo guardado en el disco, no consume memoria</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span><strong>Contenedor (pastel):</strong> proceso en ejecución, consume CPU y memoria</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400 mt-1">•</span><span><strong>1 imagen -&gt; N contenedores:</strong> una receta, varios pasteles</span></li>
+</ul>
+</div>
+<!-- Comparacao dos comandos -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-amber-400 mb-3">Comandos de IMAGEN</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Listar imágenes en el disco</p>
+<p class="text-amber-400">$ docker images</p>
+<p class="text-neutral-300">REPOSITORY  TAG     SIZE</p>
+<p class="text-neutral-300">nginx       latest  187MB</p>
+<p class="text-neutral-400 mt-2"># Descargar una imagen</p>
+<p class="text-amber-400">$ docker pull node:20</p>
+<p class="text-neutral-400 mt-2"># Borrar una imagen</p>
+<p class="text-amber-400">$ docker rmi nginx</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-amber-400 mb-3">Comandos de CONTENEDOR</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Listar contenedores en ejecución</p>
+<p class="text-amber-400">$ docker ps</p>
+<p class="text-neutral-400 mt-2"># Detener un contenedor</p>
+<p class="text-amber-400">$ docker stop a1b2</p>
+<p class="text-neutral-400 mt-2"># Borrar un contenedor detenido</p>
+<p class="text-amber-400">$ docker rm a1b2</p>
+<p class="text-neutral-400 mt-2"># Ver sus registros (salida)</p>
+<p class="text-amber-400">$ docker logs a1b2</p>
+</div>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m4-1-t4-p3"><strong>Problema:</strong> intenta <code class="font-mono text-sm text-red-400">docker rmi nginx</code> y aparece "image is being used by running container". <br/><strong>Solución:</strong> no puedes borrar la receta mientras haya un pastel sobre la mesa. Detén y elimina primero los contenedores que usan la imagen (<code class="font-mono text-sm">docker stop</code> + <code class="font-mono text-sm">docker rm</code>), luego elimina la imagen.</p>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+<div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+<div class="text-2xl mb-2">📦</div>
+<code class="text-amber-400 font-mono text-sm font-bold">images</code>
+<p class="text-xs text-neutral-400 mt-1">Listar plantillas</p>
+</div>
+<div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+<div class="text-2xl mb-2">⬇</div>
+<code class="text-amber-400 font-mono text-sm font-bold">pull</code>
+<p class="text-xs text-neutral-400 mt-1">Descargar plantilla</p>
+</div>
+<div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+<div class="text-2xl mb-2">▶</div>
+<code class="text-amber-400 font-mono text-sm font-bold">ps</code>
+<p class="text-xs text-neutral-400 mt-1">Contenedores activos</p>
+</div>
+<div class="bg-dark-800 rounded-xl p-4 border border-dark-600 text-center">
+<div class="text-2xl mb-2">🗑</div>
+<code class="text-red-400 font-mono text-sm font-bold">rm / rmi</code>
+<p class="text-xs text-neutral-400 mt-1">Borrar</p>
+</div>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 5: Dockerfile                         -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-4-1#topico-5" id="topico-5">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold">Dockerfile: la receta del contenedor</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m4-1-t5-p1">
+        Hasta ahora usaste imágenes listas (nginx, hello-world). Pero ¿y TU programa? Para empaquetar tu código en una imagen, escribes un <code class="text-amber-400 font-mono">Dockerfile</code>: un archivo de texto con la receta, línea por línea, para construir la imagen.
+      </p>
+<div class="bg-gradient-to-br from-amber-900/30 to-dark-800 rounded-xl border border-amber-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-amber-400 mb-4 flex items-center">
+<span class="mr-2">📝</span> Un Dockerfile de ejemplo (app Node)
+        </h3>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-500"># parte de una imagen base con Node ya instalado</p>
+<p class="text-amber-400">FROM node:20</p>
+<p class="text-neutral-500 mt-2"># carpeta de trabajo dentro del contenedor</p>
+<p class="text-amber-400">WORKDIR /app</p>
+<p class="text-neutral-500 mt-2"># copia los archivos de tu proyecto adentro</p>
+<p class="text-amber-400">COPY . .</p>
+<p class="text-neutral-500 mt-2"># ejecuta un comando al crear la imagen</p>
+<p class="text-amber-400">RUN npm install</p>
+<p class="text-neutral-500 mt-2"># comando que se ejecuta cuando se inicia el contenedor</p>
+<p class="text-amber-400">CMD ["node", "server.js"]</p>
+</div>
+</div>
+<!-- Explicacao das instrucoes -->
+<div class="space-y-4 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-2"><code class="text-amber-400 font-mono">FROM</code> - por dónde empezar</h4>
+<p class="text-neutral-300 text-sm" data-inema-block="m4-1-t5-p2">Toda receta empieza con una imagen base ya preparada (Node, Python, Ubuntu...). No armas todo desde cero, sino que partes de algo que ya existe.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-2"><code class="text-amber-400 font-mono">COPY</code> - llevar tu código hacia adentro</h4>
+<p class="text-neutral-300 text-sm" data-inema-block="m4-1-t5-p3">Copia archivos de tu computadora dentro de la imagen. El <code class="font-mono">COPY . .</code> lleva toda la carpeta actual a la carpeta de trabajo del contenedor.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-2"><code class="text-amber-400 font-mono">RUN</code> - ejecutar en el montaje</h4>
+<p class="text-neutral-300 text-sm">Ejecuta un comando mientras se construye la imagen (p. ej., instalar dependencias). El resultado queda guardado en la imagen.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-2"><code class="text-amber-400 font-mono">CMD</code> - qué hacer al iniciar</h4>
+<p class="text-neutral-300 text-sm">Define el comando que se ejecuta cuando se inicia el contenedor. A diferencia de RUN (montaje), CMD se ejecuta durante la ejecución.</p>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: RUN x CMD
+        </h3>
+<p class="text-neutral-300" data-inema-block="m4-1-t5-p4">La confusión más común: <strong class="text-primary">RUN</strong> sucede cuando tú <em>construye</em> la imagen (una vez, y se congela en la plantilla). <strong class="text-primary">CMD</strong> sucede cuando tú <em>se ejecuta</em> el contenedor (cada vez que se enciende). Piensa: RUN = hacer la maleta; CMD = lo que haces al llegar a tu destino.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 6: Build e Push                       -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-4-1#topico-6" id="topico-6">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold">Build y push: del Dockerfile al mundo</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m4-1-t6-p1">
+        Tienes el Dockerfile (la receta). Ahora viene el ciclo final: <strong class="text-amber-400">build</strong> convierte la receta en una imagen, <strong class="text-amber-400">run</strong> inicia un contenedor de ella, y <strong class="text-amber-400">push</strong> envía la imagen a un registry en la nube para que cualquier servidor pueda descargarla y ejecutarla.
+      </p>
+<!-- Timeline: build -> tag -> push -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+<span class="text-amber-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Build: crear la imagen</h4>
+<p class="text-sm text-neutral-400 mb-3">O <code class="font-mono text-amber-400">-t</code> le da un nombre (tag) a la imagen. El punto al final es la carpeta actual (donde está el Dockerfile).</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-amber-400">$ docker build -t meu-app .</p>
+<p class="text-neutral-400">[+] Building 12.3s</p>
+<p class="text-neutral-300"> =&gt; [1/4] FROM node:20</p>
+<p class="text-neutral-300"> =&gt; [4/4] RUN npm install</p>
+<p class="text-neutral-300"> =&gt; naming to docker.io/library/meu-app</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+<span class="text-amber-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Run: probar localmente</h4>
+<p class="text-sm text-neutral-400 mb-3">Antes de lanzarla al mundo, ejecuta la imagen que acabas de crear.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-amber-400">$ docker run -p 3000:3000 meu-app</p>
+<p class="text-neutral-300">Servidor ejecutándose en el puerto 3000</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+<span class="text-amber-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Push: enviar al registry</h4>
+<p class="text-sm text-neutral-400 mb-3">El registry es la «nube de imágenes» (Docker Hub es el más común). Inicias sesión, etiquetas la imagen con tu usuario y la envías.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># 1. iniciar sesión en Docker Hub</p>
+<p class="text-amber-400">$ docker login</p>
+<p class="text-neutral-400 mt-2"># 2. marcar con tu usuario</p>
+<p class="text-amber-400">$ docker tag meu-app seuuser/meu-app:1.0</p>
+<p class="text-neutral-400 mt-2"># 3. enviar a la nube</p>
+<p class="text-amber-400">$ docker push seuuser/meu-app:1.0</p>
+<p class="text-neutral-300">The push refers to repository [docker.io/seuuser/meu-app]</p>
+<p class="text-neutral-300">1.0: pushed</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> El ciclo completo, de cero al deploy
+        </h3>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># 1. escribir la receta (Dockerfile)</p>
+<p class="text-neutral-400"># 2. crear la imagen</p>
+<p class="text-amber-400">$ docker build -t seuuser/meu-app:1.0 .</p>
+<p class="text-neutral-400 mt-2"># 3. enviar al registry</p>
+<p class="text-amber-400">$ docker push seuuser/meu-app:1.0</p>
+<p class="text-neutral-400 mt-2"># 4. en el servidor, descargar y ejecutar</p>
+<p class="text-amber-400">$ docker run -d -p 80:3000 seuuser/meu-app:1.0</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-6">
+<h4 class="font-bold text-amber-400 mb-4">✓ Qué HACER</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-amber-400">✓</span><span>Versionar la etiqueta (<code class="font-mono text-sm">:1.0</code>, <code class="font-mono text-sm">:1.1</code>) en lugar de solo <code class="font-mono text-sm">latest</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400">✓</span><span>Probar con <code class="font-mono text-sm">docker run</code> antes de hacer push</span></li>
+<li class="flex items-start space-x-2"><span class="text-amber-400">✓</span><span>Crear uno <code class="font-mono text-sm">.dockerignore</code> para no copiar basura</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Poner contraseñas/tokens dentro de la imagen</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Hacer push de una imagen que nunca se ejecutó localmente</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Subir la carpeta <code class="font-mono text-sm">node_modules</code> dentro de la imagen</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-gradient-to-br from-amber-900/30 to-dark-800 rounded-xl border border-amber-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-amber-400 mb-3 flex items-center">
+<span class="mr-2">🏆</span> ¡Felicitaciones!
+        </h3>
+<p class="text-neutral-300" data-inema-block="m4-1-t6-p2">Ya entiendes el ciclo completo de Docker: imagen, container, Dockerfile, build y push. Con esto, tu programa funciona igual en tu PC y en cualquier servidor del mundo. En el próximo módulo, aprenderás a orquestar varios containers a la vez con el <strong class="text-amber-400">Docker Compose</strong>.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- RESUMO -->
+<section class="mb-12">
+<div class="bg-gradient-to-br from-amber-900/40 via-dark-800 to-dark-800 rounded-xl border border-amber-500/30 p-8">
+<h2 class="text-2xl font-bold mb-6 flex items-center">
+<span class="mr-3">📚</span> Resumen del módulo
+        </h2>
+<div class="space-y-4 mb-8">
+<div class="flex items-start space-x-3">
+<span class="text-amber-400 mt-1">✓</span>
+<div><strong class="text-white">El contenedor es una maleta completa</strong><span class="text-neutral-400"> - empaqueta la app y todo lo que necesita; funciona igual en cualquier lugar</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-amber-400 mt-1">✓</span>
+<div><strong class="text-white">docker --version e docker run</strong><span class="text-neutral-400"> - instalaste y ejecutaste tu primer contenedor (hello-world, nginx con -p)</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-amber-400 mt-1">✓</span>
+<div><strong class="text-white">La imagen es el molde; el contenedor, la instancia</strong><span class="text-neutral-400"> - una imagen genera tantos contenedores como quieras</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-amber-400 mt-1">✓</span>
+<div><strong class="text-white">Dockerfile es la receta</strong><span class="text-neutral-400"> - FROM, COPY, RUN, CMD construyen la imagen de tu app</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-amber-400 mt-1">✓</span>
+<div><strong class="text-white">build y push</strong><span class="text-neutral-400"> - docker build -t crea la imagen, docker push la envía al registry</span></div>
+</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+<h3 class="font-semibold text-amber-400 mb-2">Siguiente módulo:</h3>
+<p class="text-neutral-300">4.2 - Docker Compose: orquestar varios contenedores (app + base de datos + caché) con un solo archivo</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">
+            ← Volver a la ruta
+          </a>
+<a class="flex-1 text-center px-6 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-500 transition-colors" href="modulo-4-2.html">
+            Siguiente módulo →
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>De cero al deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

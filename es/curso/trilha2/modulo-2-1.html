@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>Vercel: Deploy en 1 clic | Desde cero hasta el deploy</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'blue' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'blue');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha blue) */
+    html:not(.dark) .text-blue-400 { color: #2563eb; }
+    html:not(.dark) .bg-blue-500\/20 { background-color: rgba(37, 99, 235, 0.12); }
+    html:not(.dark) .bg-blue-500\/10 { background-color: rgba(37, 99, 235, 0.08); }
+    html:not(.dark) .border-blue-500\/30 { border-color: rgba(37, 99, 235, 0.25); }
+    html:not(.dark) .hover\:bg-blue-500\/30:hover { background-color: rgba(37, 99, 235, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha2/modulo-2-1.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha2/modulo-2-1.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha2/modulo-2-1.html" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha2/modulo-2-1.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="../../../en/curso/trilha2/modulo-2-1.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">EN</a><a href="modulo-2-1.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">De cero al deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" href="../trilha1/index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal y Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-blue-400 bg-blue-500/10" href="index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy moderno</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors" href="../trilha3/index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor propio</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" href="../trilha4/index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors" href="../trilha5/index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- BREADCRUMB -->
+<nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex items-center space-x-2 text-sm text-neutral-400">
+<a class="hover:text-blue-400" href="../../index.html">Inicio</a>
+<span>/</span>
+<a class="hover:text-blue-400" href="index.html">Ruta 2</a>
+<span>/</span>
+<span class="text-blue-400">Módulo 2.1</span>
+</div>
+</nav>
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full mb-4">MÓDULO 2.1</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">⚡ Vercel: Deploy en 1 clic</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Ya sabes versionar código en GitHub. Ahora llegó el momento de poner ese código en línea, accesible desde todo el mundo. Vercel lo hace casi mágicamente: conectas el repositorio y, en segundos, tienes un sitio en línea con una URL propia. Sin servidor ni configuraciones complicadas.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-blue-400">6</div>
+<div class="text-xs text-neutral-400">Temas</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-blue-400">45</div>
+<div class="text-xs text-neutral-400">Minutos</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-blue-400">Básico</div>
+<div class="text-xs text-neutral-400">Nivel</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-blue-400">Práctico</div>
+<div class="text-xs text-neutral-400">Tipo</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="2-1" data-inema-track="2" id="conteudo">
+<!-- ============================================ -->
+<!-- TOPICO 1: O que e deploy e por que Vercel    -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-1#topico-1" id="topico-1">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold">Qué es el deploy y por qué Vercel</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-1-t1-p1">
+<strong class="text-blue-400">Deploy</strong> y es el acto de publicar tu proyecto en Internet para que cualquiera pueda acceder. Hasta ahora, tu código vivía solo en tu computadora (y quizá en GitHub). Hacer deploy es tomar ese código y ponerlo en un servidor siempre encendido, con una dirección que cualquier persona en el mundo puede escribir en el navegador. A <strong class="text-blue-400">Vercel</strong> es una plataforma que hace ese trabajo pesado por ti, gratis y en pocos segundos.
+      </p>
+<!-- SVG: Fluxo git push -> Vercel build -> URL/preview -->
+<div class="rounded-2xl border border-blue-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="Flujo de deploy: git push en GitHub activa el build en Vercel, que publica la URL y genera previews por branch" class="w-full h-auto" role="img" viewbox="0 0 800 220">
+<defs>
+<lineargradient id="m21-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#60a5fa"></stop><stop offset="1" stop-color="#3b82f6"></stop>
+</lineargradient>
+<filter height="180%" id="m21-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="m21-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#60a5fa" opacity="0.12" r="1.3"></circle>
+</pattern>
+</defs>
+<rect fill="url(#m21-grid)" height="220" width="800" x="0" y="0"></rect>
+<!-- Etapa 1: git push -->
+<rect fill="#0e1622" height="80" rx="14" stroke="#9ca3af" stroke-width="2" width="180" x="24" y="70"></rect>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="114" y="62">TU COMPUTADORA</text>
+<text fill="#60a5fa" font-family="monospace" font-size="14" text-anchor="middle" x="114" y="105">$ git push</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="114" y="128">envía a GitHub</text>
+<!-- Seta -->
+<line class="wf-a" stroke="#38bdf8" stroke-width="2.5" x1="208" x2="278" y1="110" y2="110"></line>
+<polygon class="wf-a" fill="#38bdf8" points="278,110 268,104 268,116"></polygon>
+<!-- Etapa 2: Vercel build (foco) -->
+<g filter="url(#m21-glow)">
+<rect fill="#0e1622" height="100" rx="14" stroke="url(#m21-grad)" stroke-width="2.5" width="200" x="282" y="60"></rect>
+</g>
+<text fill="#60a5fa" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="382" y="52">VERCEL</text>
+<circle cx="304" cy="80" fill="#f87171" r="4"></circle><circle cx="318" cy="80" fill="#fbbf24" r="4"></circle><circle cx="332" cy="80" fill="#60a5fa" r="4"></circle>
+<text fill="#60a5fa" font-family="monospace" font-size="12" x="300" y="106">Building...</text>
+<text fill="#9ca3af" font-family="monospace" font-size="11" x="300" y="124">npm run build</text>
+<text fill="#38bdf8" font-family="monospace" font-size="11" x="300" y="142">Deploy listo</text>
+<!-- Seta -->
+<line class="wf-a" stroke="#38bdf8" stroke-width="2.5" x1="486" x2="556" y1="110" y2="110"></line>
+<polygon class="wf-a" fill="#38bdf8" points="556,110 546,104 546,116"></polygon>
+<!-- Etapa 3: URL no ar -->
+<rect fill="#0e1622" height="60" rx="12" stroke="url(#m21-grad)" stroke-width="2" width="216" x="560" y="44"></rect>
+<text fill="#60a5fa" font-family="Inter,sans-serif" font-size="12" font-weight="600" text-anchor="middle" x="668" y="36">URL DE PRODUCCIÓN</text>
+<text fill="#38bdf8" font-family="monospace" font-size="13" text-anchor="middle" x="668" y="80">meu-app.vercel.app</text>
+<!-- Etapa 3b: Preview por branch -->
+<rect fill="#0e1622" height="60" rx="12" stroke="#9ca3af" stroke-dasharray="6 4" stroke-width="1.6" width="216" x="560" y="116"></rect>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="12" font-weight="600" text-anchor="middle" x="668" y="108">VISTA PREVIA POR BRANCH</text>
+<text fill="#9ca3af" font-family="monospace" font-size="12" text-anchor="middle" x="668" y="152">feature-abc.vercel.app</text>
+</svg>
+</div>
+<div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: deploy y abrir la tienda al público
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m2-1-t1-p2">Imagina que montaste una tienda completa dentro de tu casa: estantes listos, productos ordenados, un escaparate hermoso. Pero la puerta está cerrada con llave y nadie de afuera sabe que existe. <strong>Hacer deploy y abrir ese puerto es como poner un letrero en la calle.</strong> De repente, puede entrar cualquiera que pase por ahí.</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span><strong>Tu casa</strong> = tu computadora (solo tú la ves)</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span><strong>El cartel en la calle</strong> = la URL pública (la dirección)</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span><strong>Abrir el puerto</strong> = el deploy (publicar)</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400 mt-1">•</span><span><strong>Vercel</strong> = el centro comercial que se encarga de todo esto por ti</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> ¿Por qué Vercel y no un servidor propio?
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-1-t1-p3">De la forma tradicional, tendrías que alquilar un servidor, instalar un sistema operativo, configurar un servidor web (Nginx), ocuparte de un certificado de seguridad (HTTPS) y actualizar todo manualmente. Vercel lo hace por ti en segundos: HTTPS automático, actualización en cada <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">git push</code>, y un generoso plan gratuito para proyectos personales. Es el camino más rápido del código al sitio en línea. (Aprenderás sobre servidores propios en la Trilha 3: también tienen su lugar.)</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 2: Criar conta e conectar o GitHub    -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-1#topico-2" id="topico-2">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold">Crear una cuenta y conectar GitHub</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-1-t2-p1">
+        Antes de publicar cualquier cosa, necesitas una <strong class="text-blue-400">cuenta en Vercel</strong> y conéctala a tu GitHub. La buena noticia: ni siquiera tienes que crear una contraseña. Inicias sesión con tu propia cuenta de GitHub y Vercel empieza a "ver" tus repositorios. Este es el paso que conecta las dos herramientas.
+      </p>
+<!-- Timeline: Passo a passo -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+<span class="text-blue-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Accede al sitio de Vercel</h4>
+<p class="text-sm text-neutral-400 mb-3">Abre el navegador y ve a la dirección oficial.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># En el navegador, escribe:</p>
+<p class="text-blue-400">https://vercel.com</p>
+<p class="text-neutral-400 mt-2"># Haz clic en el botón "Sign Up" (Crear cuenta)</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+<span class="text-blue-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Elige «Continue with GitHub»</h4>
+<p class="text-sm text-neutral-400 mb-3">No necesitas crear una contraseña nueva. Usa el inicio de sesión de GitHub.</p>
+<p class="text-neutral-300 text-sm">Al hacer clic, GitHub abre una pantalla que te pide que <strong class="text-blue-400">autorizar a Vercel</strong>. Esto le da permiso a Vercel para ver tus repositorios. Haz clic en <strong>Authorize</strong>.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+<span class="text-blue-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Elige qué repositorios habilitar</h4>
+<p class="text-sm text-neutral-400 mb-3">Tú decides: todos los repositorios o solo los que elijas.</p>
+<p class="text-neutral-300 text-sm">GitHub pregunta si Vercel puede acceder <strong>todos</strong> los repositorios o <strong>solo algunos</strong> (Only select repositories). Para empezar, es más seguro dar acceso solo al proyecto que quieres publicar. Siempre puedes agregar más después.</p>
+</div>
+</div>
+</div>
+<!-- O que voce vai ver -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver en la pantalla
+        </h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m2-1-t2-p2">Después de autorizar, Vercel te lleva al <strong>Dashboard</strong>. Es una pantalla oscura con el título "Overview" y, en el centro, un botón grande:</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-500"># Dashboard de Vercel (primera vez)</p>
+<p class="text-blue-400 mt-2">[ + Add New... ]   [ Import Project ]</p>
+<p class="text-neutral-400 mt-2">Let's build something new.</p>
+<p class="text-neutral-300">Import a Git Repository to get started.</p>
+</div>
+<p class="text-neutral-400 text-sm mt-4">Este es el punto de partida. En el siguiente tema, vas a hacer clic en <strong class="text-blue-400">Import</strong> y hacer el primer deploy.</p>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-1-t2-p3"><strong>Problema:</strong> "Me conecté, pero mi repositorio no aparece en la lista de Vercel." <br/><strong>Solución:</strong> Casi siempre es porque, al autorizar, elegiste "Only select repositories" y no incluiste ese repo. Ve a <strong>Vercel → Settings → Git</strong> (o directamente en GitHub: Settings → Applications → Vercel) y agrega el repositorio a la lista de permitidos. Actualiza la página y aparecerá.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 3: Primeiro deploy automatico         -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-1#topico-3" id="topico-3">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold">Primer deploy automático</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-1-t3-p1">
+        Ahora viene la parte que da gusto: <strong class="text-blue-400">importar el repositorio y ver el sitio en línea</strong>. Vas a presionar muy pocos botones. Vercel lee tu código, descubre cómo compilarlo (build) y en segundos te entrega una URL funcionando. Y aquí viene lo mejor: a partir de ahora, todo <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">git push</code> actualiza el sitio por sí solo.
+      </p>
+<!-- Timeline de passos do deploy -->
+<div class="space-y-4 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 1: Importa el repositorio</h4>
+<p class="text-neutral-300 text-sm mb-3">En el Dashboard, haz clic en <strong class="text-blue-400">Add New → Project</strong>. Vercel muestra tus repositorios de GitHub. Encuentra el tuyo y haz clic en <strong>Import</strong>.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-500"># Lista de repositorios en Vercel</p>
+<p class="text-neutral-300 mt-1">meu-portfolio          <span class="text-blue-400">[ Import ]</span></p>
+<p class="text-neutral-300">landing-page           <span class="text-blue-400">[ Import ]</span></p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 2: Revisa la configuración (por lo general, automática)</h4>
+<p class="text-neutral-300 text-sm mb-3">Vercel detecta por sí sola el tipo de proyecto. Para un sitio HTML/CSS sencillo, ni siquiera tienes que tocar nada. Para frameworks (React, Next.js), ya completa la configuración correcta de build.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Detectado automáticamente:</p>
+<p class="text-neutral-300">Framework Preset:  <span class="text-blue-400">Other</span> (sitio estático)</p>
+<p class="text-neutral-300">Build Command:     <span class="text-neutral-500">(vacío; no hace falta)</span></p>
+<p class="text-neutral-300">Output Directory:  <span class="text-blue-400">./</span></p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 3: Haz clic en Deploy</h4>
+<p class="text-neutral-300 text-sm mb-3">Presiona el botón azul <strong class="text-blue-400">Deploy</strong> y mira. Vercel muestra los logs de la compilación en tiempo real.</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-blue-400">Ejecutando la compilación...</p>
+<p class="text-neutral-300">Cloning github.com/voce/meu-portfolio</p>
+<p class="text-neutral-300">Installing dependencies...</p>
+<p class="text-neutral-300">Build completed in 8s</p>
+<p class="text-blue-400 mt-2">✓ Deploy listo</p>
+<p class="text-neutral-300">Producción: https://meu-portfolio.vercel.app</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 4: Abre tu URL</h4>
+<p class="text-neutral-300 text-sm">Vercel muestra una pantalla de celebración ("Congratulations!") con un botón <strong class="text-blue-400">Visit</strong>. Haz clic en él. Tu sitio está en línea, accesible desde cualquier lugar del mundo. Comparte el enlace para que alguien lo pruebe.</p>
+</div>
+</div>
+<div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: la cinta transportadora automática
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-1-t3-p2">Piensa en una cinta transportadora de fábrica. Colocas la materia prima (tu código) en un punto y, en el otro, sale el producto terminado (el sitio en línea). No necesitas montar nada manualmente: la cinta hace todo. Después de configurarla una sola vez, trabaja sola: cada vez que envías código nuevo (<code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">git push</code>), la canalización se activa, construye la nueva versión y la publica. A eso se le llama <strong>implementación continua</strong>.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: el siguiente deploy es aún más fácil
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-1-t3-p3">Todo este paso a paso solo ocurre <strong>la primera vez</strong>. Después de importarlo, nunca más tendrás que entrar en Vercel para publicar. Solo tienes que editar tu código localmente y ejecutar:</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm mt-3">
+<p class="text-blue-400">$ git add .</p>
+<p class="text-blue-400">$ git commit -m "nuevo texto en la home"</p>
+<p class="text-blue-400">$ git push</p>
+<p class="text-neutral-400 mt-2"># Vercel detecta el push y actualiza el sitio automáticamente</p>
+</div>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 4: Preview deploys por branch         -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-1#topico-4" id="topico-4">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold">Preview Deploys: cada branch obtiene una URL</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-1-t4-p1">
+        Aquí está una de las funciones más útiles de Vercel. Cuando creas una <strong class="text-blue-400">branch</strong> nueva y abre un <strong class="text-blue-400">Pull Request</strong>, Vercel publica automáticamente una versión separada del sitio, con su propia URL temporal. Así ves el cambio funcionando de verdad <strong>antes</strong> antes de modificar el sitio oficial. La producción sigue intacta mientras haces pruebas.
+      </p>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver en el Pull Request
+        </h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m2-1-t4-p2">Creas la branch, haces push y abres el PR en GitHub. En segundos, un robot de Vercel comenta en el propio PR con el enlace de la vista previa:</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-500"># Comentario automático en el Pull Request</p>
+<p class="text-blue-400 mt-2">✓ Vercel</p>
+<p class="text-neutral-300">Latest commit deployed to Preview.</p>
+<p class="text-neutral-300 mt-1">Preview: <span class="text-blue-400">meu-portfolio-git-feature-novo-botao.vercel.app</span></p>
+<p class="text-neutral-300">Inspect: <span class="text-neutral-400">vercel.com/voce/.../deployments</span></p>
+</div>
+<p class="text-neutral-400 text-sm mt-4">Este enlace es exclusivo de esa branch. La URL de producción ni se entera.</p>
+</div>
+<!-- Comparacao producao vs preview -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-bold text-blue-400 mb-4">🌐 URL de producción</h4>
+<ul class="space-y-3 text-neutral-300 text-sm">
+<li class="flex items-start space-x-2"><span class="text-blue-400">•</span><span>Proviene de la branch <code class="font-mono">main</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400">•</span><span>Dirección fija: <code class="font-mono">meu-app.vercel.app</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400">•</span><span>Es la versión que ve el público</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400">•</span><span>Solo cambia cuando haces merge en main</span></li>
+</ul>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-bold text-blue-400 mb-4">🧪 URL de vista previa</h4>
+<ul class="space-y-3 text-neutral-300 text-sm">
+<li class="flex items-start space-x-2"><span class="text-blue-400">•</span><span>Proviene de cualquier branch / PR</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400">•</span><span>Dirección única con el nombre de la branch</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400">•</span><span>Solo tú y quienes revisan el PR pueden verlo</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400">•</span><span>Se actualiza con cada nuevo push a la branch</span></li>
+</ul>
+</div>
+</div>
+<!-- Grid Fazer / Evitar -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6">
+<h4 class="font-bold text-blue-400 mb-4">✓ Qué HACER</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-blue-400">✓</span><span>Probar cambios grandes en una rama separada</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400">✓</span><span>Enviar el enlace de preview para que alguien lo revise</span></li>
+<li class="flex items-start space-x-2"><span class="text-blue-400">✓</span><span>Abrir la vista previa en el celular antes del merge</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Probar todo directamente en la rama <code class="font-mono">main</code> (se publica)</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Enviar el enlace de preview como si fuera el sitio final</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Olvidar cerrar o fusionar PR antiguos que siguen abiertos</span></li>
+</ul>
+</div>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 5: Configuracoes de projeto           -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-1#topico-5" id="topico-5">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold">Configuración del proyecto: Build, Env y Framework</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-1-t5-p1">
+        En la mayoría de los proyectos sencillos, Vercel lo configura todo automáticamente. Pero vale la pena entender <strong class="text-blue-400">tres ajustes</strong> que encontrarás en <strong>Settings</strong>: el comando de build, las variables de entorno y el framework. Saber dónde están te saca de muchos apuros cuando un deploy no funciona como esperabas.
+      </p>
+<!-- Build Command -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-blue-400 font-mono">Build Command</code> - Cómo crear el sitio</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m2-1-t5-p2">Es el comando que ejecuta Vercel para transformar tu código en el sitio final. Los sitios HTML puros no lo necesitan. Los proyectos con framework sí.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Sitio HTML/CSS simple:</p>
+<p class="text-neutral-300">(déjalo vacío: no hay build)</p>
+<p class="text-neutral-400 mt-3"># Proyecto React / Vite:</p>
+<p class="text-blue-400">npm run build</p>
+<p class="text-neutral-400 mt-3"># Dónde queda el resultado (Output Directory):</p>
+<p class="text-blue-400">dist</p>
+</div>
+</div>
+<!-- Environment Variables -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-blue-400 font-mono">Environment Variables</code> - Secretos del proyecto</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m2-1-t5-p3">Son valores secretos (claves de API, contraseñas, tokens) que NO pones en el código. Los registras en <strong>Settings → Environment Variables</strong>, y Vercel los inyecta durante el build, sin exponer el secreto en el repositorio.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Ejemplo de variable registrada en Vercel:</p>
+<p class="text-neutral-300">Name:   <span class="text-blue-400">API_KEY</span></p>
+<p class="text-neutral-300">Value:  <span class="text-neutral-500">sk-xxxx... (queda oculto)</span></p>
+<p class="text-neutral-300">Env:    <span class="text-blue-400">Producción, vista previa, desarrollo</span></p>
+</div>
+<p class="text-neutral-400 text-sm mt-3">Profundizarás en esto en el <strong class="text-blue-400">Módulo 2.4 - Variables de entorno</strong>.</p>
+</div>
+<!-- Framework Preset -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-blue-400 font-mono">Framework Preset</code> - El tipo de proyecto</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m2-1-t5-p4">Vercel reconoce decenas de frameworks y ya completa la configuración correcta de build y output para cada uno. Solo tienes que confirmar.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-300">Next.js   <span class="text-neutral-500">→ compilación automática, sin configuración</span></p>
+<p class="text-neutral-300">Vite      <span class="text-neutral-500">→ npm run build, output dist/</span></p>
+<p class="text-neutral-300">Other     <span class="text-neutral-500">→ sitio estático, sin compilación</span></p>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-1-t5-p5"><strong>Problema:</strong> "El deploy falló con 'Build failed' / la página se abre en blanco." <br/><strong>Solución:</strong> Casi siempre el <strong>Output Directory</strong> está mal (Vercel busca el sitio en una carpeta que no existe) o faltó registrar una <strong>Environment Variable</strong>. Abre los logs del deploy (botón <strong>View Build Logs</strong>), lee la última línea roja y ajusta la configuración en Settings. Después, en <strong>Deployments</strong>, haz clic en los tres puntos → <strong>Redeploy</strong>.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 6: Dominios customizados              -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-2-1#topico-6" id="topico-6">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold">Dominios personalizados</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m2-1-t6-p1">
+        La URL <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">meu-app.vercel.app</code> funciona perfectamente, pero para algo profesional vas a querer una dirección propia, como <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">www.seunome.com</code>. Esto es el <strong class="text-blue-400">dominio personalizado</strong>. Compras el dominio en un registrador (Registro.br, Namecheap, GoDaddy) y lo conectas a Vercel.
+      </p>
+<!-- Timeline de conexao do dominio -->
+<div class="space-y-4 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 1: Agrega el dominio en Vercel</h4>
+<p class="text-neutral-300 text-sm mb-3">Ve a <strong class="text-blue-400">Settings → Domains</strong>, escribe tu dominio y haz clic en Add.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># En Settings → Domains:</p>
+<p class="text-blue-400">tunombre.com  [ Add ]</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 2: Vercel te da los registros DNS</h4>
+<p class="text-neutral-300 text-sm mb-3">Muestra valores que tienes que pegar en el panel de tu registrador (donde compraste el dominio).</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Copia estos registros:</p>
+<p class="text-neutral-300">Type: <span class="text-blue-400">A</span>      Name: @     Value: 76.76.21.21</p>
+<p class="text-neutral-300">Type: <span class="text-blue-400">CNAME</span>  Name: www   Value: cname.vercel-dns.com</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 3: Pega los datos en el panel del registrador y espera</h4>
+<p class="text-neutral-300 text-sm">En el sitio donde compraste el dominio, ve a "Administrar DNS" y agrega los registros. Después, solo queda esperar: la propagación del DNS tarda desde unos minutos hasta algunas horas. Vercel también genera el certificado HTTPS gratis, de forma automática.</p>
+</div>
+</div>
+<div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: DNS y la guía telefónica
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-1-t6-p2">O <strong>DNS</strong> y es como una enorme guía telefónica de Internet. Cuando alguien escribe <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">seunome.com</code>, el navegador consulta esta lista para descubrir el «número» (el servidor) donde está alojado el sitio. Al pegar los registros DNS, básicamente escribes en la lista: «quien busque tunombre.com, que vaya a Vercel». La propagación es el tiempo que tarda esta nueva entrada en llegar a todas las listas del mundo.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: empieza sin comprar un dominio
+        </h3>
+<p class="text-neutral-300" data-inema-block="m2-1-t6-p3">No necesitas un dominio propio para aprender ni para proyectos personales. La URL <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">.vercel.app</code> y es gratis, tiene HTTPS y funciona para siempre. Compra un dominio solo cuando el proyecto sea real (portafolio, negocio). Y siempre puedes agregarlo después, sin volver a hacer el deploy.</p>
+</div>
+<div class="bg-gradient-to-br from-blue-900/30 to-dark-800 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4">🎉 ¡Lo lograste!</h3>
+<p class="text-neutral-300" data-inema-block="m2-1-t6-p4">Si llegaste hasta aquí, ya sabes tomar un proyecto de GitHub y publicarlo con una URL propia, vistas previas por rama e incluso un dominio personalizado. Eso es deploy moderno de verdad. En el <strong class="text-blue-400">siguiente módulo</strong>, aprenderás el <strong>Supabase</strong>, para darle una base de datos y un backend a tu sitio.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- RESUMO -->
+<section class="mb-12">
+<div class="bg-gradient-to-br from-blue-900/40 via-dark-800 to-dark-800 rounded-xl border border-blue-500/30 p-8">
+<h2 class="text-2xl font-bold mb-6 flex items-center">
+<span class="mr-3">📚</span> Resumen del módulo
+        </h2>
+<div class="space-y-4 mb-8">
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">Deploy es abrir la tienda al público</strong><span class="text-neutral-400"> - publicar el código en Internet con una URL propia</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">Cuenta mediante GitHub</strong><span class="text-neutral-400"> - sin contraseña nueva; autoriza y habilita los repos</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">Deploy automático</strong><span class="text-neutral-400"> - importa el repo una vez; cada git push se actualiza automáticamente</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">Preview por branch</strong><span class="text-neutral-400"> - cada PR obtiene una URL para probar sin tocar producción</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-blue-400 mt-1">✓</span>
+<div><strong class="text-white">Configuración y dominio</strong><span class="text-neutral-400"> - build, env, framework y dominio personalizado con HTTPS automático</span></div>
+</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+<h3 class="font-semibold text-blue-400 mb-2">Siguiente módulo:</h3>
+<p class="text-neutral-300">2.2 - Supabase: Base de datos en minutos (dale a tu sitio un backend de verdad)</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">
+            ← Volver a la ruta
+          </a>
+<a class="flex-1 text-center px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-500 transition-colors" href="modulo-2-2.html">
+            Siguiente módulo →
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>De cero al deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

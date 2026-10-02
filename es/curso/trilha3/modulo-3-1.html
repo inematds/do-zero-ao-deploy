@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>VPS: Tu computadora en la nube | Desde cero hasta el deploy</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'purple' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'purple');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha purple) */
+    html:not(.dark) .text-purple-400 { color: #9333ea; }
+    html:not(.dark) .bg-purple-500\/20 { background-color: rgba(147, 51, 234, 0.12); }
+    html:not(.dark) .bg-purple-500\/10 { background-color: rgba(147, 51, 234, 0.08); }
+    html:not(.dark) .border-purple-500\/30 { border-color: rgba(147, 51, 234, 0.25); }
+    html:not(.dark) .hover\:bg-purple-500\/30:hover { background-color: rgba(147, 51, 234, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha3/modulo-3-1.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha3/modulo-3-1.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha3/modulo-3-1.html" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha3/modulo-3-1.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="../../../en/curso/trilha3/modulo-3-1.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">EN</a><a href="modulo-3-1.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">De cero al deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" href="../trilha1/index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal y Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" href="../trilha2/index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy moderno</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-purple-400 bg-purple-500/10" href="index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor propio</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" href="../trilha4/index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors" href="../trilha5/index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- BREADCRUMB -->
+<nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex items-center space-x-2 text-sm text-neutral-400">
+<a class="hover:text-purple-400" href="../../index.html">Inicio</a>
+<span>/</span>
+<a class="hover:text-purple-400" href="index.html">Ruta 3</a>
+<span>/</span>
+<span class="text-purple-400">Módulo 3.1</span>
+</div>
+</nav>
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MÓDULO 3.1</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">🖥️ VPS: Tu computadora en la nube</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Un VPS es una computadora que alquilas y permanece encendida las 24 horas del día, los 7 días de la semana, en un centro de datos. Ahí alojarás tus proyectos, ejecutarás tus programas y tendrás un servidor de verdad. Aquí aprenderás qué es, cómo elegir y cómo contratar el primero.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">6</div>
+<div class="text-xs text-neutral-400">Temas</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">45</div>
+<div class="text-xs text-neutral-400">Minutos</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">Básico</div>
+<div class="text-xs text-neutral-400">Nivel</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-purple-400">Práctico</div>
+<div class="text-xs text-neutral-400">Tipo</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="3-1" data-inema-track="3" id="conteudo">
+<!-- ============================================ -->
+<!-- TOPICO 1: O que e um VPS                      -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-1#topico-1" id="topico-1">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold">Qué es un VPS</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-1-t1-p1">
+        VPS significa <strong class="text-purple-400">Virtual Private Server</strong> (Servidor Privado Virtual). En términos sencillos: es un <strong class="text-purple-400">computadora en la nube que alquilas</strong>. No está en tu escritorio, sino en un centro de datos (un galpón gigante lleno de servidores), encendido todo el tiempo, con internet rápido y una dirección fija. Controlas esta computadora por internet, como si estuvieras sentado frente a ella.
+      </p>
+<!-- SVG: Seu PC -> Internet -> VPS sempre ligado na nuvem -->
+<div class="rounded-2xl border border-purple-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="Diagrama que muestra tu computadora conectándose por internet a un VPS siempre encendido en un centro de datos en la nube" class="w-full h-auto" role="img" viewbox="0 0 800 240">
+<defs>
+<lineargradient id="m31-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#c084fc"></stop><stop offset="1" stop-color="#a855f7"></stop>
+</lineargradient>
+<filter height="180%" id="m31-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="m31-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#c084fc" opacity="0.12" r="1.3"></circle>
+</pattern>
+</defs>
+<rect fill="url(#m31-grid)" height="240" width="800" x="0" y="0"></rect>
+<!-- Seu PC -->
+<rect fill="#1a1a2e" height="100" rx="12" stroke="#9ca3af" stroke-width="2" width="150" x="40" y="80"></rect>
+<rect fill="#1a1230" height="56" rx="4" stroke="#9ca3af" stroke-width="1" width="114" x="58" y="98"></rect>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" x="115" y="170">el teclado lo tienes tú</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="115" y="70">TU PC</text>
+<!-- Internet -->
+<line class="wf-a" stroke="#38bdf8" stroke-dasharray="6 5" stroke-width="2.5" x1="195" x2="305" y1="130" y2="130"></line>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="12" text-anchor="middle" x="250" y="118">internet</text>
+<text fill="#38bdf8" font-family="monospace" font-size="11" text-anchor="middle" x="250" y="150">SSH</text>
+<!-- Nuvem -->
+<g filter="url(#m31-glow)">
+<ellipse cx="500" cy="70" fill="none" rx="120" ry="38" stroke="url(#m31-grad)" stroke-width="2"></ellipse>
+</g>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="500" y="40">NUBE (CENTRO DE DATOS)</text>
+<!-- VPS -->
+<line stroke="#c084fc" stroke-width="2.5" x1="315" x2="395" y1="130" y2="130"></line>
+<g filter="url(#m31-glow)">
+<rect fill="#1a1230" height="110" rx="12" stroke="url(#m31-grad)" stroke-width="2" width="200" x="400" y="95"></rect>
+</g>
+<text fill="#c084fc" font-family="Inter,sans-serif" font-size="14" font-weight="600" text-anchor="middle" x="500" y="120">VPS</text>
+<!-- racks/leds -->
+<rect fill="#1a1230" height="14" rx="3" stroke="#a855f7" stroke-width="1" width="160" x="420" y="135"></rect>
+<circle cx="430" cy="142" fill="#34d399" r="3"></circle><circle cx="442" cy="142" fill="#34d399" r="3"></circle>
+<rect fill="#1a1230" height="14" rx="3" stroke="#a855f7" stroke-width="1" width="160" x="420" y="155"></rect>
+<circle cx="430" cy="162" fill="#34d399" r="3"></circle><circle cx="442" cy="162" fill="#fbbf24" r="3"></circle>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="500" y="194">siempre encendido</text>
+<!-- IP fixo -->
+<rect fill="#1a1230" height="80" rx="10" stroke="#38bdf8" stroke-width="1.5" width="130" x="640" y="110"></rect>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="11" font-weight="600" text-anchor="middle" x="705" y="135">IP FIJA</text>
+<text fill="#9ca3af" font-family="monospace" font-size="12" text-anchor="middle" x="705" y="158">203.0.113.7</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="10" text-anchor="middle" x="705" y="178">la dirección del servidor</text>
+<line stroke="#38bdf8" stroke-dasharray="4 4" stroke-width="1.5" x1="600" x2="640" y1="150" y2="150"></line>
+</svg>
+</div>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: alquilar una computadora en la nube
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m3-1-t1-p2">Imagina que necesitas una computadora encendida para siempre, pero no quieres dejar tu propia PC encendida día y noche (gastando electricidad, haciendo ruido, con riesgo de apagarse si se corta la energía). Entonces <strong>alquila un</strong>: otra empresa se encarga de la máquina física, la energía, Internet y la refrigeración. Tú solo la usas, pagas por mes y accedes desde cualquier lugar.</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>Tu PC:</strong> se apaga cuando duermes, queda atrapado en tu casa</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>El VPS:</strong> nunca se apaga, tiene una IP fija y es accesible desde todo el mundo</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>Pagas:</strong> una mensualidad (por lo general, de 4 a 12 dólares al mes)</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>"Virtual":</strong> una máquina física se divide en varios VPS aislados</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> ¿Por qué no usar solo Vercel?
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-1-t1-p3">En la ruta de aprendizaje 2 usaste Vercel, que es ideal para sitios y front-ends. Pero es <strong>limitada</strong>: no controlas la máquina, no ejecutas procesos largos ni instalas lo que quieres. El VPS te da <strong>control total</strong>: es un Linux de verdad donde instalas bases de datos, bots, APIs pesadas, juegos y automatizaciones que funcionan todo el día. Más poder, más responsabilidad.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 2: Provedores e como escolher         -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-1#topico-2" id="topico-2">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold">Proveedores: DigitalOcean, Hetzner, Contabo</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-1-t2-p1">
+        Hay decenas de empresas que alquilan VPS. Para principiantes, destacan tres: <strong class="text-purple-400">DigitalOcean</strong> (la más fácil), <strong class="text-purple-400">Hetzner</strong> (mejor relación precio-rendimiento) y <strong class="text-purple-400">Contabo</strong> (más memoria por el mismo dinero). Todas funcionan igual: creas una cuenta, eliges un plan y en 60 segundos tienes un servidor listo.
+      </p>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<div class="text-2xl mb-2">🌊</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-2">DigitalOcean</h3>
+<p class="text-sm text-neutral-400 mb-3">La más amigable para quienes están empezando. Panel sencillo, mucha documentación, excelentes tutoriales.</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400">•</span><span>Desde ~6 dólares/mes</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">•</span><span>Llama al VPS «Droplet»</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">•</span><span>Créditos gratis para probar</span></li>
+</ul>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<div class="text-2xl mb-2">💸</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-2">Hetzner</h3>
+<p class="text-sm text-neutral-400 mb-3">La mejor relación costo-beneficio del mercado. Empresa alemana, servidores en Europa y en EE. UU.</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400">•</span><span>A partir de ~4 dólares/mes</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">•</span><span>Llama al VPS «Cloud Server»</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">•</span><span>Excelente para proyectos serios</span></li>
+</ul>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<div class="text-2xl mb-2">💾</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-2">Contabo</h3>
+<p class="text-sm text-neutral-400 mb-3">Mucha memoria RAM y espacio en disco al menor precio. Ideal para quien necesita espacio.</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400">•</span><span>Desde ~5 dólares/mes</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">•</span><span>Mucha RAM en los planes económicos</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">•</span><span>Soporte un poco más lento</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver en el sitio del proveedor
+        </h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-1-t2-p2">Al abrir cualquiera de estos sitios, encontrarás una tabla de planes parecida a esta:</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Tabla de planes (ejemplo)</p>
+<p class="text-blue-400">Plan       vCPU   RAM     Disco    Precio</p>
+<p class="text-neutral-300">Basico       1      1 GB    25 GB    ~5/mes</p>
+<p class="text-neutral-300">Standard     2      4 GB    80 GB    ~12/mes</p>
+<p class="text-neutral-300">Pro          4      8 GB    160 GB   ~24/mes</p>
+</div>
+<p class="text-neutral-300 text-sm mt-4" data-inema-block="m3-1-t2-p3"><strong class="text-blue-400">vCPU</strong> = potencia de procesamiento. <strong class="text-blue-400">RAM</strong> = memoria para ejecutar programas. <strong class="text-blue-400">Disco</strong> = espacio para guardar archivos. Para empezar, el plan más barato es suficiente.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-6">
+<h4 class="font-bold text-purple-400 mb-4">✓ Qué HACER al elegir</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400">✓</span><span>Empezar por el plan más barato (puedes aumentarlo después)</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">✓</span><span>Elegir una región cerca de tus usuarios</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">✓</span><span>Verificar si cobra por hora (puedes borrarlo y dejar de pagar)</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Contratar el plan más caro «por si acaso»</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Olvidar un VPS encendido y generando cargos</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Ignorar la región y colocar el servidor al otro lado del mundo</span></li>
+</ul>
+</div>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 3: Contratar o primeiro VPS           -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-1#topico-3" id="topico-3">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold">Contrata tu primer VPS</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-1-t3-p1">
+        Crear un VPS lleva menos de dos minutos. El proceso es parecido con cualquier proveedor: respondes cuatro preguntas (<strong class="text-purple-400">región</strong>, <strong class="text-purple-400">tamaño</strong>, <strong class="text-purple-400">sistema</strong> e <strong class="text-purple-400">cómo va a entrar</strong>), haz clic en "Crear" y listo. Vamos paso a paso.
+      </p>
+<!-- Timeline: passos da contratacao -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Elige la región (Region)</h4>
+<p class="text-sm text-neutral-400 mb-3">Dónde estará ubicado físicamente el servidor. Cuanto más cerca esté de ti y de tus usuarios, más rápido será.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Opciones comunes</p>
+<p class="text-purple-400">New York / NYC   -&gt; este de EUA</p>
+<p class="text-purple-400">Frankfurt / FRA  -&gt; Europa</p>
+<p class="text-purple-400">São Paulo / GRU  -&gt; Brasil (cuando esté disponible)</p>
+</div>
+<p class="text-neutral-300 text-sm mt-3"><strong class="text-purple-400">Para Brasil:</strong> si no hay una región en Brasil, elige "New York" o "Miami". La diferencia de velocidad es pequeña.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Elige el tamaño (Size)</h4>
+<p class="text-sm text-neutral-400 mb-3">Cuánta CPU, RAM y espacio en disco. Empieza con poco: puedes aumentar después sin perder los datos.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Recomendado para el primer proyecto</p>
+<p class="text-purple-400">1 vCPU, 1 GB RAM, 25 GB de disco</p>
+<p class="text-neutral-400 mt-2"># Cuesta alrededor de</p>
+<p class="text-purple-400">5 a 6 dólares por mes</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Elige el sistema (Image)</h4>
+<p class="text-sm text-neutral-400 mb-3">Qué sistema operativo usará el servidor. Elige siempre Linux Ubuntu, el más común y con más tutoriales.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Selecciona la versión LTS más reciente</p>
+<p class="text-purple-400">Ubuntu 24.04 (LTS)</p>
+<p class="text-neutral-400 mt-2"># LTS = Long Term Support (soporte a largo plazo)</p>
+<p class="text-neutral-400"># = más estable, ideal para servidores</p>
+</div>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="text-purple-400 font-bold text-lg">4</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Define el acceso (contraseña o clave SSH)</h4>
+<p class="text-sm text-neutral-400 mb-3">Cómo vas a acceder al servidor. Dos opciones: contraseña (más sencilla) o clave SSH (más segura).</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Opción A: Contraseña</p>
+<p class="text-purple-400">Crea una contraseña segura y ANÓTALA en un lugar seguro</p>
+<p class="text-neutral-400 mt-2"># Opción B: Clave SSH (recomendada)</p>
+<p class="text-purple-400">Pega tu clave pública (la veremos en el módulo 3.2)</p>
+</div>
+<p class="text-neutral-300 text-sm mt-3">Por ahora, la <strong class="text-purple-400">contraseña</strong> es suficiente. En el próximo módulo aprenderás SSH.</p>
+</div>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-1-t3-p2"><strong>Problema:</strong> "Creé el VPS, anoté mal la contraseña y ahora no puedo entrar." <br/><strong>Solución:</strong> En el panel del proveedor está la opción de <strong>restablecer la contraseña de root</strong> (Reset Root Password). Genera una nueva contraseña temporal y la envía por correo electrónico. Úsala para iniciar sesión y cámbiala de inmediato. Por eso: anota siempre la contraseña antes de cerrar la pantalla.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 4: Primeiro acesso via console web    -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-1#topico-4" id="topico-4">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold">Primer acceso desde la consola web</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-1-t4-p1">
+        Con el VPS creado, necesitas <strong class="text-purple-400">entrar en él</strong>. La forma más rápida (y que no requiere configurar nada) es <strong class="text-purple-400">consola web</strong>: una terminal que se abre en el navegador, directamente en el panel del proveedor. Es como sentarte frente al servidor de verdad.
+      </p>
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver en la pantalla
+        </h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-1-t4-p2">Al hacer clic en el botón "Console" (o "Launch Console") en el panel, se abre una ventana negra que te pide iniciar sesión. Escribe <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">root</code> y es la contraseña que definiste:</p>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-300">Ubuntu 24.04 LTS  meu-vps  tty1</p>
+<p class="text-neutral-300 mt-2">meu-vps login: <span class="text-blue-400">root</span></p>
+<p class="text-neutral-300">Password: <span class="text-neutral-500">(escribe la contraseña: no aparece nada)</span></p>
+<p class="text-neutral-400 mt-3"># Si la contraseña es correcta, aparece:</p>
+<p class="text-purple-400">Welcome to Ubuntu 24.04 LTS</p>
+<p class="text-purple-400">root@meu-vps:~#</p>
+</div>
+<p class="text-neutral-300 text-sm mt-4" data-inema-block="m3-1-t4-p3">O <strong class="text-blue-400">#</strong> al final indica que has iniciado sesión como root (el jefe del servidor). Ahora, cualquier comando que escribas se ejecuta dentro del VPS, no en tu PC.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Primeros comandos para «poner en marcha» el servidor</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-1-t4-p4">Los mismos comandos de la ruta 1 funcionan aquí. Pruébalos para confirmar que todo está bien:</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># ¿Quién soy en este servidor?</p>
+<p class="text-purple-400">root@meu-vps:~# whoami</p>
+<p class="text-neutral-300">root</p>
+<p class="text-neutral-400 mt-3"># ¿Dónde estoy?</p>
+<p class="text-purple-400">root@meu-vps:~# pwd</p>
+<p class="text-neutral-300">/root</p>
+<p class="text-neutral-400 mt-3"># ¿Qué sistema está en ejecución?</p>
+<p class="text-purple-400">root@meu-vps:~# uname -a</p>
+<p class="text-neutral-300">Linux meu-vps 6.8.0 x86_64 GNU/Linux</p>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-1-t4-p5"><strong>Problema:</strong> "Escribo la contraseña, pero no aparece en la pantalla; parece que no funciona." <br/><strong>Solución:</strong> Esto es normal e intencional. En Linux, la contraseña <strong>nunca</strong> aparece mientras escribes (ni siquiera asteriscos). Es una protección para que nadie lo vea por encima de tu hombro. Escribe con calma y presiona Enter. Si te equivocas, te lo vuelve a pedir.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: la consola web es solo el comienzo
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-1-t4-p6">La consola web es excelente para el primer acceso y para emergencias (cuando te quedas fuera). Pero para el día a día es incómoda: no puedes pegar texto fácilmente y es más lenta. En el próximo módulo aprenderás <strong>SSH</strong>, que conecta tu terminal directamente al servidor, con las funciones de copiar y pegar funcionando con normalidad.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 5: Entendendo Linux no servidor       -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-1#topico-5" id="topico-5">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold">Entender Linux en el servidor</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-1-t5-p1">
+        Tu VPS ejecuta <strong class="text-purple-400">Linux</strong>, un sistema operativo distinto de Windows y Mac, pero que sigue la misma lógica de carpetas y comandos que ya viste. Tres conceptos son esenciales: quién es el <strong class="text-purple-400">root</strong>, como son las <strong class="text-purple-400">carpetas</strong> y es como instalar programas con el <strong class="text-purple-400">apt</strong>.
+      </p>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: root es el dueño del edificio
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m3-1-t5-p2">El usuario <strong>root</strong> y es el administrador absoluto del servidor: puede hacer todo, abrir cualquier puerto, modificar cualquier archivo, instalar y borrar lo que quiera. Es el "dueño del edificio" con la llave maestra. Por eso también es peligroso: un comando incorrecto como root puede dañar todo el sistema.</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>root:</strong> poder total, el prompt termina en <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-purple-400">#</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>usuario común:</strong> poderes limitados, el prompt termina en <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-purple-400">$</code></span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400 mt-1">•</span><span><strong>sudo:</strong> pide "permiso de root" para un comando específico</span></li>
+</ul>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Las carpetas principales de Linux</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-1-t5-p3">En Linux todo empieza en la barra <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs">/</code> (la raíz). Las carpetas más importantes para ti:</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-purple-400">/          <span class="text-neutral-400"># la raíz de todo</span></p>
+<p class="text-purple-400">/root      <span class="text-neutral-400"># la carpeta personal del usuario root</span></p>
+<p class="text-purple-400">/home      <span class="text-neutral-400"># carpetas personales de los usuarios comunes</span></p>
+<p class="text-purple-400">/etc       <span class="text-neutral-400"># archivos de configuración</span></p>
+<p class="text-purple-400">/var       <span class="text-neutral-400"># registros y datos de programas</span></p>
+<p class="text-purple-400">/usr       <span class="text-neutral-400"># programas instalados</span></p>
+<p class="text-purple-400">/tmp       <span class="text-neutral-400"># archivos temporales</span></p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-purple-400 font-mono">apt</code> - Instalar programas en el servidor</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-1-t5-p4">En Ubuntu, instalas programas con <strong>apt</strong>, una especie de «tienda de aplicaciones» desde la línea de comandos. No necesitas descargar nada de ningún sitio.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Instalar un programa (ej.: el editor nano)</p>
+<p class="text-purple-400">root@meu-vps:~# apt install nano</p>
+<p class="text-neutral-300">Reading package lists... Done</p>
+<p class="text-neutral-300">nano is already the newest version.</p>
+<p class="text-neutral-400 mt-3"># Instalar git y curl de una vez</p>
+<p class="text-purple-400">root@meu-vps:~# apt install git curl</p>
+<p class="text-neutral-400 mt-3"># Eliminar un programa</p>
+<p class="text-purple-400">root@meu-vps:~# apt remove nome-do-programa</p>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-1-t5-p5"><strong>Problema:</strong> "Ejecuté <code class="font-mono text-sm text-red-400">apt install</code> y apareció el error 'Unable to locate package' o 'Could not get lock'." <br/><strong>Solución:</strong> Ejecuta <code class="font-mono text-sm text-purple-400">apt update</code> primero: actualiza la lista de programas disponibles. Sin esto, apt no sabe dónde encontrar lo que pediste. Si aparece "lock", espera unos segundos (se está ejecutando otra actualización) y vuelve a intentarlo.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 6: Atualizacao e manutencao basica    -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-3-1#topico-6" id="topico-6">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold">Actualización y mantenimiento básico</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m3-1-t6-p1">
+        Un servidor necesita cuidados, como un auto. Tres tareas sencillas mantienen tu VPS en buen estado: <strong class="text-purple-400">actualizar</strong> los programas, <strong class="text-purple-400">reiniciar</strong> cuando necesito vigilar el <strong class="text-purple-400">espacio en disco</strong>. Haz esto de vez en cuando y tu servidor funcionará sin problemas durante años.
+      </p>
+<div class="bg-gradient-to-br from-purple-900/30 to-dark-800 rounded-xl border border-purple-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-purple-400 mb-4">🔄 Actualizar todo (la rutina más importante)</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m3-1-t6-p2">Son dos comandos en secuencia: <strong>update</strong> busca las novedades y <strong>upgrade</strong> instálalo. Hazlo cuando enciendas un VPS nuevo y cada pocas semanas.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># 1) Actualizar la lista de paquetes</p>
+<p class="text-purple-400">root@meu-vps:~# apt update</p>
+<p class="text-neutral-300">Hit:1 http://archive.ubuntu.com noble InRelease</p>
+<p class="text-neutral-300">12 packages can be upgraded.</p>
+<p class="text-neutral-400 mt-3"># 2) Instalar las actualizaciones (-y responde "sí" automáticamente)</p>
+<p class="text-purple-400">root@meu-vps:~# apt upgrade -y</p>
+<p class="text-neutral-300">Setting up packages...</p>
+<p class="text-neutral-300">Done.</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Reiniciar y revisar el espacio</h3>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Reiniciar el servidor (después de actualizaciones importantes)</p>
+<p class="text-purple-400">root@meu-vps:~# reboot</p>
+<p class="text-neutral-400 mt-1"># La conexión se cae durante ~30 segundos. Vuelve a conectarte después.</p>
+<p class="text-neutral-400 mt-3"># Ver cuánto espacio queda en el disco (-h = legible)</p>
+<p class="text-purple-400">root@meu-vps:~# df -h</p>
+<p class="text-neutral-300">Filesystem  Size  Used  Avail  Use%  Mounted</p>
+<p class="text-neutral-300">/dev/vda1    25G   6.2G   18G    27%  /</p>
+<p class="text-neutral-400 mt-3"># Ver el uso de memoria RAM</p>
+<p class="text-purple-400">root@meu-vps:~# free -h</p>
+<p class="text-neutral-300">              total   used   free</p>
+<p class="text-neutral-300">Mem:          958Mi  210Mi  748Mi</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-6">
+<h4 class="font-bold text-purple-400 mb-4">✓ Buenas prácticas de mantenimiento</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-purple-400">✓</span><span>Ejecutar <code class="font-mono text-sm">apt update &amp;&amp; apt upgrade</code> cada pocas semanas</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">✓</span><span>Verificar el disco con <code class="font-mono text-sm">df -h</code> antes de instalar cosas grandes</span></li>
+<li class="flex items-start space-x-2"><span class="text-purple-400">✓</span><span>Reiniciar después de las actualizaciones del kernel</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Dejar que el disco se llene hasta el 100% (el servidor se bloquea)</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Ignorar las actualizaciones de seguridad durante meses</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Reiniciar en medio de una actualización en curso</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">🏆</span> ¡Felicitaciones!
+        </h3>
+<p class="text-neutral-300" data-inema-block="m3-1-t6-p2b">Ya tienes una computadora en la nube encendida 24/7, sabes acceder a ella y mantenerla actualizada. Esta es la base de todo lo que viene en la trilha 3. En el próximo módulo aprenderás <strong class="text-purple-400">SSH</strong>, para acceder al servidor directamente desde tu terminal, de forma segura y cómoda, sin depender de la consola web.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- RESUMO -->
+<section class="mb-12">
+<div class="bg-gradient-to-br from-purple-900/40 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-8">
+<h2 class="text-2xl font-bold mb-6 flex items-center">
+<span class="mr-3">📚</span> Resumen del módulo
+        </h2>
+<div class="space-y-4 mb-8">
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">Un VPS es una computadora alquilada en la nube</strong><span class="text-neutral-400"> - siempre encendido, con IP fija, accesible desde cualquier lugar</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">DigitalOcean, Hetzner, Contabo</strong><span class="text-neutral-400"> - buenos proveedores; empieza por el plan más barato</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">Contratar = región, tamaño, sistema, acceso</strong><span class="text-neutral-400"> - Ubuntu LTS es la mejor opción de sistema</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">root, carpetas y apt</strong><span class="text-neutral-400"> - el root lo controla todo; apt instala programas</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-purple-400 mt-1">✓</span>
+<div><strong class="text-white">apt update/upgrade, reboot, df -h</strong><span class="text-neutral-400"> - mantenimiento básico que mantiene el servidor en buen estado</span></div>
+</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+<h3 class="font-semibold text-purple-400 mb-2">Siguiente módulo:</h3>
+<p class="text-neutral-300">3.2 - SSH: Acceso seguro al servidor (conéctate desde tu terminal con claves en lugar de contraseña)</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">
+            ← Volver a la ruta
+          </a>
+<a class="flex-1 text-center px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-500 transition-colors" href="modulo-3-2.html">
+            Siguiente módulo →
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>De cero al deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>

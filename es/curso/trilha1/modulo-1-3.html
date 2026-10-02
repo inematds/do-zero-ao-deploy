@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="dzd" name="inema-course"/>
+<title>GitHub: tu espacio en la nube | De cero al deploy</title>
+<!-- ANTI-FOUC: script bloqueante ANTES do Tailwind -->
+<script>
+  (function () {
+    try {
+      var html = document.documentElement;
+      var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+      function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+      var p = clone(DEF);
+      try {
+        var raw = localStorage.getItem('inema.prefs');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+          }
+        } else {
+          var legacy = localStorage.getItem('theme');
+          if (legacy === 'light') p.theme = 'claro';
+          else if (legacy === 'dark') p.theme = 'inema-dark';
+        }
+      } catch (e) { p = clone(DEF); }
+      var THEMES = {
+        'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+        'claro':      { dark: false, attr: null,        cs: 'light' },
+        'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+        'foco':       { dark: null,  attr: 'foco',      cs: null    },
+        'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+      };
+      var t = THEMES[p.theme] || THEMES['inema-dark'];
+      if (t.dark === true) html.classList.add('dark');
+      else if (t.dark === false) html.classList.remove('dark');
+      if (t.attr) html.setAttribute('data-theme', t.attr);
+      else html.removeAttribute('data-theme');
+      html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+      html.setAttribute('data-font', p.font || 'inter');
+      html.setAttribute('data-accent', p.accent || 'emerald');
+      var s = html.style;
+      var scale = (+p.fontScale || 100);
+      s.setProperty('--inema-font-scale', (scale / 100).toString());
+      s.setProperty('font-size', scale + '%');
+      s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+      s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+      var fam = p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif');
+      s.setProperty('--font-body', fam);
+      var ACC = { emerald: [152,76,45], blue: [217,91,60], purple: [258,90,66], amber: [38,92,50], teal: [174,72,41], rose: [350,89,60] };
+      var a = ACC[p.accent] || ACC.emerald;
+      s.setProperty('--accent-h', a[0]+''); s.setProperty('--accent-s', a[1]+'%'); s.setProperty('--accent-l', a[2]+'%');
+      s.setProperty('--accent', 'hsl('+a[0]+' '+a[1]+'% '+a[2]+'%)');
+    } catch (err) {
+      try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch(e){}
+    }
+  })();
+  </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FACC15',
+            dark: { 900: '#111827', 800: '#1f2937', 700: '#374151', 600: '#4b5563' }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<!-- Manifesto do curso (OBRIGATORIO em toda pagina) -->
+<script data-inema-manifest="" type="application/json">
+  {"course":"dzd","tracks":[{"n":"1","title":"Terminal & Git","modules":[{"id":"1-1","title":"O Terminal","topics":6,"href":"curso/trilha1/modulo-1-1.html"},{"id":"1-2","title":"Git Essencial","topics":6,"href":"curso/trilha1/modulo-1-2.html"},{"id":"1-3","title":"GitHub e Pages","topics":6,"href":"curso/trilha1/modulo-1-3.html"},{"id":"1-4","title":"Projeto: Landing Page","topics":6,"href":"curso/trilha1/modulo-1-4.html"}]},{"n":"2","title":"Deploy Moderno","modules":[{"id":"2-1","title":"Vercel","topics":6,"href":"curso/trilha2/modulo-2-1.html"},{"id":"2-2","title":"Supabase","topics":6,"href":"curso/trilha2/modulo-2-2.html"},{"id":"2-3","title":"APIs","topics":6,"href":"curso/trilha2/modulo-2-3.html"},{"id":"2-4","title":"Variaveis de Ambiente","topics":6,"href":"curso/trilha2/modulo-2-4.html"}]},{"n":"3","title":"Servidor Proprio","modules":[{"id":"3-1","title":"VPS","topics":6,"href":"curso/trilha3/modulo-3-1.html"},{"id":"3-2","title":"SSH","topics":6,"href":"curso/trilha3/modulo-3-2.html"},{"id":"3-3","title":"Firewall","topics":6,"href":"curso/trilha3/modulo-3-3.html"},{"id":"3-4","title":"Tokens e Acesso","topics":6,"href":"curso/trilha3/modulo-3-4.html"}]},{"n":"4","title":"Docker & Automacao","modules":[{"id":"4-1","title":"Docker Basico","topics":6,"href":"curso/trilha4/modulo-4-1.html"},{"id":"4-2","title":"Docker Compose","topics":6,"href":"curso/trilha4/modulo-4-2.html"},{"id":"4-3","title":"Systemd","topics":6,"href":"curso/trilha4/modulo-4-3.html"},{"id":"4-4","title":"Cron Jobs","topics":6,"href":"curso/trilha4/modulo-4-4.html"}]},{"n":"5","title":"Assistentes IA","modules":[{"id":"5-1","title":"Jarvis","topics":6,"href":"curso/trilha5/modulo-5-1.html"},{"id":"5-2","title":"Intelecto","topics":6,"href":"curso/trilha5/modulo-5-2.html"}]}]}
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .dark body { background-color: #111827; }
+
+    /* Light mode overrides - OBRIGATORIO */
+    html:not(.dark) body { background-color: #f8fafc; }
+    html:not(.dark) .bg-dark-900 { background-color: #ffffff; }
+    html:not(.dark) .bg-dark-800 { background-color: #f9fafb; }
+    html:not(.dark) .bg-dark-700 { background-color: #f3f4f6; }
+    html:not(.dark) .bg-dark-600 { background-color: #e5e7eb; }
+    html:not(.dark) .text-neutral-100 { color: #111827; }
+    html:not(.dark) .text-neutral-300 { color: #4b5563; }
+    html:not(.dark) .text-neutral-400 { color: #6b7280; }
+    html:not(.dark) .text-neutral-500 { color: #9ca3af; }
+    html:not(.dark) .border-dark-600 { border-color: #d1d5db; }
+    html:not(.dark) .border-dark-700 { border-color: #e5e7eb; }
+
+    /* Light mode - cores de acento (trilha emerald) */
+    html:not(.dark) .text-emerald-400 { color: #059669; }
+    html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(5, 150, 105, 0.12); }
+    html:not(.dark) .bg-emerald-500\/10 { background-color: rgba(5, 150, 105, 0.08); }
+    html:not(.dark) .border-emerald-500\/30 { border-color: rgba(5, 150, 105, 0.25); }
+    html:not(.dark) .hover\:bg-emerald-500\/30:hover { background-color: rgba(5, 150, 105, 0.18); }
+
+    /* Light mode - remove gradientes */
+    html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; }
+
+    /* Light mode - cores especiais */
+    html:not(.dark) .text-primary { color: #a16207; }
+    html:not(.dark) .bg-primary\/10 { background-color: rgba(161, 98, 7, 0.08); }
+    html:not(.dark) .border-primary\/40 { border-color: rgba(161, 98, 7, 0.25); }
+    html:not(.dark) .text-sky-400 { color: #0369a1; }
+    html:not(.dark) .text-yellow-400 { color: #a16207; }
+    html:not(.dark) .hover\:text-sky-300:hover { color: #0284c7; }
+    html:not(.dark) .hover\:text-yellow-300:hover { color: #854d0e; }
+
+    /* Light mode - nav */
+    html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255, 255, 255, 0.95); }
+
+    /* Dark mode - bordas suaves */
+    .dark .border-dark-600 { border-color: #374151; }
+    .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+    /* SVG light mode */
+    html:not(.dark) svg[role="img"] { filter: saturate(0.82) brightness(0.96); }
+
+    /* SVG pulse animation */
+    @keyframes wf-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+    @media (prefers-reduced-motion: no-preference) {
+      .wf-a { animation: wf-pulse 2.6s ease-in-out infinite; }
+      .wf-a:nth-child(2){animation-delay:.25s} .wf-a:nth-child(3){animation-delay:.5s}
+    }
+  </style>
+<link href="https://inematds.github.io/do-zero-ao-deploy/curso/trilha1/modulo-1-3.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/en/curso/trilha1/modulo-1-3.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/do-zero-ao-deploy/es/curso/trilha1/modulo-1-3.html" hreflang="es" rel="alternate"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha1/modulo-1-3.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="../../../en/curso/trilha1/modulo-1-3.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">EN</a><a href="modulo-1-3.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">ES</a></div>
+<!-- NAVIGATION -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14">
+<div class="flex items-center space-x-4">
+<a class="flex items-center space-x-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span class="text-2xl">🚀</span>
+<span class="font-bold text-lg hidden sm:inline">De cero al deploy</span>
+</a>
+<span class="text-neutral-600">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium" href="https://inema.club" target="_blank">INEMA.CLUB</a>
+</div>
+<div class="flex items-center space-x-1 sm:space-x-2">
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-emerald-400 bg-emerald-500/10" href="index.html">
+<span class="sm:hidden">T1</span><span class="hidden sm:inline">Terminal y Git</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" href="../trilha2/index.html">
+<span class="sm:hidden">T2</span><span class="hidden sm:inline">Deploy moderno</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors" href="../trilha3/index.html">
+<span class="sm:hidden">T3</span><span class="hidden sm:inline">Servidor propio</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" href="../trilha4/index.html">
+<span class="sm:hidden">T4</span><span class="hidden sm:inline">Docker</span>
+</a>
+<a class="px-3 py-1.5 rounded-lg text-sm font-semibold text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors" href="../trilha5/index.html">
+<span class="sm:hidden">T5</span><span class="hidden sm:inline">IA</span>
+</a>
+<button class="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors ml-2" id="theme-toggle">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20">
+<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+</svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- BREADCRUMB -->
+<nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex items-center space-x-2 text-sm text-neutral-400">
+<a class="hover:text-emerald-400" href="../../index.html">Inicio</a>
+<span>/</span>
+<a class="hover:text-emerald-400" href="index.html">Ruta 1</a>
+<span>/</span>
+<span class="text-emerald-400">Módulo 1.3</span>
+</div>
+</nav>
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full mb-4">MÓDULO 1.3</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">☁️ GitHub: Tu casa en la nube</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Hasta aquí tu código solo vive en tu computadora. Ahora aprenderás a llevarlo a la nube: crear una cuenta, conectar el entorno local y el remoto, publicar con un clic y colaborar. GitHub es donde el mundo guarda y muestra lo que construye.</p>
+<div class="grid grid-cols-4 gap-4 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-emerald-400">6</div>
+<div class="text-xs text-neutral-400">Temas</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-emerald-400">45</div>
+<div class="text-xs text-neutral-400">Minutos</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-emerald-400">Básico</div>
+<div class="text-xs text-neutral-400">Nivel</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600">
+<div class="text-xl font-bold text-emerald-400">Práctico</div>
+<div class="text-xs text-neutral-400">Tipo</div>
+</div>
+</div>
+</div>
+</header>
+<!-- CONTEUDO -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-inema-module="1-3" data-inema-track="1" id="conteudo">
+<!-- ============================================ -->
+<!-- TOPICO 1: Criar conta no GitHub              -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-1-3#topico-1" id="topico-1">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold">Crear una cuenta en GitHub</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m1-3-t1-p1">
+        O <strong class="text-emerald-400">GitHub</strong> es un sitio donde guardas tu código en Internet gratis. Antes de subir cualquier cosa, necesitas una cuenta. Es rápido: es el mismo proceso que crear una cuenta en cualquier sitio, pero con un detalle importante que mucha gente confunde al principio: <strong class="text-emerald-400">git y GitHub no son lo mismo</strong>.
+      </p>
+<!-- SVG: Fluxo local -> push -> GitHub -> Pages -->
+<div class="rounded-2xl border border-emerald-500/30 bg-dark-900/40 p-3 sm:p-4 mb-8 overflow-hidden">
+<svg aria-label="Flujo del código: de la computadora local a GitHub mediante push, y de GitHub publicado en internet mediante GitHub Pages" class="w-full h-auto" role="img" viewbox="0 0 820 200">
+<defs>
+<lineargradient id="m13-grad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#34d399"></stop><stop offset="1" stop-color="#10b981"></stop>
+</lineargradient>
+<filter height="180%" id="m13-glow" width="180%" x="-40%" y="-40%">
+<fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge>
+</filter>
+<pattern height="32" id="m13-grid" patternunits="userSpaceOnUse" width="32">
+<circle cx="1.3" cy="1.3" fill="#34d399" opacity="0.12" r="1.3"></circle>
+</pattern>
+</defs>
+<rect fill="url(#m13-grid)" height="200" width="820" x="0" y="0"></rect>
+<!-- Computador local -->
+<rect fill="#0e2018" height="90" rx="12" stroke="#9ca3af" stroke-width="2" width="150" x="24" y="55"></rect>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="12" font-weight="600" text-anchor="middle" x="99" y="48">TU COMPUTADORA</text>
+<text fill="#9ca3af" font-family="Inter,sans-serif" font-size="26" text-anchor="middle" x="99" y="95">💻</text>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="99" y="125">git local</text>
+<!-- Seta push -->
+<line marker-end="url(#m13-arrow)" stroke="url(#m13-grad)" stroke-width="2.5" x1="180" x2="300" y1="100" y2="100"></line>
+<text fill="#34d399" font-family="monospace" font-size="13" font-weight="600" text-anchor="middle" x="240" y="90">git push</text>
+<!-- GitHub nuvem -->
+<g filter="url(#m13-glow)">
+<rect fill="#0e2018" height="110" rx="14" stroke="url(#m13-grad)" stroke-width="2.5" width="200" x="306" y="45"></rect>
+</g>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle" x="406" y="38">GITHUB (NUBE)</text>
+<text fill="#34d399" font-family="Inter,sans-serif" font-size="30" text-anchor="middle" x="406" y="92">☁️</text>
+<text fill="#9ca3af" font-family="monospace" font-size="11" text-anchor="middle" x="406" y="122">usuario/repo</text>
+<text fill="#38bdf8" font-family="monospace" font-size="10" text-anchor="middle" x="406" y="140">respaldo + colaboración</text>
+<!-- Seta deploy -->
+<line marker-end="url(#m13-arrowc)" stroke="#38bdf8" stroke-width="2.5" x1="512" x2="632" y1="100" y2="100"></line>
+<text fill="#38bdf8" font-family="monospace" font-size="12" font-weight="600" text-anchor="middle" x="572" y="90">Pages</text>
+<!-- Site publicado -->
+<rect fill="#0e2018" height="90" rx="12" stroke="#38bdf8" stroke-width="2" width="158" x="638" y="55"></rect>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="12" font-weight="600" text-anchor="middle" x="717" y="48">SITIO EN LÍNEA</text>
+<text fill="#38bdf8" font-family="Inter,sans-serif" font-size="26" text-anchor="middle" x="717" y="95">🌐</text>
+<text fill="#9ca3af" font-family="monospace" font-size="10" text-anchor="middle" x="717" y="125">voce.github.io</text>
+<marker id="m13-arrow" markerheight="9" markerwidth="9" orient="auto" refx="7" refy="3.2"><path d="M0,0 L7,3.2 L0,6.4 Z" fill="#10b981"></path></marker>
+<marker id="m13-arrowc" markerheight="9" markerwidth="9" orient="auto" refx="7" refy="3.2"><path d="M0,0 L7,3.2 L0,6.4 Z" fill="#38bdf8"></path></marker>
+</svg>
+</div>
+<!-- Passo a passo criar conta -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Paso a paso para crear la cuenta</h3>
+<ol class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-3"><span class="text-emerald-400 font-bold">1.</span><span>Accede <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">github.com</code> y haz clic en <strong>Sign up</strong>.</span></li>
+<li class="flex items-start space-x-3"><span class="text-emerald-400 font-bold">2.</span><span>Escribe tu <strong>correo electrónico</strong>. Usa uno al que realmente tengas acceso (tendrás que confirmarlo).</span></li>
+<li class="flex items-start space-x-3"><span class="text-emerald-400 font-bold">3.</span><span>Crea una <strong>contraseña</strong> fuerte y elige uno <strong>nombre de usuario</strong> (nombre de usuario). Este nombre aparecerá en la URL de tus proyectos, por ejemplo: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">github.com/seunome</code>.</span></li>
+<li class="flex items-start space-x-3"><span class="text-emerald-400 font-bold">4.</span><span>Resuelve el <strong>desafío de verificación</strong> (rompecabezas antirobots).</span></li>
+<li class="flex items-start space-x-3"><span class="text-emerald-400 font-bold">5.</span><span>Abre tu correo, copia el <strong>código de confirmación</strong> y pégalo en GitHub. Listo.</span></li>
+</ol>
+</div>
+<div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: git es la app de fotos, GitHub es la nube
+        </h3>
+<p class="text-neutral-300 mb-4" data-inema-block="m1-3-t1-p2">Piensa en el <strong>git</strong> como la app de fotos de tu celular: organiza, guarda versiones y todo queda en tu máquina. El <strong>GitHub</strong> y es la nube (como Google Fotos): envías una copia a Internet, queda segura aunque el celular se rompa y otras personas pueden verla.</p>
+<ul class="space-y-2 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span><strong>git</strong> = programa en tu computadora que controla versiones (offline, local)</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span><strong>GitHub</strong> = sitio en internet donde guardas y muestras el código (online, en la nube)</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400 mt-1">•</span><span>Usas git para hacer commits y GitHub para guardar esos commits en la nube</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: elige bien el username
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-3-t1-p3">Tu nombre de usuario es casi una tarjeta de presentación profesional. Elige algo sencillo y serio (por ejemplo: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">joaosilva</code>) en lugar de apodos. Aparecerá en la URL de tus sitios en GitHub Pages, así que piensa en algo que incluirías en tu currículum.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 2: Tokens de acesso (PAT)             -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-1-3#topico-2" id="topico-2">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold">Tokens de acceso (PAT)</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m1-3-t2-p1">
+        Aquí hay una sorpresa: <strong class="text-emerald-400">tu contraseña de GitHub ya no funciona para enviar código desde la terminal</strong>. Por seguridad, GitHub exige un <strong class="text-emerald-400">token</strong> (Personal Access Token, o PAT). Es como una contraseña desechable con permisos específicos, solo para la terminal.
+      </p>
+<div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: el token es la llave del hotel
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-3-t2-p2">Tu contraseña es la llave maestra que lo abre todo. El token es la tarjeta de una habitación de hotel: abre solo lo necesario, vence por sí solo y, si lo pierdes, basta con cancelarlo y generar otro, sin cambiar toda la cerradura. Por eso GitHub prefiere que uses un token en la terminal y no la contraseña.</p>
+</div>
+<!-- Passos para criar PAT -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4">Cómo crear un Personal Access Token</h3>
+<ol class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-3"><span class="text-emerald-400 font-bold">1.</span><span>En GitHub, haz clic en tu foto (esquina superior derecha) → <strong>Settings</strong>.</span></li>
+<li class="flex items-start space-x-3"><span class="text-emerald-400 font-bold">2.</span><span>Desplázate hasta el final del menú lateral → <strong>Developer settings</strong>.</span></li>
+<li class="flex items-start space-x-3"><span class="text-emerald-400 font-bold">3.</span><span><strong>Personal access tokens</strong> → <strong>Tokens (classic)</strong> → <strong>Generate new token</strong>.</span></li>
+<li class="flex items-start space-x-3"><span class="text-emerald-400 font-bold">4.</span><span>De un <strong>nombre</strong> (ej.: «mi-pc»), define la <strong>validez</strong> (ej.: 90 días) y marca el alcance <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">repo</code>.</span></li>
+<li class="flex items-start space-x-3"><span class="text-emerald-400 font-bold">5.</span><span>Haz clic en <strong>Generate token</strong> e <strong>COPIA en el momento</strong>. Solo aparece una vez.</span></li>
+</ol>
+</div>
+<!-- O que voce vai ver -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver en la pantalla
+        </h3>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Después de generar, aparece un token así:</p>
+<p class="text-emerald-400 break-all">ghp_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8</p>
+<p class="text-neutral-400 mt-3"># En el primer push, la terminal pide:</p>
+<p class="text-neutral-300">Username: seunome</p>
+<p class="text-neutral-300">Password: <span class="text-blue-400">(pega el token aquí, NO la contraseña)</span></p>
+</div>
+<p class="text-neutral-300 text-sm mt-4" data-inema-block="m1-3-t2-p3">Cuando la terminal pida «Password», pega el <strong class="text-blue-400">token</strong>, no tu contraseña. Se rechazará la contraseña.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ Qué HACER</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Guardar el token en un gestor de contraseñas</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Marcar solo el scope que necesitas (<code class="font-mono text-sm">repo</code>)</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Definir una vigencia y generar otra cuando expire</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Pegar el token dentro del código del proyecto</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Enviar el token por correo electrónico o chat a alguien</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Marcar TODOS los scopes sin necesitarlos</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-3-t2-p4"><strong>Problema:</strong> al dar <code class="font-mono text-sm text-red-400">git push</code>, aparece <code class="font-mono text-sm">Authentication failed</code> o <code class="font-mono text-sm">Support for password authentication was removed</code>. <br/><strong>Solución:</strong> eso casi siempre es un token <strong>expirado</strong> o escribiste la contraseña en lugar del token. Genera un token nuevo en Settings &gt; Developer settings &gt; Tokens y pégalo en lugar de la contraseña cuando el terminal te lo pida.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 3: Conectar local e nuvem             -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-1-3#topico-3" id="topico-3">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold">Conectar Local y Nube</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m1-3-t3-p1">
+        Ya tienes un proyecto con git en tu computadora (módulo anterior) y una cuenta en GitHub. Falta <strong class="text-emerald-400">iniciar ambos</strong>. Esto se hace con cuatro comandos principales: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">remote add</code>, <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">push</code>, <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">pull</code> e <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">clone</code>.
+      </p>
+<!-- remote add + push -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">git remote add</code> + <code class="text-emerald-400 font-mono">git push</code> - Enviar a la nube</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m1-3-t3-p2">Primero creas un repositorio vacío en GitHub (botón <strong>New</strong>). Te muestra la URL. Después, en la terminal, dentro de la carpeta del proyecto:</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Apuntar el proyecto local al repo en la nube</p>
+<p class="text-emerald-400">$ git remote add origin https://github.com/seunome/meu-site.git</p>
+<p class="text-neutral-400 mt-3"># Renombrar la rama principal a main (estándar de GitHub)</p>
+<p class="text-emerald-400">$ git branch -M main</p>
+<p class="text-neutral-400 mt-3"># Enviar todo por primera vez (-u conecta ambos extremos)</p>
+<p class="text-emerald-400">$ git push -u origin main</p>
+<p class="text-neutral-300">Enumerating objects: 5, done.</p>
+<p class="text-neutral-300">Writing objects: 100% (5/5), 612 bytes, done.</p>
+<p class="text-neutral-300">To https://github.com/seunome/meu-site.git</p>
+<p class="text-neutral-300"> * [new branch]      main -&gt; main</p>
+<p class="text-neutral-300">branch 'main' set up to track 'origin/main'.</p>
+</div>
+<p class="text-neutral-400 text-sm mt-3"><code class="font-mono">origin</code> y es solo un apodo para la URL del repo. El <code class="font-mono">-u</code> conecta tu branch local con la remota, así que después de esto basta con <code class="font-mono">git push</code>.</p>
+</div>
+<!-- pull -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">git pull</code> - Traer cambios de la nube</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m1-3-t3-p3">Cuando tú (o un colega) cambies algo directamente en GitHub, usa <code class="font-mono">pull</code> para descargar esos cambios en tu computadora.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-emerald-400">$ git pull</p>
+<p class="text-neutral-300">remote: Enumerating objects: 3, done.</p>
+<p class="text-neutral-300">Updating a1b2c3d..d4e5f6g</p>
+<p class="text-neutral-300">Fast-forward</p>
+<p class="text-neutral-300"> index.html | 2 +-</p>
+<p class="text-neutral-300"> 1 file changed, 1 insertion(+), 1 deletion(-)</p>
+</div>
+</div>
+<!-- clone -->
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6 mb-6">
+<h3 class="text-lg font-semibold text-white mb-4"><code class="text-emerald-400 font-mono">git clone</code> - Descargar un repo completo</h3>
+<p class="text-neutral-300 text-sm mb-4" data-inema-block="m1-3-t3-p4">Para empezar a trabajar en un proyecto que ya existe en la nube (tuyo o de otra persona), usa <code class="font-mono">clone</code>. Descarga todo y ya conecta el <code class="font-mono">origin</code> automáticamente.</p>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-emerald-400">$ git clone https://github.com/seunome/meu-site.git</p>
+<p class="text-neutral-300">Cloning into 'meu-site'...</p>
+<p class="text-neutral-300">remote: Counting objects: 100% (8/8), done.</p>
+<p class="text-neutral-300">Receiving objects: 100% (8/8), done.</p>
+<p class="text-emerald-400 mt-2">$ cd meu-site</p>
+<p class="text-neutral-400"># Listo, ya puedes editar y hacer push</p>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: el ciclo del día a día
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-3-t3-p5">La rutina siempre es la misma: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">git pull</code> (obtener lo nuevo) → editar → <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">git add .</code> → <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">git commit -m "..."</code> → <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono">git push</code>. Haz pull al principio y push al final.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 4: GitHub Pages                       -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-1-3#topico-4" id="topico-4">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold">GitHub Pages: activar y publicar</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m1-3-t4-p1">
+        Aquí ocurre la magia: GitHub toma el código de tu repo y <strong class="text-emerald-400">publica como un sitio web real en Internet</strong>, con dirección propia y gratis. Esto se llama <strong class="text-emerald-400">GitHub Pages</strong>. En pocos clics, tu HTML se convierte en un enlace que cualquier persona del mundo puede abrir.
+      </p>
+<!-- Timeline de ativacao -->
+<div class="space-y-6 mb-6">
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<span class="text-emerald-400 font-bold text-lg">1</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Abre la configuración del repo</h4>
+<p class="text-sm text-neutral-400">En tu repositorio en GitHub, haz clic en la pestaña <strong>Settings</strong> (en la parte superior). En el menú lateral izquierdo, haz clic en <strong>Pages</strong>.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<span class="text-emerald-400 font-bold text-lg">2</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Elige la branch</h4>
+<p class="text-sm text-neutral-400 mb-3">En "Source", selecciona <strong>Deploy from a branch</strong>. En "Branch", elige <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">main</code> y es la carpeta <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">/ (root)</code>. Haz clic en <strong>Save</strong>.</p>
+</div>
+</div>
+<div class="flex items-start space-x-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<span class="text-emerald-400 font-bold text-lg">3</span>
+</div>
+<div class="flex-1 bg-dark-800 rounded-xl p-6 border border-dark-600">
+<h4 class="font-semibold text-white mb-2">Espera a que termine la compilación</h4>
+<p class="text-sm text-neutral-400">GitHub tarda de 30 segundos a unos minutos en crear el sitio. Actualiza la página y pronto aparecerá el enlace verde con la dirección. Ten paciencia la primera vez.</p>
+</div>
+</div>
+</div>
+<!-- O que voce vai ver -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver
+        </h3>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Después del build, aparece un recuadro verde:</p>
+<p class="text-emerald-400">✓ Your site is live at</p>
+<p class="text-blue-400">https://seunome.github.io/meu-site/</p>
+</div>
+<p class="text-neutral-300 text-sm mt-4" data-inema-block="m1-3-t4-p2">El patrón de la dirección es <code class="font-mono text-blue-400">usuario.github.io/repo</code>. Haz clic en el enlace y tu sitio se abre en el navegador, en línea y disponible para todo el mundo.</p>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-3 flex items-center">
+<span class="mr-2">⚠️</span> Error común
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-3-t4-p3"><strong>Problema:</strong> abro la URL y aparece <code class="font-mono text-sm">404</code> o una página en blanco. <br/><strong>Solución:</strong> revisa tres cosas. (1) Tu archivo principal debe llamarse <code class="font-mono text-sm">index.html</code> y estar en la raíz del repo. (2) Es posible que el build no haya terminado; espera un poco más y recarga. (3) La branch seleccionada en Pages tiene que ser la que contiene el código (<code class="font-mono text-sm">main</code>).</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 5: IA no codigo - Codex e Copilot     -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-1-3#topico-5" id="topico-5">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold">IA en el código: Codex y Copilot</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m1-3-t5-p1">
+        GitHub no solo guarda código: también ofrece <strong class="text-emerald-400">asistentes de inteligencia artificial</strong> que escriben código contigo. Los más famosos son <strong class="text-emerald-400">GitHub Copilot</strong> y modelos como el <strong class="text-emerald-400">Codex</strong>. Completan líneas automáticamente, generan funciones enteras y responden tus dudas dentro del editor.
+      </p>
+<div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
+<span class="mr-2">🧠</span> Analogía: un copiloto de verdad
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-3-t5-p2">Piensa en un vuelo: tú eres el piloto, pero tienes un copiloto al lado que ya conoce el camino y te va sugiriendo el siguiente paso. Tú decides todo, pero él adelanta el trabajo pesado. Copilot hace eso con el código: empiezas a escribir y él sugiere el resto en gris. Presionas Tab para aceptar o lo ignoras.</p>
+</div>
+<!-- O que sao -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3 flex items-center"><span class="mr-2">🤖</span> GitHub Copilot</h4>
+<p class="text-sm text-neutral-400 mb-3">Extensión que instalas en VS Code. A medida que escribes, sugiere la continuación del código en tiempo real (autocompletado inteligente).</p>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">•</span><span>Sugerencias en gris mientras escribes</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">•</span><span>Chat para resolver dudas en el editor</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">•</span><span>Tab acepta, Esc descarta</span></li>
+</ul>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3 flex items-center"><span class="mr-2">⚡</span> Codex y asistentes</h4>
+<p class="text-sm text-neutral-400 mb-3">Modelos de IA (como Codex) que generan código a partir de una descripción en portugués. Tú pides lo que quieres y el modelo lo escribe.</p>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">•</span><span>Generan funciones enteras a partir de texto</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">•</span><span>Explican código que no entiendes</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">•</span><span>Aceleran tareas repetitivas</span></li>
+</ul>
+</div>
+</div>
+<!-- Como ativam produtividade -->
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+<span class="mr-2">👁</span> Qué vas a ver en el editor
+        </h3>
+<div class="bg-dark-900 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Escribes solo un comentario:</p>
+<p class="text-emerald-400">// función que suma dos números</p>
+<p class="text-neutral-400 mt-2"># Copilot sugiere (en gris) el resto:</p>
+<p class="text-neutral-500">function soma(a, b) {</p>
+<p class="text-neutral-500">  return a + b;</p>
+<p class="text-neutral-500">}</p>
+<p class="text-blue-400 mt-2"># Presionas Tab y el código aparece listo</p>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">💡</span> Consejo: la IA acelera, pero tú decides
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-3-t5-p3">Estos asistentes aumentan mucho la productividad, pero a veces se equivocan. Siempre <strong class="text-primary">lee y entiende</strong> lo que la IA generó antes de aceptarlo. Úsalo como atajo para el trabajo pesado, no como sustituto del aprendizaje. Quien entiende el código dirige a la IA, no al revés.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- ============================================ -->
+<!-- TOPICO 6: Exercicio                          -->
+<!-- ============================================ -->
+<section class="mb-16 scroll-mt-20" data-inema-topic="modulo-1-3#topico-6" id="topico-6">
+<div class="flex items-center space-x-4 mb-6">
+<span class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold">Ejercicio: desde cero hasta el push</h2>
+</div>
+<p class="text-neutral-300 mb-6 leading-relaxed" data-inema-block="m1-3-t6-p1">
+        Es hora de reunir todo. Vas a crear un repositorio desde cero, conectarlo con GitHub y <strong class="text-emerald-400">enviar tu primer proyecto a la nube</strong>. Al final, tu código estará en línea, guardado y listo para convertirse en sitio web.
+      </p>
+<div class="bg-gradient-to-br from-emerald-900/30 to-dark-800 rounded-xl border border-emerald-500/30 p-6 mb-6">
+<h3 class="text-lg font-semibold text-emerald-400 mb-4">🎯 Lo que vas a lograr</h3>
+<p class="text-neutral-300 text-sm">Un repositorio en GitHub llamado <code class="bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-400">meu-primeiro-repo</code> con un archivo subido, visible en tu cuenta para que todo el mundo lo vea.</p>
+</div>
+<!-- Passo a passo -->
+<div class="space-y-4 mb-6">
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 1: Crea el repo en GitHub</h4>
+<p class="text-sm text-neutral-400 mb-3">En el sitio, haz clic en el <strong>+</strong> (esquina superior derecha) → <strong>New repository</strong>. Nombre: <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">meu-primeiro-repo</code>. Deja <strong>público</strong> e <strong>no</strong> marca "Add a README". Haz clic en <strong>Create repository</strong>.</p>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 2: Prepara el proyecto local</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-emerald-400">$ mkdir meu-primeiro-repo</p>
+<p class="text-emerald-400">$ cd meu-primeiro-repo</p>
+<p class="text-emerald-400">$ git init</p>
+<p class="text-neutral-300">Initialized empty Git repository</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 3: Crea y guarda un archivo</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-emerald-400">$ echo "# Mi Primer Repo" &gt; README.md</p>
+<p class="text-emerald-400">$ git add .</p>
+<p class="text-emerald-400">$ git commit -m "primer commit"</p>
+<p class="text-neutral-300">[main (root-commit) a1b2c3d] primer commit</p>
+<p class="text-neutral-300"> 1 file changed, 1 insertion(+)</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 4: Conéctate con GitHub</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-neutral-400"># Usa la URL que te mostró GitHub</p>
+<p class="text-emerald-400">$ git remote add origin https://github.com/seunome/meu-primeiro-repo.git</p>
+<p class="text-emerald-400">$ git branch -M main</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 5: Sube a la nube</h4>
+<div class="bg-dark-700 rounded-lg p-4 font-mono text-sm">
+<p class="text-emerald-400">$ git push -u origin main</p>
+<p class="text-neutral-400"># Cuando te lo pida, pega el TOKEN en lugar de la contraseña</p>
+<p class="text-neutral-300">Username: seunome</p>
+<p class="text-neutral-300">Password: ghp_xxxxxxxxxxxx</p>
+<p class="text-neutral-300 mt-1"> * [new branch]      main -&gt; main</p>
+</div>
+</div>
+<div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+<h4 class="font-semibold text-white mb-3">Paso 6: Revisa en el navegador</h4>
+<p class="text-sm text-neutral-400">Abre <code class="bg-dark-700 px-1.5 py-0.5 rounded text-xs font-mono">github.com/seunome/meu-primeiro-repo</code>. Tu <code class="font-mono">README.md</code> está allí, en la nube, para que el mundo lo vea.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-6">
+<h4 class="font-bold text-emerald-400 mb-4">✓ Qué HACER</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Dar <code class="font-mono text-sm">commit</code> antes de intentar hacer push</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Pegar el token cuando te pida la contraseña</span></li>
+<li class="flex items-start space-x-2"><span class="text-emerald-400">✓</span><span>Verificar el repo en el navegador después</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-6">
+<h4 class="font-bold text-red-400 mb-4">✗ Qué NO hacer</h4>
+<ul class="space-y-3 text-neutral-300">
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Marcar "Add README" al crear (genera un conflicto en el push)</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Escribir la contraseña en lugar del token</span></li>
+<li class="flex items-start space-x-2"><span class="text-red-400">✗</span><span>Olvidar el <code class="font-mono text-sm">git init</code> antes de todo</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/40 p-6 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-3 flex items-center">
+<span class="mr-2">🏆</span> ¡Felicitaciones!
+        </h3>
+<p class="text-neutral-300" data-inema-block="m1-3-t6-p2">Tu código ahora está en la nube. Sabes crear una cuenta, generar un token, conectar los entornos local y remoto, y publicar. En el próximo módulo, vas a unir todo en un <strong class="text-emerald-400">proyecto real de principio a fin</strong>: una landing page desde cero hasta el deploy.</p>
+</div>
+<div class="flex justify-start mt-6">
+<button aria-pressed="false" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors" data-inema-read-toggle="" type="button">
+<span aria-hidden="true" class="inema-read-icon">○</span>
+<span class="inema-read-label">Marcar como leído</span>
+</button>
+</div>
+</section>
+<!-- RESUMO -->
+<section class="mb-12">
+<div class="bg-gradient-to-br from-emerald-900/40 via-dark-800 to-dark-800 rounded-xl border border-emerald-500/30 p-8">
+<h2 class="text-2xl font-bold mb-6 flex items-center">
+<span class="mr-3">📚</span> Resumen del módulo
+        </h2>
+<div class="space-y-4 mb-8">
+<div class="flex items-start space-x-3">
+<span class="text-emerald-400 mt-1">✓</span>
+<div><strong class="text-white">git y GitHub son cosas diferentes</strong><span class="text-neutral-400"> - git y la app local, GitHub y la nube donde guardas</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-emerald-400 mt-1">✓</span>
+<div><strong class="text-white">Token (PAT) en lugar de contraseña</strong><span class="text-neutral-400"> - creado en Settings &gt; Developer settings, copiado en el momento</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-emerald-400 mt-1">✓</span>
+<div><strong class="text-white">remote add, push, pull, clone</strong><span class="text-neutral-400"> - conectar, enviar, traer y descargar código</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-emerald-400 mt-1">✓</span>
+<div><strong class="text-white">GitHub Pages publica tu sitio</strong><span class="text-neutral-400"> - Settings &gt; Pages &gt; branch main, en usuario.github.io/repo</span></div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="text-emerald-400 mt-1">✓</span>
+<div><strong class="text-white">Copilot y Codex aceleran el código</strong><span class="text-neutral-400"> - autocompletan y generan, pero tú decides y revisas</span></div>
+</div>
+</div>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-8">
+<h3 class="font-semibold text-emerald-400 mb-2">Siguiente módulo:</h3>
+<p class="text-neutral-300">1.4 - Proyecto: Landing Page (combina terminal, git y GitHub en un proyecto real desde cero hasta el deploy)</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="flex-1 text-center px-6 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">
+            ← Volver a la ruta
+          </a>
+<a class="flex-1 text-center px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-500 transition-colors" href="modulo-1-4.html">
+            Siguiente módulo →
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="border-t border-dark-600 py-8 mt-16">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-sm">
+<p>De cero al deploy - 2026</p>
+</div>
+</footer>
+<!-- SCRIPTS -->
+<script>
+    // Theme Toggle (v1)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && !html.classList.contains('dark'))) {
+      themeToggleDarkIcon.classList.remove('hidden');
+      html.classList.remove('dark');
+    } else {
+      themeToggleLightIcon.classList.remove('hidden');
+    }
+    themeToggle.addEventListener('click', () => {
+      themeToggleDarkIcon.classList.toggle('hidden');
+      themeToggleLightIcon.classList.toggle('hidden');
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+<script src="../../assets/learn.js"></script>
+<script>
+    if (window.INEMA && typeof window.INEMA.init === 'function') {
+      window.INEMA.init();
+    }
+  </script>
+</body>
+</html>
